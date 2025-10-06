@@ -1,0 +1,15 @@
+/.idea
+/.vscode
+/Assets/SerializedUdonPrograms
+/Assets/TextMesh Pro
+/Assets/UdonSharp
+/Assets/XR
+/Library
+/obj/Debug
+/Temp
+/UserSettings
+/ProjectSettings
+/Packages
+*.csproj
+/ClientSimStorage
+/Logs
