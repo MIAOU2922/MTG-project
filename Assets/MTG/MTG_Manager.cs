@@ -36,7 +36,7 @@ namespace MTG
         {
             createURL = new VRCUrl($"{BaseURL}c");
             searchURL = new VRCUrl($"{BaseURL}s?q=");
-            joinURLs = new VRCUrl[32];
+            joinURLs = new VRCUrl[64];
             for (int i = 0; i < joinURLs.Length; i++)
                 joinURLs[i] = new VRCUrl($"{BaseURL}j{ToBase36(i)}");
             tempURLs = new VRCUrl[2048];

@@ -174,6 +174,7 @@ GameObject:
   - component: {fileID: 2774594206050096641}
   - component: {fileID: 6304232511103514612}
   - component: {fileID: 7049132260704737108}
+  - component: {fileID: 563373890907714992}
   - component: {fileID: 1857812520637080737}
   - component: {fileID: 2781996971926043570}
   m_Layer: 13
@@ -267,8 +268,8 @@ MonoBehaviour:
   allowManipulationWhenEquipped: 0
   orientation: 0
   AutoHold: 0
-  InteractionText: 
-  UseText: Use
+  InteractionText: ' '
+  UseText: ' '
   useEventBroadcastType: 0
   UseDownEventName: 
   UseUpEventName: 
@@ -279,7 +280,20 @@ MonoBehaviour:
   ThrowVelocityBoostScale: 1
   currentlyHeldBy: {fileID: 0}
   pickupable: 1
-  proximity: 2
+  proximity: 1
+--- !u!114 &563373890907714992
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1857119487949026606}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1783056023, guid: 661092b4961be7145bfbe56e1e62337b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  AllowCollisionOwnershipTransfer: 1
 --- !u!114 &1857812520637080737
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -318,6 +332,7 @@ MonoBehaviour:
   color_identity: []
   keywords: []
   card_faces: []
+  rulings: []
   set_code: 
   set_name: 
   set_type: 
