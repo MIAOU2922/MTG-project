@@ -1,0 +1,157 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int      @id
+  created_at   DateTime @default(now())
+  last_seen_at DateTime @default(now()) @updatedAt
+
+  players   Player[]
+  redirects Redirect[]
+
+  @@map("users")
+}
+
+model Instance {
+  id           Int      @id
+  created_at   DateTime @default(now())
+  last_seen_at DateTime @default(now()) @updatedAt
+
+  players Player[]
+
+  @@map("instances")
+}
+
+model Player {
+  instance_id Int
+  user_id     Int
+
+  user     User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  instance Instance @relation(fields: [instance_id], references: [id], onDelete: Cascade)
+
+  @@id([instance_id, user_id])
+  @@map("players")
+}
+
+model Redirect {
+  id      Int
+  user_id Int
+  url     String
+
+  age  DateTime @default(now()) @updatedAt
+  user User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@id([user_id, id])
+  @@map("redirects")
+}
+
+model Config {
+  key   String @id
+  value String
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  @@map("configs")
+}
+
+model Oracle {
+  id     String   @id
+  text   String
+  faces  Face[]
+  rulings Ruling[]
+
+  @@map("oracles")
+}
+
+model Card {
+  id   String @id
+  name String
+
+  lang             String
+  printed_name     String?
+  set_id           String
+  collector_number String
+  rarity           String
+  image_url        String
+  release_at       DateTime
+  faces            Face[]
+  legalities       Json     @default("{}")
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  set Set? @relation(fields: [set_id], references: [id])
+
+  @@unique([lang, set_id, collector_number])
+  @@map("cards")
+}
+
+model Face {
+  index            Int      @default(0)
+  name             String
+  oracle_id        String?
+  layout           String
+  card_id          String
+  cmc              Float?
+  type_line        String?
+  printed_type_line String?
+  mana_cost        String?
+  power            String?
+  toughness        String?
+  loyalty          String?
+  defense          String?
+  flavor_text      String?
+  printed_text     String?
+  keywords         String[]
+  color_identities String[]
+  colors           String[]
+  flavor_name      String?
+  image_url        String
+
+  card   Card    @relation(fields: [card_id], references: [id], onDelete: Cascade)
+  oracle Oracle? @relation(fields: [oracle_id], references: [id], onDelete: Cascade)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  @@id([card_id, index])
+  @@map("faces")
+}
+
+model Set {
+  id    String @id
+  set   String?
+  name  String
+  type  String
+  cards Card[]
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  @@map("sets")
+}
+
+model Ruling {
+  id           String   @id
+  oracle_id    String
+  published_at DateTime
+  comment      String?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @default(now()) @updatedAt
+
+  oracle Oracle @relation(fields: [oracle_id], references: [id], onDelete: Cascade)
+
+  @@map("rulings")
+}

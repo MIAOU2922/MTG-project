@@ -1,0 +1,43 @@
+version: "3.8"
+
+services:
+  database:
+    image: postgres:15
+    container_name: mtgvrc_database
+    environment:
+      POSTGRES_USER: mtgvrc
+      POSTGRES_PASSWORD: 4fhTE1P2jWpriqu3ZyGO
+      POSTGRES_DB: mtgvrc
+    ports:
+      - "55432:5432"
+    volumes:
+      - database:/var/lib/postgresql/data
+    networks:
+      - default
+
+  server:
+    image: node:latest
+    working_dir: /app
+    container_name: mtgvrc_server
+    volumes:
+      - .:/app
+    # ports:
+    #   - "55433:3000"
+    environment:
+      DATABASE_URL: postgres://mtgvrc:4fhTE1P2jWpriqu3ZyGO@mtgvrc_database:5432/mtgvrc
+    depends_on:
+      - database
+    command: sh -c "npm install && npx prisma generate && npx prisma migrate deploy && npm run dev"
+    networks:
+      - default
+      - nginx
+
+volumes:
+  database:
+
+networks:
+  nginx:
+    name: nginx
+    driver: bridge
+  default:
+    driver: bridge
