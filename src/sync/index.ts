@@ -1,12 +1,31 @@
 import Database from "@/database/Database";
 import { ScryfallBulkDataClient } from "./bulk-client";
-import { CoreCard, StreamProcessingOptions } from "./types";
+import { CoreCard, StreamProcessingOptions, Ruling } from "./types";
 
 export default class ScryFallSync {
 
-    public async start() {
+    public async start(options: { syncCards?: boolean; syncRulings?: boolean } = {}) {
+        const { syncCards = true, syncRulings = true } = options;
         const bulk = new ScryfallBulkDataClient();
 
+        console.log("Starting bulk data sync (cards + rulings)...");
+
+        // Synchroniser d'abord les cartes
+        if (syncCards) {
+            await this.syncCards(bulk);
+        } else {
+            console.log("⏭️ Skipping cards synchronization");
+        }
+        
+        // Puis synchroniser les rulings
+        if (syncRulings) {
+            await this.syncRulings(bulk);
+        } else {
+            console.log("⏭️ Skipping rulings synchronization");
+        }
+    }
+
+    private async syncCards(bulk: ScryfallBulkDataClient) {
         console.log("Starting bulk card sync...");
 
         let totalProcessed = 0;
@@ -85,10 +104,91 @@ export default class ScryFallSync {
         } catch (error) {
             const totalTime = Date.now() - startTime;
             console.error("=".repeat(50));
-            console.error("BULK SYNC FAILED");
+            console.error("BULK CARD SYNC FAILED");
             console.error("=".repeat(50));
             console.error(`❌ Failed after ${Math.round(totalTime / 1000)}s`);
             console.error(`📊 Processed ${totalProcessed} cards before failure`);
+            console.error(`💥 Error:`, error);
+            console.error("=".repeat(50));
+            throw error;
+        }
+    }
+
+    private async syncRulings(bulk: ScryfallBulkDataClient) {
+        console.log("Starting bulk rulings sync...");
+
+        let totalProcessed = 0;
+        let totalErrors = 0;
+        let batchErrors: { batchIndex: number; error: string }[] = [];
+
+        const startTime = Date.now();
+
+        const processingOptions = {
+            batchSize: 1000, // Plus grand batch pour les rulings qui sont plus simples
+            onBatch: async (rulings: Ruling[], batchIndex: number) => {
+                const batchStartTime = Date.now();
+                console.log(`Processing rulings batch ${batchIndex + 1} with ${rulings.length} rulings...`);
+
+                try {
+                    await this.upsertRulingsBatch(rulings);
+                    totalProcessed += rulings.length;
+                    const batchTime = Date.now() - batchStartTime;
+                    const totalTime = Date.now() - startTime;
+                    const avgTimePerBatch = totalTime / (batchIndex + 1);
+
+                    console.log(`Rulings batch ${batchIndex + 1} completed in ${batchTime}ms. Total: ${totalProcessed} rulings, ${totalErrors} errors`);
+                    console.log(`Average rulings batch time: ${Math.round(avgTimePerBatch)}ms`);
+                } catch (error) {
+                    totalErrors++;
+                    const errorMessage = error instanceof Error ? error.message : String(error);
+                    batchErrors.push({
+                        batchIndex: batchIndex + 1,
+                        error: errorMessage
+                    });
+                    console.error(`Rulings batch ${batchIndex + 1} failed:`, errorMessage);
+                }
+            },
+            onError: (error: Error, item?: any, index?: number) => {
+                totalErrors++;
+                console.error(`Error processing ruling at index ${index}:`, error.message);
+                if (item) {
+                    console.error("Problematic ruling:", item.oracle_id || "Unknown");
+                }
+            }
+        };
+
+        try {
+            const metadata = await bulk.downloadBulkDataStream("rulings", processingOptions);
+            const totalTime = Date.now() - startTime;
+
+            console.log("=".repeat(50));
+            console.log("BULK RULINGS SYNC COMPLETED");
+            console.log("=".repeat(50));
+            console.log(`📊 Total rulings processed: ${metadata.totalItems}`);
+            console.log(`✅ Successfully processed: ${totalProcessed}`);
+            console.log(`❌ Total errors: ${totalErrors}`);
+            console.log(`⏱️  Total time: ${Math.round(totalTime / 1000)}s`);
+            console.log(`🚀 Average speed: ${Math.round(metadata.totalItems / (totalTime / 1000))} rulings/sec`);
+            console.log(`📁 File size: ${Math.round(metadata.fileSize / (1024 * 1024))}MB`);
+            console.log(`📅 Last updated: ${metadata.lastUpdated}`);
+
+            if (batchErrors.length > 0) {
+                console.log("\n❌ RULINGS BATCH ERRORS SUMMARY:");
+                batchErrors.forEach(err => {
+                    console.log(`  - Batch ${err.batchIndex}: ${err.error}`);
+                });
+            }
+
+            console.log("=".repeat(50));
+
+            return metadata;
+        } catch (error) {
+            const totalTime = Date.now() - startTime;
+            console.error("=".repeat(50));
+            console.error("BULK RULINGS SYNC FAILED");
+            console.error("=".repeat(50));
+            console.error(`❌ Failed after ${Math.round(totalTime / 1000)}s`);
+            console.error(`📊 Processed ${totalProcessed} rulings before failure`);
             console.error(`💥 Error:`, error);
             console.error("=".repeat(50));
             throw error;
@@ -284,6 +384,67 @@ export default class ScryFallSync {
         }
 
         console.log(`Batch completed: ${batchSuccesses} successes, ${batchErrors} errors`);
+    }
+
+    private async upsertRulingsBatch(rulings: Ruling[]): Promise<void> {
+        let batchSuccesses = 0;
+        let batchErrors = 0;
+
+        console.log(`Processing ${rulings.length} rulings in optimized batch...`);
+
+        try {
+            await Database.prisma.$transaction(
+                async (tx) => {
+                    // Supprimer tous les rulings existants pour éviter les doublons
+                    // (on pourrait être plus intelligent et ne supprimer que ceux modifiés)
+                    
+                    for (const ruling of rulings) {
+                        if (!ruling.oracle_id || !ruling.published_at || !ruling.comment) {
+                            batchErrors++;
+                            console.error(`Missing required fields for ruling: ${ruling.oracle_id || 'unknown'}`);
+                            continue;
+                        }
+
+                        try {
+                            // Créer un ID unique basé sur oracle_id + published_at + hash du commentaire
+                            const crypto = require('crypto');
+                            const hash = crypto.createHash('md5').update(ruling.comment).digest('hex').substring(0, 8);
+                            const rulingId = `${ruling.oracle_id}_${ruling.published_at}_${hash}`;
+
+                            const rulingData = {
+                                id: rulingId,
+                                oracle_id: ruling.oracle_id,
+                                published_at: new Date(ruling.published_at),
+                                comment: ruling.comment,
+                            };
+
+                            await tx.ruling.upsert({
+                                where: { id: rulingData.id },
+                                update: {
+                                    comment: rulingData.comment,
+                                    updated_at: new Date(),
+                                },
+                                create: rulingData,
+                            });
+                            batchSuccesses++;
+                        } catch (rulingError) {
+                            batchErrors++;
+                            console.error(`Failed to upsert ruling for oracle ${ruling.oracle_id}: ${rulingError}`);
+                        }
+                    }
+                },
+                { 
+                    timeout: 120000,
+                    maxWait: 10000
+                }
+            );
+        } catch (error) {
+            batchErrors = rulings.length;
+            console.error(`Rulings batch transaction failed: ${error}`);
+            throw error;
+        }
+
+        console.log(`Rulings batch completed: ${batchSuccesses} successes, ${batchErrors} errors`);
     }
 
     // Anciennes méthodes supprimées - remplacées par le traitement en batch optimisé

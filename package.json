@@ -11,6 +11,8 @@
     "build": "npx tsc",
     "dev:watch": "npx tsx watch src/index.ts",
     "sync": "node --max-old-space-size=4096 --expose-gc node_modules/.bin/tsx src/scryfall_sync.ts",
+    "sync:cards": "node --max-old-space-size=4096 --expose-gc node_modules/.bin/tsx src/scryfall_sync.ts cards",
+    "sync:rulings": "node --max-old-space-size=4096 --expose-gc node_modules/.bin/tsx src/scryfall_sync.ts rulings",
     "docker:restart": "docker compose restart",
     "docker:up": "docker compose up -d --build",
     "docker:down": "docker compose down"
