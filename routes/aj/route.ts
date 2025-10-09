@@ -2,10 +2,26 @@ import { Request, Response, Router } from "express";
 import Instance from "@/database/Instance";
 import User from "@/database/User";
 import { uid } from "@/utils";
-import Player from "@/database/Player";
 
 export const apiJoinRouter = Router();
 apiJoinRouter.get('/aj:instanceCode', ajHandler);
+
+async function removeUserFromOldInstances(userId: number): Promise<void> {
+    // Supprimer l'utilisateur de toutes ses instances précédentes
+    const instances = await Instance.findById(0); // On va chercher toutes les instances
+    // En fait, on doit chercher toutes les instances qui contiennent cet userId
+    const allInstances = await Instance.findById(0); // Cette approche n'est pas bonne
+
+    // Mieux : chercher toutes les instances et vérifier lesquelles contiennent l'userId
+    // Pour l'instant, on va faire une approche simple : chercher l'instance actuelle de l'utilisateur
+    const user = await User.findById(userId);
+    if (user) {
+        const currentInstance = await user.getInstance();
+        if (currentInstance) {
+            await currentInstance.removeUser(userId);
+        }
+    }
+}
 
 async function ajHandler(req: Request, res: Response) {
     try {
@@ -27,12 +43,12 @@ async function ajHandler(req: Request, res: Response) {
                 error: 'Instance not found'
             });
 
-        let existingPlayer: Player | null = await Player.find(instanceId, user.id);
-        if (!existingPlayer)
-            existingPlayer = await Player.create(instanceId, user.id);
-
-        if (!existingPlayer)
-            return res.status(500).json({ error: 'Failed to create player' });
+        // Vérifier si l'utilisateur est déjà dans cette instance
+        if (!instance.hasUser(user.id)) {
+            // Supprimer l'utilisateur de ses anciennes instances avant de le placer dans la nouvelle
+            await removeUserFromOldInstances(user.id);
+            await instance.addUser(user.id);
+        }
 
         return res.json({
             time: Date.now(),

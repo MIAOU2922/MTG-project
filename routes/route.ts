@@ -3,6 +3,7 @@ import { apiUserRouter } from "@routes/au/route";
 import { apiJoinRouter } from "@routes/aj/route";
 import { apiCreateRouter } from "@routes/ac/route";
 import { apiSearchRouter } from "@routes/as/route";
+import { atRouter } from "@routes/at/route";
 import { uid } from "@/utils";
 
 export const router = Router();
@@ -10,6 +11,7 @@ router.use(apiUserRouter);
 router.use(apiJoinRouter);
 router.use(apiCreateRouter);
 router.use(apiSearchRouter);
+router.use(atRouter);
 router.get('/h', healthHandler);
 
 function healthHandler(req: Request, res: Response) {

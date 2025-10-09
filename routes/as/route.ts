@@ -1,5 +1,6 @@
 import { Request, Response, Router } from "express";
 import User from "@/database/User";
+import Instance from "@/database/Instance";
 import { uid } from "@/utils";
 
 export const apiSearchRouter = Router();
@@ -19,21 +20,50 @@ async function asHandler(req: Request, res: Response) {
             });
         }
 
+        // Récupérer l'instance du joueur (comme dans /at)
+        const playerInstance = await managePlayerInstance(user);
+
         const searchResults = await performSearch(query);
+
+        // Ajouter les IDs des cartes trouvées à l'instance si elle existe
+        if (playerInstance) {
+            const cardIds = searchResults.items.map(card => card.id).filter(id => id);
+            for (const cardId of cardIds) {
+                await playerInstance.addCard(cardId);
+            }
+            // Mise à jour du last_seen fait automatiquement dans user.updateLastSeen()
+        }
 
         return res.json({
             time: Date.now(),
             uid: user.id,
             query: query,
             count: searchResults.count,
+            instance_id: playerInstance?.id,
             results: searchResults.items.map(item => ({
+                id: item.id,
                 name: item.name,
                 printed_name: item.printed_name,
                 set: item.set?.set,
                 collector_number: item.collector_number,
                 lang: item.lang,
                 rarity: item.rarity,
-                faces: item.faces,
+                faces: item.faces.map(face => ({
+                    name: face.name,
+                    type_line: face.type_line,
+                    printed_type_line: face.printed_type_line,
+                    mana_cost: face.mana_cost,
+                    cmc: face.cmc,
+                    power: face.power,
+                    toughness: face.toughness,
+                    loyalty: face.loyalty,
+                    colors: face.colors,
+                    color_identities: face.color_identities,
+                    keywords: face.keywords,
+                    oracle_text: face.oracle?.text,
+                    printed_text: face.printed_text,
+                    flavor_text: face.flavor_text,
+                })),
             })),
         });
     } catch (error) {
@@ -138,7 +168,13 @@ async function performSearch(query: string) {
     }
     
     if (filters.keyword) {
-        faceConditions.keywords = { has: filters.keyword };
+        // Recherche insensible à la casse dans keywords, oracle_text et printed_text
+        const kw = filters.keyword.toLowerCase();
+        faceConditions.OR = [
+            { keywords: { has: kw } },
+            { oracle: { text: { contains: kw, mode: 'insensitive' } } },
+            { printed_text: { contains: kw, mode: 'insensitive' } }
+        ];
     }
     
     if (filters.flavor_text) {
@@ -273,6 +309,7 @@ async function performSearch(query: string) {
     const cards = await Database.prisma.card.findMany({
         where,
         select: {
+            id: true,
             name: true,
             printed_name: true,
             set: true,
@@ -291,6 +328,7 @@ async function performSearch(query: string) {
                     loyalty: true,
                     colors: true,
                     color_identities: true,
+                    keywords: true,
                     oracle: {
                         select: {
                             text: true,
@@ -301,7 +339,7 @@ async function performSearch(query: string) {
                 }
             }
         },
-        take: 600, // Limite de sécurité pour éviter les réponses trop volumineuses
+        //take: 600, // Limite de sécurité pour éviter les réponses trop volumineuses
     });
     
     return {
@@ -648,4 +686,32 @@ function parseColorValue(value: string): { mode: string; colors: string[] } {
     }
     
     return { mode, colors };
+}
+
+/**
+ * Gère l'instance du joueur :
+ * - Si le joueur est déjà dans une instance, la retourne
+ * - Sinon, retourne null (le joueur doit d'abord rejoindre une instance via aj)
+ */
+async function managePlayerInstance(user: User): Promise<Instance | null> {
+    // Vérifier si l'utilisateur est déjà dans une instance
+    const instance = await user.getInstance();
+
+    if (instance) {
+        // Vérifier si quelqu'un d'autre utilise cette instance (nettoyage)
+        await cleanupOldPlayerAssociations(user.id);
+
+        return instance;
+    }
+
+    // L'utilisateur n'est pas dans une instance
+    return null;
+}
+
+/**
+ * Nettoie les anciennes associations joueur-instance si nécessaire
+ */
+async function cleanupOldPlayerAssociations(currentUserId: number): Promise<void> {
+    // Cette logique peut être étendue selon les besoins
+    // Pour l'instant, on ne fait rien de spécial
 }

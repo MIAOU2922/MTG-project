@@ -1,6 +1,6 @@
 import { User as IUser } from "prisma";
 import Database from "@/database/Database";
-import Player from "@/database/Player";
+import Instance from "@/database/Instance";
 
 export default class User implements IUser {
     public readonly id: number;
@@ -25,9 +25,11 @@ export default class User implements IUser {
 
     }
 
-    public async getPlayers(): Promise<Player[]> {
-        const players = await Database.prisma.player.findMany({ where: { user_id: this.id } });
-        return players.map(player => new Player(player));
+    public async getInstance(): Promise<Instance | null> {
+        const instance = await Database.prisma.instance.findFirst({
+            where: { user_ids: { has: this.id } }
+        });
+        return instance ? new Instance(instance) : null;
     }
 
     public async updateLastSeen(): Promise<User> {
@@ -35,6 +37,18 @@ export default class User implements IUser {
             where: { id: this.id },
             data: { last_seen_at: new Date() }
         });
+
+        // Mettre à jour aussi l'instance si l'utilisateur en a une
+        try {
+            const instance = await this.getInstance();
+            if (instance) {
+                await instance.updateLastSeen();
+            }
+        } catch (error) {
+            // Ne pas échouer si la mise à jour de l'instance échoue
+            console.warn(`Failed to update instance last_seen for user ${this.id}:`, error);
+        }
+
         return new User(user);
     }
 }

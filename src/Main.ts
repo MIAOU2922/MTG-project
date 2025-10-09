@@ -2,6 +2,8 @@ import EventEmitter from "node:events";
 import express, { Application, Request, Response, NextFunction } from 'express';
 import { router } from "@routes/route";
 import cors from 'cors';
+import * as cron from 'cron';
+import Instance from '@/database/Instance';
 
 export default class Main extends EventEmitter {
     private static _instance: Main;
@@ -14,7 +16,7 @@ export default class Main extends EventEmitter {
         this.port = process.env.PORT ? parseInt(process.env.PORT) : 3000;
         this.setupMiddleware();
         this.setupRoutes();
-        
+        this.setupImageDownloadScheduler();
     }
 
     public static getInstance(): Main {
@@ -56,7 +58,25 @@ export default class Main extends EventEmitter {
         return this.app;
     }
 
-    public getPort(): number {
-        return this.port;
+    private setupImageDownloadScheduler(): void {
+        // Téléchargement initial au démarrage du serveur
+        console.log('🚀 Running initial image download for recent instances...');
+        Instance.downloadRecentInstanceImages().catch(error => {
+            console.error('❌ Error during initial image download:', error);
+        });
+
+        // Planifier un nettoyage périodique des images anciennes (toutes les heures)
+        const cleanupJob = new cron.CronJob('0 * * * *', async () => {
+            console.log('🧹 Running periodic cleanup of old instance images (> 24h)...');
+            try {
+                await Instance.cleanupOldInstanceImages();
+                console.log('✅ Periodic cleanup completed');
+            } catch (error) {
+                console.error('❌ Error during periodic cleanup:', error);
+            }
+        });
+
+        cleanupJob.start();
+        console.log('📅 Image cleanup scheduler started (runs every hour)');
     }
 }

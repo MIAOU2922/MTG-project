@@ -16,7 +16,6 @@ model User {
   created_at   DateTime @default(now())
   last_seen_at DateTime @default(now()) @updatedAt
 
-  players   Player[]
   redirects Redirect[]
 
   @@map("users")
@@ -26,21 +25,10 @@ model Instance {
   id           Int      @id
   created_at   DateTime @default(now())
   last_seen_at DateTime @default(now()) @updatedAt
-
-  players Player[]
+  card_ids     String[] @default([])
+  user_ids     Int[]    @default([])
 
   @@map("instances")
-}
-
-model Player {
-  instance_id Int
-  user_id     Int
-
-  user     User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  instance Instance @relation(fields: [instance_id], references: [id], onDelete: Cascade)
-
-  @@id([instance_id, user_id])
-  @@map("players")
 }
 
 model Redirect {

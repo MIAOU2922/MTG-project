@@ -217,6 +217,7 @@ Utilisez des guillemets pour les termes avec espaces :
           "loyalty": null,
           "colors": ["R"],
           "color_identities": ["R"],
+          "keywords": ["Flying"],
           "oracle_text": "Lightning Bolt deals 3 damage to any target.",
           "printed_text": "L'Éclair inflige 3 blessures à une cible, créature ou joueur.",
           "flavor_text": null
@@ -263,6 +264,7 @@ Utilisez des guillemets pour les termes avec espaces :
 | `loyalty` | string\|null | Loyauté |
 | `colors` | array | Couleurs |
 | `color_identities` | array | Identité colorielle |
+| `keywords` | array | Mots-clés |
 | `oracle_text` | string\|null | Texte d'oracle anglais |
 | `printed_text` | string\|null | Texte d'oracle traduit |
 | `flavor_text` | string\|null | Texte de saveur |
