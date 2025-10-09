@@ -8,7 +8,6 @@ using System;
 namespace MTG
 {
     // Classe principale pour les données de carte
-    [System.Serializable]
     public class MTG_Card : UdonSharpBehaviour
     {
 

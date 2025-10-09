@@ -1,4 +1,4 @@
-using UdonSharp;
+﻿using UdonSharp;
 using UnityEngine;
 #if UNITY_EDITOR
 using UnityEditor;
@@ -31,7 +31,7 @@ namespace MTG
 
         public bool allowFallbackToNearestIfNoneWithinSlotCollider = true;
 
-        [SerializeField] protected MTG_CardInstance[][] cardsBySlot; // initialisé dans Start()
+        [SerializeField] [VRC.Udon.Serialization.OdinSerializer.OdinSerialize] /* UdonSharp auto-upgrade: serialization */  protected MTG_CardInstance[][] cardsBySlot; // initialisé dans Start()
 
         void Start()
         {

@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 2765789559025691665}
   - component: {fileID: 3278956462420993668}
   m_Layer: 0
-  m_Name: background
+  m_Name: background 64
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -58,14 +58,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.023529412, g: 0.14117648, b: 0.16862746, a: 1}
+  m_Color: {r: 0.2509804, g: 0.2509804, b: 0.2509804, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 18dcb56db573ae3499a22657f140fda6, type: 3}
+  m_Sprite: {fileID: 21300000, guid: ffc8365c84fb7ff448ae8cd2815e8478, type: 3}
   m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1

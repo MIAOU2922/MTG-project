@@ -6,31 +6,42 @@ using VRC.Udon;
 using VRC.SDK3.StringLoading;
 using VRC.Udon.Common.Interfaces;
 using VRC.SDK3.Data;
+using VRC.SDK3.Image;
 
 namespace MTG
 {
     public class MTG_Manager : UdonSharpBehaviour
     {
         [UdonSynced, SerializeField]
-        protected int instanceID = -1;
+        public int instanceID = -1;
         [SerializeField]
-        private MTG_SyncInterface syncInterface;
+        public MTG_SyncInterface syncInterface;
         [SerializeField]
         private bool _isSyncing = false;
         [SerializeField]
         private bool agree = false;
         [SerializeField]
-        protected VRCUrl createURL;
+        public VRCUrl createURL;
         [SerializeField]
-        protected VRCUrl searchURL;
+        public VRCUrl searchURL;
         [SerializeField]
-        protected VRCUrl[] joinURLs;
+        public VRCUrl[] joinURLs;
         [SerializeField]
-        protected VRCUrl[] tempURLs;
+        public VRCUrl[] tempURLs;
+        
+        // Système de cache d'atlas
+        public Texture2D[] atlasCache;
+        public bool[] atlasLoaded;
+        public bool[] atlasLoading;
+        public float lastAtlasInfoUpdate = 0f;
+        public const float ATLAS_INFO_UPDATE_INTERVAL = 10f; // 10 secondes
+        
+        // VRCImageDownloader pour les atlas
+        private VRCImageDownloader imageDownloader;
 
 
 #if !COMPILER_UDONSHARP && UNITY_EDITOR
-        public VRCUrl BaseURL = new VRCUrl("http://localhost:5000/a");
+        public VRCUrl BaseURL = new VRCUrl("https://mtg.hactazia.fr/a");
 
         private void OnValidate()
         {
@@ -39,7 +50,7 @@ namespace MTG
             joinURLs = new VRCUrl[64];
             for (int i = 0; i < joinURLs.Length; i++)
                 joinURLs[i] = new VRCUrl($"{BaseURL}j{ToBase36(i)}");
-            tempURLs = new VRCUrl[2048];
+            tempURLs = new VRCUrl[4096];
             for (int i = 0; i < tempURLs.Length; i++)
                 tempURLs[i] = new VRCUrl($"{BaseURL}t{ToBase36(i)}");
         }
@@ -57,6 +68,32 @@ namespace MTG
             return result;
         }
 #endif
+
+        private void Start()
+        {
+            // Initialiser le cache d'atlas
+            int maxAtlas = tempURLs.Length;
+            atlasCache = new Texture2D[maxAtlas];
+            atlasLoaded = new bool[maxAtlas];
+            atlasLoading = new bool[maxAtlas];
+            
+            // Créer VRCImageDownloader
+            imageDownloader = new VRCImageDownloader();
+            
+            // Démarrer la mise à jour périodique des infos d'atlas
+            // Udon: utiliser un système manuel avec Update()
+            lastAtlasInfoUpdate = Time.time;
+        }
+        
+        private void Update()
+        {
+            // Mise à jour périodique des atlas info
+            if (Time.time - lastAtlasInfoUpdate >= ATLAS_INFO_UPDATE_INTERVAL)
+            {
+                lastAtlasInfoUpdate = Time.time;
+                UpdateAtlasInfo();
+            }
+        }
 
         public override void OnDeserialization()
         {
@@ -111,6 +148,21 @@ namespace MTG
 
         public override void OnStringLoadSuccess(IVRCStringDownload json)
         {
+            // Vérifier si c'est une réponse d'atlas info
+            if (IsAtlasInfoResponse(json))
+            {
+                ProcessAtlasInfo(json.Result);
+                return;
+            }
+            
+            // Vérifier si c'est une réponse d'atlas
+            if (IsAtlasResponse(json, out int atlasIndex))
+            {
+                ProcessAtlasImage(json, atlasIndex);
+                return;
+            }
+            
+            // Sinon, traiter comme réponse de join/create
             if (!IsJoinOrCreateResponse(json)) return;
 
             if (VRCJson.TryDeserializeFromJson(json.Result, out DataToken result))
@@ -126,39 +178,52 @@ namespace MTG
 
                 var dict = result.DataDictionary;
                 
-                // Vérifier si l'objet "instance" existe
-                if (!dict.ContainsKey("instance") || dict["instance"].TokenType != TokenType.DataDictionary)
+                // Vérifier si l'objet "instance" existe (ancien format)
+                if (dict.ContainsKey("instance") && dict["instance"].TokenType == TokenType.DataDictionary)
                 {
-                    Debug.LogError($"Error parsing response: missing 'instance' object: {json.Result}");
+                    var instanceDict = dict["instance"].DataDictionary;
+                    
+                    // Vérifier si l'ID existe dans l'instance
+                    if (!instanceDict.ContainsKey("id") || instanceDict["id"].TokenType != TokenType.Double)
+                    {
+                        Debug.LogError($"Error parsing response: missing 'id' in instance object: {json.Result}");
+                        _isSyncing = false;
+                        if (!agree)
+                            syncInterface.Show();
+                        return;
+                    }
+
+                    // SOLUTION : Utiliser .Double puis convertir en int
+                    instanceID = (int)instanceDict["id"].Double;
+                    
+                    // OU alternative plus sûre :
+                    // instanceID = Mathf.RoundToInt((float)instanceDict["id"].Double);
+
+                    Debug.Log($"Joined game {instanceID}");
+                    agree = true;
+                    _isSyncing = false;
+                    syncInterface.Hide();
+                    return;
+                }
+                // Nouveau format avec "iid"
+                else if (dict.ContainsKey("iid") && dict["iid"].TokenType == TokenType.Double)
+                {
+                    instanceID = (int)dict["iid"].Double;
+                    
+                    Debug.Log($"Joined game {instanceID} (new format)");
+                    agree = true;
+                    _isSyncing = false;
+                    syncInterface.Hide();
+                    return;
+                }
+                else
+                {
+                    Debug.LogError($"Error parsing response: neither 'instance.id' nor 'iid' found: {json.Result}");
                     _isSyncing = false;
                     if (!agree)
                         syncInterface.Show();
                     return;
                 }
-
-                var instanceDict = dict["instance"].DataDictionary;
-                
-                // Vérifier si l'ID existe dans l'instance
-                if (!instanceDict.ContainsKey("id") || instanceDict["id"].TokenType != TokenType.Double)
-                {
-                    Debug.LogError($"Error parsing response: missing 'id' in instance object: {json.Result}");
-                    _isSyncing = false;
-                    if (!agree)
-                        syncInterface.Show();
-                    return;
-                }
-
-                // SOLUTION : Utiliser .Double puis convertir en int
-                instanceID = (int)instanceDict["id"].Double;
-                
-                // OU alternative plus sûre :
-                // instanceID = Mathf.RoundToInt((float)instanceDict["id"].Double);
-
-                Debug.Log($"Joined game {instanceID}");
-                agree = true;
-                _isSyncing = false;
-                syncInterface.Hide();
-                return;
             }
 
             Debug.LogError($"Error parsing response: {json.Result}");
@@ -178,9 +243,201 @@ namespace MTG
                 syncInterface.Show();
         }
         
-        public int GetInstanceID()
+        public int GetGameInstanceID()
         {
             return instanceID;
+        }
+        
+        // Méthodes de gestion d'atlas
+        public void UpdateAtlasInfo()
+        {
+            if (instanceID == -1) return;
+            
+            // Utiliser l'URL pré-configurée pour /at/0 (index 0)
+            if (tempURLs.Length > 0)
+            {
+                VRCStringDownloader.LoadUrl(tempURLs[0], (IUdonEventReceiver)this);
+            }
+        }
+        
+        public Texture2D GetAtlasTexture(int atlasIndex)
+        {
+            if (atlasIndex < 0 || atlasIndex >= atlasCache.Length)
+                return null;
+                
+            if (!atlasLoaded[atlasIndex] && !atlasLoading[atlasIndex])
+            {
+                // Déclencher le téléchargement de l'atlas
+                LoadAtlas(atlasIndex);
+            }
+            
+            return atlasCache[atlasIndex];
+        }
+        
+
+
+        private void LoadAtlas(int atlasIndex)
+        {
+            if (atlasIndex < 0 || atlasIndex >= tempURLs.Length || atlasLoading[atlasIndex])
+                return;
+
+            atlasLoading[atlasIndex] = true;
+            
+            // Utiliser VRCImageDownloader pour télécharger l'image
+            imageDownloader.DownloadImage(tempURLs[atlasIndex], null, (IUdonEventReceiver)this);
+        }
+        
+        private bool IsAtlasInfoResponse(IVRCStringDownload json)
+        {
+            if (json == null || json.Url == null) return false;
+            string url = json.Url.ToString();
+            return url.Contains("at0"); // at0 pour l'atlas info
+        }
+        
+        private bool IsAtlasResponse(IVRCStringDownload result, out int atlasIndex)
+        {
+            atlasIndex = -1;
+            if (result == null || result.Url == null) return false;
+            
+            for (int i = 0; i < tempURLs.Length; i++)
+            {
+                if (result.Url == tempURLs[i])
+                {
+                    atlasIndex = i;
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        private void ProcessAtlasInfo(string jsonResult)
+        {
+            if (!VRCJson.TryDeserializeFromJson(jsonResult, out DataToken result) || result.TokenType != TokenType.DataDictionary)
+            {
+                Debug.LogError("Error parsing atlas info: " + jsonResult);
+                return;
+            }
+            
+            var dict = result.DataDictionary;
+            if (!dict.ContainsKey("data") || dict["data"].TokenType != TokenType.DataDictionary)
+            {
+                return;
+            }
+            
+            var data = dict["data"].DataDictionary;
+            if (!data.ContainsKey("batches"))
+            {
+                return;
+            }
+            
+            var batches = data["batches"].DataList;
+            
+            // Marquer les atlas nécessaires pour téléchargement
+            for (int i = 0; i < batches.Count; i++)
+            {
+                if (batches[i].TokenType != TokenType.DataDictionary) continue;
+                var batch = batches[i].DataDictionary;
+                
+                if (!batch.ContainsKey("atlas_link")) continue;
+                string atlasLink = batch["atlas_link"].String;
+                int atlasIndex = ConvertAtlasLinkToIndex(atlasLink);
+                
+                if (atlasIndex >= 0 && atlasIndex < atlasCache.Length && !atlasLoaded[atlasIndex] && !atlasLoading[atlasIndex])
+                {
+                    LoadAtlas(atlasIndex);
+                }
+            }
+        }
+        
+        private void ProcessAtlasImage(IVRCStringDownload result, int atlasIndex)
+        {
+            // Cette méthode n'est plus utilisée car on utilise VRCImageDownloader
+            // Les callbacks OnImageLoadSuccess/OnImageLoadError sont utilisés à la place
+        }
+        
+        // Callbacks pour VRCImageDownloader
+        public override void OnImageLoadSuccess(IVRCImageDownload result)
+        {
+            // Trouver l'index de l'atlas depuis l'URL
+            if (IsAtlasImageResponse(result, out int atlasIndex))
+            {
+                atlasCache[atlasIndex] = result.Result;
+                atlasLoaded[atlasIndex] = true;
+                atlasLoading[atlasIndex] = false;
+                Debug.Log($"Atlas {atlasIndex} loaded successfully via VRCImageDownloader");
+                
+                // Notifier les cartes que l'atlas est disponible
+                NotifyAtlasLoaded(atlasIndex);
+            }
+        }
+        
+        public override void OnImageLoadError(IVRCImageDownload result)
+        {
+            // Trouver l'index de l'atlas depuis l'URL
+            if (IsAtlasImageResponse(result, out int atlasIndex))
+            {
+                atlasLoading[atlasIndex] = false;
+                Debug.LogError($"Failed to load atlas {atlasIndex}: {result.Error}");
+            }
+        }
+        
+        private bool IsAtlasImageResponse(IVRCImageDownload result, out int atlasIndex)
+        {
+            atlasIndex = -1;
+            if (result == null || result.Url == null) return false;
+            
+            for (int i = 0; i < tempURLs.Length; i++)
+            {
+                if (result.Url == tempURLs[i])
+                {
+                    atlasIndex = i;
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+        private void NotifyAtlasLoaded(int atlasIndex)
+        {
+            // Cette méthode sera appelée par les cartes pour être notifiées
+            // Nous utiliserons un système d'événements plus tard si nécessaire
+        }
+        
+        private int ConvertAtlasLinkToIndex(string atlasLink)
+        {
+            if (string.IsNullOrEmpty(atlasLink) || !atlasLink.StartsWith("/at"))
+            {
+                return 0;
+            }
+            
+            string base36Suffix = atlasLink.Substring(3); // Enlever "/at"
+            if (string.IsNullOrEmpty(base36Suffix))
+            {
+                return 0;
+            }
+            
+            return FromBase36(base36Suffix);
+        }
+        
+        private int FromBase36(string value)
+        {
+            const string chars = "0123456789abcdefghijklmnopqrstuvwxyz";
+            int result = 0;
+            int multiplier = 1;
+            
+            for (int i = value.Length - 1; i >= 0; i--)
+            {
+                char c = value[i];
+                int digit = chars.IndexOf(c);
+                if (digit == -1)
+                {
+                    return 0;
+                }
+                result += digit * multiplier;
+                multiplier *= 36;
+            }
+            
+            return result;
         }
     }
 }
