@@ -15,7 +15,7 @@ async function acHandler(req: Request, res: Response) {
         // Create new instance with rotation
         const instance = await Instance.createWithRotation(user);
 
-        // Add the user to the instance immediately after creation
+        // Add the user to the instance (removes from all other instances automatically)
         await instance.addUser(user.id);
 
         return res.json({

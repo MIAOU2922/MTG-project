@@ -130,25 +130,36 @@ async function cleanupOldPlayerAssociations(currentUserId: number): Promise<void
 
 /**
  * Génère les données JSON pour un lien donné
+ * Utilise le même calcul de coordonnées UV que le script Python
  */
 function generateJsonData(linkIndex: number, instance: Instance, userId: number): any {
     const cards = instance.card_ids;
     const batchSize = 24;
     const batches = [];
 
-    // Dimensions pour calculer les offsets
+    // Dimensions d'une carte MTG standard
     const cardWidth = 488;
     const cardHeight = 680;
     const cols = 6;
     const rows = 4;
-    const originalWidth = cardWidth * cols;
-    const originalHeight = cardHeight * rows;
+    
+    // Dimensions de l'atlas original (avant downscale)
+    const originalWidth = cardWidth * cols;   // 2928px
+    const originalHeight = cardHeight * rows;  // 2720px
+    
+    // Calculer le scale pour ne pas dépasser 2048px
     const maxSize = 2048;
     const scaleX = maxSize / originalWidth;
     const scaleY = maxSize / originalHeight;
     const scale = Math.min(scaleX, scaleY);
-    const finalCardWidth = cardWidth * scale;
-    const finalCardHeight = cardHeight * scale;
+    
+    // Dimensions finales de l'atlas (après downscale)
+    const atlasWidth = Math.floor(originalWidth * scale);
+    const atlasHeight = Math.floor(originalHeight * scale);
+    
+    // Dimensions d'une carte après downscale
+    const scaledCardWidth = cardWidth * scale;
+    const scaledCardHeight = cardHeight * scale;
 
     // Créer des lots de 24 cartes
     for (let i = 0; i < cards.length; i += batchSize) {
@@ -156,25 +167,33 @@ function generateJsonData(linkIndex: number, instance: Instance, userId: number)
         const batchIndex = Math.floor(i / batchSize);
         const atlasLinkId = batchIndex + 10;
 
-        // Calculer les offsets pour chaque carte du batch
+        // Calculer les coordonnées UV pour chaque carte du batch
+        // Compatible Unity (origine en bas à gauche)
         const cardsWithOffsets = batchCards.map((cardId, cardIndex) => {
             const col = cardIndex % cols;
             const row = Math.floor(cardIndex / cols);
-            const x = Math.floor(col * finalCardWidth);
-            const y = Math.floor(row * finalCardHeight);
-            const width = Math.floor(finalCardWidth);
-            const height = Math.floor(finalCardHeight);
-
-            // Normaliser les coordonnées entre 0 et 1
-            const atlasWidth = Math.floor(originalWidth * scale);
-            const atlasHeight = Math.floor(originalHeight * scale);
+            
+            // Position en pixels dans l'atlas redimensionné
+            const pixelX = col * scaledCardWidth;
+            const pixelY = row * scaledCardHeight;
+            
+            // Normaliser les coordonnées (0-1) pour Unity
+            // Unity utilise l'origine en bas à gauche, donc on inverse Y
+            const rectX = pixelX / atlasWidth;
+            const rectY = 1.0 - (pixelY + scaledCardHeight) / atlasHeight;
+            const rectWidth = scaledCardWidth / atlasWidth;
+            const rectHeight = scaledCardHeight / atlasHeight;
 
             return {
                 id: cardId,
-                x: x / atlasWidth,
-                y: y / atlasHeight,
-                width: width / atlasWidth,
-                height: height / atlasHeight
+                // Coordonnées Unity Rect (x, y, width, height) normalisées
+                rect_x: rectX,
+                rect_y: rectY,
+                rect_width: rectWidth,
+                rect_height: rectHeight,
+                // Aussi fournir les dimensions en pixels pour référence
+                width: Math.floor(scaledCardWidth),
+                height: Math.floor(scaledCardHeight)
             };
         });
 
@@ -182,8 +201,8 @@ function generateJsonData(linkIndex: number, instance: Instance, userId: number)
             batch_index: batchIndex,
             card_count: batchCards.length,
             atlas_link: `/at${atlasLinkId.toString(36)}`,
-            atlas_width: Math.floor(originalWidth * scale),
-            atlas_height: Math.floor(originalHeight * scale),
+            atlas_width: atlasWidth,
+            atlas_height: atlasHeight,
             cards: cardsWithOffsets
         });
     }

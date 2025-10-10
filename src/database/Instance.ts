@@ -30,6 +30,23 @@ export default class Instance implements IInstance {
         this.user_ids = (data as any).user_ids || [];
     }
 
+    /**
+     * Remove a user from all instances in the database
+     * This ensures a user can only be in one instance at a time
+     */
+    public static async removeUserFromAllInstances(userId: number): Promise<void> {
+        // Find all instances containing this user
+        const instances = await Database.prisma.instance.findMany({
+            where: { user_ids: { has: userId } }
+        });
+        
+        // Remove user from each instance
+        for (const instanceData of instances) {
+            const instance = new Instance(instanceData);
+            await instance.removeUser(userId);
+        }
+    }
+
     public static async findById(id: number): Promise<Instance | null> {
         const instance = await Database.prisma.instance.findUnique({ where: { id } });
         return instance ? new Instance(instance) : null;
@@ -79,6 +96,10 @@ export default class Instance implements IInstance {
     }
 
     public async addUser(userId: number): Promise<void> {
+        // Remove user from all other instances first to ensure exclusivity
+        await Instance.removeUserFromAllInstances(userId);
+        
+        // Add user to this instance
         if (!this.user_ids.includes(userId)) {
             const newUserIds = [...this.user_ids, userId];
             await Database.prisma.instance.update({

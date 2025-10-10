@@ -129,10 +129,13 @@ async function performSearch(query: string) {
         where.set = { set: filters.set };
     }
     
+    // Filtre de langue : par défaut en anglais si non spécifié
     if (filters.lang) {
         where.lang = filters.lang;
+    } else {
+        // Si aucune langue n'est spécifiée, filtrer par défaut sur l'anglais
+        where.lang = 'en';
     }
-    // No default language filter - return results in all languages unless explicitly specified
     
     if (filters.rarity) {
         where.rarity = filters.rarity;
@@ -354,7 +357,7 @@ async function performSearch(query: string) {
                 }
             }
         },
-        //take: 600, // Limite de sécurité pour éviter les réponses trop volumineuses
+        take: 300, // Limite de sécurité pour éviter les réponses trop volumineuses
     });
     
     return {
