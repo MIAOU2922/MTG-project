@@ -110,18 +110,17 @@ async function performSearch(query: string) {
         }));
     }
     
-    // Filters applied to Card table
+    // Recherche simple uniquement si aucun filtre n'est présent ET qu'il y a du texte libre
     if (filters.name) {
         where.name = { contains: filters.name, mode: 'insensitive' };
-    } else if (Object.keys(filters).length === 0 || 
-               (Object.keys(filters).length === 1 && filters.lang)) {
-        // Recherche simple : chercher dans tous les champs de texte disponibles
+    } else if (
+        Object.keys(filters).length === 0 ||
+        (Object.keys(filters).length === 1 && filters.lang && query.trim() !== '')
+    ) {
+        // Recherche simple : uniquement dans le nom anglais et le nom traduit
         where.OR = [
             { name: { contains: query, mode: 'insensitive' } },
-            { printed_name: { contains: query, mode: 'insensitive' } },
-            { faces: { some: { oracle: { text: { contains: query, mode: 'insensitive' } } } } },
-            { faces: { some: { printed_text: { contains: query, mode: 'insensitive' } } } },
-            { faces: { some: { flavor_text: { contains: query, mode: 'insensitive' } } } },
+            { printed_name: { contains: query, mode: 'insensitive' } }
         ];
     }
     
@@ -172,8 +171,17 @@ async function performSearch(query: string) {
     }
     
     // Filters applied to Face table
-    if (filters.type) {
+
+    // Gestion correcte de type et subtype (ex: t:creature st:rat)
+    if (filters.type && filters.subtype) {
+        faceConditions.AND = [
+            { type_line: { contains: filters.type, mode: 'insensitive' } },
+            { type_line: { contains: filters.subtype, mode: 'insensitive' } }
+        ];
+    } else if (filters.type) {
         faceConditions.type_line = { contains: filters.type, mode: 'insensitive' };
+    } else if (filters.subtype) {
+        faceConditions.type_line = { contains: filters.subtype, mode: 'insensitive' };
     }
     
     if (filters.oracle) {
@@ -278,10 +286,24 @@ async function performSearch(query: string) {
         const isValue = filters.is.toLowerCase();
         switch (isValue) {
             case 'spell':
-                faceConditions.type_line = { not: { contains: 'land', mode: 'insensitive' } };
+                // Les "spells" sont toutes les cartes sauf les permanents (créature, artefact, enchantement, planeswalker, terrain)
+                faceConditions.AND = [
+                    { type_line: { not: { contains: 'creature', mode: 'insensitive' } } },
+                    { type_line: { not: { contains: 'artifact', mode: 'insensitive' } } },
+                    { type_line: { not: { contains: 'enchantment', mode: 'insensitive' } } },
+                    { type_line: { not: { contains: 'planeswalker', mode: 'insensitive' } } },
+                    { type_line: { not: { contains: 'land', mode: 'insensitive' } } }
+                ];
                 break;
             case 'permanent':
-                faceConditions.type_line = { contains: 'land', mode: 'insensitive' };
+                // Les permanents sont : créature, artefact, enchantement, planeswalker, terrain
+                faceConditions.OR = [
+                    { type_line: { contains: 'creature', mode: 'insensitive' } },
+                    { type_line: { contains: 'artifact', mode: 'insensitive' } },
+                    { type_line: { contains: 'enchantment', mode: 'insensitive' } },
+                    { type_line: { contains: 'planeswalker', mode: 'insensitive' } },
+                    { type_line: { contains: 'land', mode: 'insensitive' } }
+                ];
                 break;
             case 'vanilla':
                 // Creatures with no text
@@ -357,7 +379,7 @@ async function performSearch(query: string) {
                 }
             }
         },
-        take: 300, // Limite de sécurité pour éviter les réponses trop volumineuses
+        take: 240, // Limite de sécurité pour éviter les réponses trop volumineuses
     });
     
     return {
@@ -408,6 +430,10 @@ function parseQuery(query: string): Record<string, any> {
                 case 'type':
                 case 't':
                     filters.type = cleanValue;
+                    break;
+                case 'subtype':
+                case 'st':
+                    filters.subtype = cleanValue;
                     break;
                 case 'oracle':
                 case 'o':
@@ -594,13 +620,13 @@ function parseQuery(query: string): Record<string, any> {
             }
         } else if (token.startsWith('!')) {
             // Exact name match
-            filters.exact_name = token.slice(1).replace(/^["']|["']$/g, '');
+            filters.exact_name = token.slice(1).replace(/^['"]|['"]$/g, '');
         } else if (token.startsWith('-')) {
             // Negated term
             const negatedToken = token.slice(1);
             if (negatedToken.includes(':')) {
                 const [key, value] = negatedToken.split(':', 2);
-                filters[`-${key}`] = value.replace(/^["']|["']$/g, '');
+                filters[`-${key}`] = value.replace(/^['"]|['"]$/g, '');
             } else {
                 filters.negated_terms = filters.negated_terms || [];
                 filters.negated_terms.push(negatedToken);
@@ -611,7 +637,13 @@ function parseQuery(query: string): Record<string, any> {
             // Regular expression
             filters.regex = token.slice(1, -1);
         } else {
-            nameParts.push(token);
+            // Si le token n'est pas un filtre connu, on le traite comme un sous-type potentiel
+            // (ex: "rat" tout seul => filtre sur le sous-type)
+            if (!filters.name && !filters.subtype) {
+                filters.subtype = token;
+            } else {
+                nameParts.push(token);
+            }
         }
     }
     

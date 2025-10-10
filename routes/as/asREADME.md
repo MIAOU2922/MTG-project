@@ -40,11 +40,14 @@ Utilisez la syntaxe `clé:valeur` pour filtrer précisément.
 | `rarity:` | `r:` | Rareté | `rarity:rare` |
 | `collector_number:` | `cn:`, `number:` | Numéro de collectionneur | `cn:1` |
 
-#### Types et Texte
+
+#### Types, Sous-types et Texte
 
 | Filtre | Alias | Description | Exemple |
 |--------|-------|-------------|---------|
 | `type:` | `t:` | Type de carte | `type:Creature` |
+| `subtype:` | `st:` | Sous-type de carte (ex: rat, goblin, angel...) | `subtype:rat` |
+| *(mot seul)* |  | Si un mot n'est pas un filtre connu, il est traité comme un sous-type | `rat` |
 | `oracle:` | `o:` | Texte d'oracle | `oracle:Flying` |
 | `fulloracle:` | `fo:` | Texte d'oracle complet | `fulloracle:draw` |
 | `keyword:` | `kw:` | Mot-clé | `keyword:Flying` |
@@ -165,21 +168,26 @@ Utilisez des guillemets pour les termes avec espaces :
 
 ## Exemples Complets
 
-### Recherches Simples
+
+### Recherche Simple et Sous-type
+
+Les recherches sans filtres spécifiques cherchent dans tous les champs de texte :
+- Nom anglais (`name`)
+- Nom traduit (`printed_name`)
+- Texte d'oracle anglais (`oracle_text`)
+- Texte d'oracle traduit (`printed_text`)
+- Texte de saveur (`flavor_text`)
+
+Si le terme n'est pas un filtre connu, il est aussi interprété comme un sous-type (ex: `rat` retournera toutes les créatures de sous-type rat).
+
+**Exemples :**
 ```
 /as?q=Lightning Bolt
-/as?q=dragon vol
-/as?q=draw cards
+/as?q=Cycle alimentaire aérien
+/as?q=vol
+/as?q=rat
+/as?q=subtype:angel
 ```
-
-### Recherches Avancées
-```
-/as?q=cmc:3 type:Instant
-/as?q=power:>=4 toughness:<=2 type:Creature
-/as?q=c:wu is:spell
-/as?q=oracle:Flying -t:creature
-/as?q=year:>=2020 rarity:mythic
-/as?q=set:m21 lang:en type:Creature cmc:<=3
 ```
 
 ### Combinaisons Complexes
