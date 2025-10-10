@@ -20,14 +20,29 @@ async function asHandler(req: Request, res: Response) {
             });
         }
 
+
         // Récupérer l'instance du joueur (comme dans /at)
-        const playerInstance = await managePlayerInstance(user);
+        let playerInstance = await managePlayerInstance(user);
+
+        // If the user is not in any instance, try to find or create one and add the user
+        if (!playerInstance) {
+            // Try to find an available instance (reuse logic from Instance.findAvailable if needed)
+            playerInstance = await Instance.findAvailable();
+            if (!playerInstance) {
+                // If no available instance, create a new one
+                playerInstance = await Instance.createWithRotation(user);
+            }
+            // Add user to the instance if not already present
+            if (playerInstance && !playerInstance.hasUser(user.id)) {
+                await playerInstance.addUser(user.id);
+            }
+        }
 
         const searchResults = await performSearch(query);
 
         // Ajouter les IDs des cartes trouvées à l'instance si elle existe
         if (playerInstance) {
-            const cardIds = searchResults.items.map(card => card.id).filter(id => id);
+            const cardIds = (searchResults.items as { id: string }[]).map((card: { id: string }) => card.id).filter((id: string) => id);
             for (const cardId of cardIds) {
                 await playerInstance.addCard(cardId);
             }
@@ -40,7 +55,7 @@ async function asHandler(req: Request, res: Response) {
             query: query,
             count: searchResults.count,
             instance_id: playerInstance?.id,
-            results: searchResults.items.map(item => ({
+            results: (searchResults.items as any[]).map((item: any) => ({
                 id: item.id,
                 name: item.name,
                 printed_name: item.printed_name,
@@ -48,7 +63,7 @@ async function asHandler(req: Request, res: Response) {
                 collector_number: item.collector_number,
                 lang: item.lang,
                 rarity: item.rarity,
-                faces: item.faces.map(face => ({
+                faces: (item.faces as any[]).map((face: any) => ({
                     name: face.name,
                     type_line: face.type_line,
                     printed_type_line: face.printed_type_line,

@@ -12,8 +12,11 @@ async function acHandler(req: Request, res: Response) {
         const user = await User.findOrCreate(userId);
         await user.updateLastSeen();
 
-        // Create new instance with rotation (need to implement this method)
+        // Create new instance with rotation
         const instance = await Instance.createWithRotation(user);
+
+        // Add the user to the instance immediately after creation
+        await instance.addUser(user.id);
 
         return res.json({
             time: Date.now(),
