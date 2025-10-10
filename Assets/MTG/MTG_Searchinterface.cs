@@ -15,12 +15,20 @@ namespace MTG
 {
     public class MTG_Searchinterface : UdonSharpBehaviour
     {
+        // Préfixe coloré pour les logs
+        private const string LOG_PREFIX = "<color=#FF1493>[MTG_Searchinterface]</color> ";
+        
         public MTG_Manager manager;
         public VRCUrlInputField input;
         public GameObject CardPrefab;
         public Transform CardParent;
+        public GameObject CardPreview;
         public int previousSearch;
         public int nextSearch;
+        
+        [UdonSynced]
+        private int syncedSearchTrigger = 0;
+        private int lastSearchTrigger = 0;
         
         private int currentLoadIndex = 0;
         private DataList cardsToLoad;
@@ -29,6 +37,17 @@ namespace MTG
         private int instantiatedCardsCount = 0;
         private string[] cardKeys = new string[128];
         private int cardKeysCount = 0;
+        
+        // Variables pour la suppression progressive des anciennes cartes
+        private bool isDeletingOldCards = false;
+        private int deleteIndex = 0;
+        private float nextDeleteTime = 0f;
+        private const float DELETE_INTERVAL = 0.1f; // Intervalle entre chaque suppression
+        private const int CARDS_PER_DELETE_BATCH = 3; // Réduire à 3 cartes par lot pour éviter les surcharges
+        
+        private const float LOAD_INTERVAL = 0.15f; // Intervalle entre chaque chargement
+        private const int CARDS_PER_LOAD_BATCH = 3; // Réduire à 3 cartes par lot
+        private bool clearAllRequested = false;
 
         private void Start()
         {
@@ -38,7 +57,11 @@ namespace MTG
 
         private void Update()
         {
-            if (cardsToLoad != null && currentLoadIndex < cardsToLoad.Count && Time.time >= nextLoadTime)
+            if ((isDeletingOldCards || clearAllRequested) && Time.time >= nextDeleteTime)
+            {
+                DeleteNextBatchOfCards();
+            }
+            else if (cardsToLoad != null && currentLoadIndex < cardsToLoad.Count && Time.time >= nextLoadTime)
             {
                 LoadNextBatchOfCards();
             }
@@ -48,13 +71,13 @@ namespace MTG
         {
             if (json == null)
             {
-                Debug.LogError("Null JSON in response");
+                Debug.LogError(LOG_PREFIX + "Null JSON in response");
                 return false;
             }
 
             if (json.Url == null)
             {
-                Debug.LogError("Null URL in response");
+                Debug.LogError(LOG_PREFIX + "Null URL in response");
                 return false;
             }
 
@@ -98,7 +121,7 @@ namespace MTG
             // On extrait la partie après "/at" et on convertit de base36 vers int
             if (string.IsNullOrEmpty(atlasLink) || !atlasLink.StartsWith("/at"))
             {
-                Debug.LogError($"Invalid atlas link format: {atlasLink}");
+                Debug.LogError(LOG_PREFIX + $"Invalid atlas link format: {atlasLink}");
                 return 0;
             }
             
@@ -123,7 +146,7 @@ namespace MTG
                 int digit = chars.IndexOf(c);
                 if (digit == -1)
                 {
-                    Debug.LogError($"Invalid base36 character: {c}");
+                    Debug.LogError(LOG_PREFIX + $"Invalid base36 character: {c}");
                     return 0;
                 }
                 result += digit * multiplier;
@@ -142,28 +165,59 @@ namespace MTG
             string requiredBase = manager.searchURL.ToString();
             if (!urlString.StartsWith(requiredBase))
             {
-                Debug.LogError($"Invalid URL. Must start with: {requiredBase}", this);
-                Debug.Log($"Current URL: {urlString}", this);
+                Debug.LogError(LOG_PREFIX + $"Invalid URL. Must start with: {requiredBase}", this);
+                Debug.Log(LOG_PREFIX + $"Current URL: {urlString}", this);
                 return;
             }
             
             // Vérifier qu'il y a bien un terme de recherche après ?q=
             if (urlString.Length <= requiredBase.Length)
             {
-                Debug.LogWarning("No search term provided after ?q=", this);
+                Debug.LogWarning(LOG_PREFIX + "No search term provided after ?q=", this);
                 return;
             }
             
-            Debug.Log($"[MTG] Sending validated search request to: {urlString}", this);
+            Debug.Log(LOG_PREFIX + $"Sending validated search request to: {urlString}", this);
+            
+            // Synchroniser la recherche pour tous les joueurs
+            if (Networking.IsOwner(gameObject))
+            {
+                syncedSearchTrigger++;
+                RequestSerialization();
+            }
+            else
+            {
+                // Prendre ownership puis synchroniser
+                Networking.SetOwner(Networking.LocalPlayer, gameObject);
+                syncedSearchTrigger++;
+                RequestSerialization();
+            }
+            
+            // Charger localement
             VRCStringDownloader.LoadUrl(userUrl, (IUdonEventReceiver)this);
+        }
+        
+        public override void OnDeserialization()
+        {
+            // Quand une nouvelle recherche est synchronisée, tous les joueurs rechargent
+            if (syncedSearchTrigger != lastSearchTrigger)
+            {
+                lastSearchTrigger = syncedSearchTrigger;
+                // Recharger la recherche avec l'URL actuelle dans l'input field
+                VRCUrl currentUrl = input.GetUrl();
+                if (currentUrl != null)
+                {
+                    VRCStringDownloader.LoadUrl(currentUrl, (IUdonEventReceiver)this);
+                }
+            }
         }
         public override void OnStringLoadSuccess(IVRCStringDownload json)
         {
             // Validate url
             if (!IsValidResponse(json))
             {
-                Debug.LogError("Invalid response URL", this);
-                Debug.LogError($"URL received: {json.Url}", this);
+                Debug.LogError(LOG_PREFIX + "Invalid response URL", this);
+                Debug.LogError(LOG_PREFIX + $"URL received: {json.Url}", this);
                 return;
             }
             
@@ -180,7 +234,7 @@ namespace MTG
                 // Validate JSON structure
                 if (result.TokenType != TokenType.DataDictionary)
                 {
-                    Debug.LogError($"Error parsing response: {json.Result}");
+                    Debug.LogError(LOG_PREFIX + $"Error parsing response: {json.Result}");
                     return;
                 }
 
@@ -198,41 +252,49 @@ namespace MTG
 
                 if (!dict.ContainsKey("results") || dict["results"].TokenType != TokenType.DataList)
                 {
-                    Debug.LogError("Invalid or missing results in response", this);
+                    Debug.LogError(LOG_PREFIX + "Invalid or missing results in response", this);
                     return;
                 }
 
                 // get results list
                 var list = dict["results"].DataList;
 
-                // Clear previous cards
-                foreach (Transform child in CardParent)
-                    Destroy(child.gameObject);
-
-                for (int i = 0; i < instantiatedCardsCount; i++) instantiatedCards[i] = null;
-                instantiatedCardsCount = 0;
-                for (int i = 0; i < cardKeysCount; i++) cardKeys[i] = null;
-                cardKeysCount = 0;
-
-                // Démarrer le chargement progressif des cartes
-                cardsToLoad = list;
+                // Annuler tout processus en cours
+                isDeletingOldCards = false;
+                deleteIndex = 0;
                 currentLoadIndex = 0;
-                nextLoadTime = Time.time;
-                LoadNextBatchOfCards();
+                
+                // Démarrer la suppression progressive des anciennes cartes
+                if (instantiatedCardsCount > 0)
+                {
+                    isDeletingOldCards = true;
+                    deleteIndex = 0;
+                    nextDeleteTime = Time.time;
+                    cardsToLoad = list; // Stocker les nouvelles cartes à charger
+                    currentLoadIndex = 0;
+                }
+                else
+                {
+                    // Pas d'anciennes cartes, charger directement les nouvelles
+                    cardsToLoad = list;
+                    currentLoadIndex = 0;
+                    nextLoadTime = Time.time;
+                    LoadNextBatchOfCards();
+                }
             }
             else
             {
-                Debug.LogError($"Error parsing response: {json.Result}");
+                Debug.LogError(LOG_PREFIX + $"Error parsing response: {json.Result}");
             }
         }
         public override void OnStringLoadError(IVRCStringDownload result)
         {
             if (!IsValidResponse(result))
             {
-                Debug.LogError("Invalid response URL", this);
+                Debug.LogError(LOG_PREFIX + "Invalid response URL", this);
                 return;
             }
-            Debug.LogError($"Error loading string: {result.ErrorCode} - {result.Error}");
+            Debug.LogError(LOG_PREFIX + $"Error loading string: {result.ErrorCode} - {result.Error}");
         }
         private void LoadAtlasInfo()
         {
@@ -243,35 +305,120 @@ namespace MTG
             }
         }
         
+        private void DeleteNextBatchOfCards()
+        {
+            if (!isDeletingOldCards && !clearAllRequested)
+                return;
+
+            if (deleteIndex >= instantiatedCardsCount || instantiatedCardsCount == 0)
+            {
+                if (clearAllRequested)
+                {
+                    for (int i = 0; i < instantiatedCards.Length; i++)
+                        instantiatedCards[i] = null;
+                    instantiatedCardsCount = 0;
+                    for (int i = 0; i < cardKeys.Length; i++)
+                        cardKeys[i] = null;
+                    cardKeysCount = 0;
+                    isDeletingOldCards = false;
+                    clearAllRequested = false;
+                    deleteIndex = 0;
+                    currentLoadIndex = 0;
+                    cardsToLoad = null;
+
+                    // Détruire tous les enfants restants dans CardParent
+                    if (CardParent != null)
+                    {
+                        for (int i = CardParent.childCount - 1; i >= 0; i--)
+                        {
+                            GameObject child = CardParent.GetChild(i).gameObject;
+                            Destroy(child);
+                        }
+                    }
+
+                    Debug.Log(LOG_PREFIX + "All cards cleared (progressive)");
+                    return;
+                }
+                // Suppression progressive normale (recherche)
+                isDeletingOldCards = false;
+                ClearArraysProgressively();
+                deleteIndex = 0;
+                currentLoadIndex = 0;
+                nextLoadTime = Time.time + LOAD_INTERVAL;
+                if (cardsToLoad != null)
+                {
+                    LoadNextBatchOfCards();
+                }
+                return;
+            }
+
+            int cardsToDelete = Mathf.Min(CARDS_PER_DELETE_BATCH, instantiatedCardsCount - deleteIndex);
+
+            for (int i = 0; i < cardsToDelete; i++)
+            {
+                int cardIndex = deleteIndex + i;
+                if (cardIndex >= 0 && cardIndex < instantiatedCards.Length && instantiatedCards[cardIndex] != null)
+                {
+                    Destroy(instantiatedCards[cardIndex]);
+                    instantiatedCards[cardIndex] = null;
+                }
+            }
+
+            deleteIndex += cardsToDelete;
+            nextDeleteTime = Time.time + DELETE_INTERVAL;
+        }
+        
+        private void ClearArraysProgressively()
+        {
+            // Réinitialiser en plusieurs étapes pour éviter les boucles trop longues
+            int clearBatchSize = 10;
+            
+            for (int i = 0; i < Mathf.Min(clearBatchSize, instantiatedCards.Length); i++)
+            {
+                instantiatedCards[i] = null;
+            }
+            instantiatedCardsCount = 0;
+            
+            for (int i = 0; i < Mathf.Min(clearBatchSize, cardKeys.Length); i++)
+            {
+                cardKeys[i] = null;
+            }
+            cardKeysCount = 0;
+        }
+        
         private void ProcessAtlasInfo(string jsonResult)
         {
             if (!VRCJson.TryDeserializeFromJson(jsonResult, out DataToken result) || result.TokenType != TokenType.DataDictionary)
             {
-                Debug.LogError("Error parsing atlas info: " + jsonResult);
+                Debug.LogError(LOG_PREFIX + "Error parsing atlas info: " + jsonResult);
                 return;
             }
             
             var dict = result.DataDictionary;
             if (!dict.ContainsKey("data") || dict["data"].TokenType != TokenType.DataDictionary)
             {
-                Debug.LogError("Invalid atlas info structure");
+                Debug.LogError(LOG_PREFIX + "Invalid atlas info structure");
                 return;
             }
             
             var data = dict["data"].DataDictionary;
             if (!data.ContainsKey("batches"))
             {
-                Debug.LogError("Missing batches in atlas info");
+                Debug.LogError(LOG_PREFIX + "Missing batches in atlas info");
                 return;
             }
             
             var batches = data["batches"].DataList;
+            
+            Debug.Log(LOG_PREFIX + $"Processing atlas info for {instantiatedCardsCount} cards, {batches.Count} batches");
             
             // Pour chaque carte instanciée, trouver sa correspondance dans les batches
             for (int i = 0; i < instantiatedCardsCount; i++) 
             {
                 string cardKey = cardKeys[i];
                 if (string.IsNullOrEmpty(cardKey)) continue;
+                
+                Debug.Log(LOG_PREFIX + $"Looking for card {i}: {cardKey}");
                 
                 // Chercher la carte dans tous les batches
                 bool found = false;
@@ -291,20 +438,37 @@ namespace MTG
                         {
                             // Trouvé !
                             string atlasLink = batch["atlas_link"].String;
-                            float x = (float)cardInfo["x"].Double;
-                            float y = (float)cardInfo["y"].Double;
-                            float width = (float)cardInfo["width"].Double;
-                            float height = (float)cardInfo["height"].Double;
+                            float x = (float)cardInfo["rect_x"].Double;
+                            float y = (float)cardInfo["rect_y"].Double;
+                            float width = (float)cardInfo["rect_width"].Double;
+                            float height = (float)cardInfo["rect_height"].Double;
                             
                             Rect uvRect = new Rect(x, y, width, height);
                             
                             // Convertir l'atlas link en index pour tempURLs
                             int atlasIndex = ConvertAtlasLinkToIndex(atlasLink);
                             
+                            Debug.Log(LOG_PREFIX + $"Found card {cardKey} in atlas {atlasLink} (index {atlasIndex})");
+                            
                             // Assigner le manager puis demander à la carte de récupérer son image via son id
-                            var searchCard = instantiatedCards[i].GetComponent<MTG_SearchCard>();
-                            searchCard.manager = manager;
-                            searchCard.SetImageFromId();
+                            if (instantiatedCards[i] != null)
+                            {
+                                var searchCard = instantiatedCards[i].GetComponent<MTG_SearchCard>();
+                                if (searchCard != null)
+                                {
+                                    searchCard.manager = manager;
+                                    searchCard.SetImageFromId();
+                                    Debug.Log(LOG_PREFIX + $"Called SetImageFromId on card {cardKey}");
+                                }
+                                else
+                                {
+                                    Debug.LogWarning(LOG_PREFIX + $"Card {i} has no MTG_SearchCard component!");
+                                }
+                            }
+                            else
+                            {
+                                Debug.LogWarning(LOG_PREFIX + $"Card {i} is null!");
+                            }
                             
                             found = true;
                             break;
@@ -315,23 +479,27 @@ namespace MTG
                 
                 if (!found)
                 {
-                    Debug.LogWarning($"Card with key {cardKey} not found in atlas info");
+                    Debug.LogWarning(LOG_PREFIX + $"Card with key {cardKey} not found in atlas info");
                 }
             }
         }
-        
+
         private void LoadNextBatchOfCards()
         {
             if (cardsToLoad == null || currentLoadIndex >= cardsToLoad.Count)
                 return;
-            
-            // Charger 6 cartes maximum par lot
-            int cardsInThisBatch = Mathf.Min(6, cardsToLoad.Count - currentLoadIndex);
-            
+
+            // Ne pas charger si on est en train de supprimer
+            if (isDeletingOldCards)
+                return;
+
+            // Charger moins de cartes par lot pour éviter les surcharges VM
+            int cardsInThisBatch = Mathf.Min(CARDS_PER_LOAD_BATCH, cardsToLoad.Count - currentLoadIndex);
+
             for (int i = 0; i < cardsInThisBatch; i++)
             {
                 int cardIndex = currentLoadIndex + i;
-                
+
                 // verify card is dictionary and has required fields
                 if (cardsToLoad[cardIndex].TokenType != TokenType.DataDictionary) continue;
                 var cardDict = cardsToLoad[cardIndex].DataDictionary;
@@ -340,34 +508,73 @@ namespace MTG
                 var card = Instantiate(CardPrefab);
                 card.transform.SetParent(CardParent, false);
                 var cardComp = card.GetComponent<MTG_SearchCard>();
-                
+
                 // Assigner le manager à la carte
                 cardComp.manager = manager;
                 cardComp.SetData(cardDict);
-                
+
+                // Assigner la référence à l'interface pour le callback bouton
+                cardComp.searchInterface = this;
+
                 // Ajouter à la liste des cartes instanciées et clés
-                if (instantiatedCardsCount < instantiatedCards.Length) {
+                if (instantiatedCardsCount < instantiatedCards.Length)
+                {
                     instantiatedCards[instantiatedCardsCount] = card;
                     instantiatedCardsCount++;
                 }
-                if (cardKeysCount < cardKeys.Length) {
+                if (cardKeysCount < cardKeys.Length)
+                {
                     cardKeys[cardKeysCount] = cardComp.cardKey;
                     cardKeysCount++;
                 }
             }
-            
+
             currentLoadIndex += cardsInThisBatch;
-            
-            // Si il reste des cartes à charger, programmer le prochain lot dans 0.1 seconde
+
+            // Intervalle plus long pour éviter les surcharges
             if (currentLoadIndex < cardsToLoad.Count)
             {
-                nextLoadTime = Time.time + 0.1f;
+                nextLoadTime = Time.time + LOAD_INTERVAL;
             }
             else
             {
                 // Toutes les cartes chargées, récupérer les infos d'atlas
                 LoadAtlasInfo();
             }
+        }
+
+        // Supprime immédiatement toutes les cartes instanciées et réinitialise les tableaux
+        public void ClearAllCards()
+        {
+            if (instantiatedCardsCount == 0)
+            {
+                Debug.Log(LOG_PREFIX + "No cards to clear");
+                return;
+            }
+            clearAllRequested = true;
+            isDeletingOldCards = true;
+            deleteIndex = 0;
+            nextDeleteTime = Time.time;
+            Debug.Log(LOG_PREFIX + "Progressive clearAllCards started");
+        }
+
+        // Méthode appelée par une carte lorsqu'on appuie sur son bouton
+        public void OnCardPreviewRequest(string cardId)
+        {
+            if (CardPreview == null)
+            {
+                Debug.LogWarning(LOG_PREFIX + "CardPreview n'est pas assigné !");
+                return;
+            }
+            var previewCard = CardPreview.GetComponent<MTG_SearchCard>();
+            if (previewCard == null)
+            {
+                Debug.LogWarning(LOG_PREFIX + "CardPreview n'a pas de composant MTG_SearchCard !");
+                return;
+            }
+            previewCard.cardKey = cardId;
+            previewCard.SetImageFromId();
+            Debug.Log(LOG_PREFIX + $"CardPreview mis à jour avec l'id {cardId}");
         }
     }
 }

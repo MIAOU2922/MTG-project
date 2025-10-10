@@ -12,6 +12,8 @@ namespace MTG
 {
     public class MTG_Manager : UdonSharpBehaviour
     {
+        // Préfixe coloré pour les logs
+        private const string LOG_PREFIX = "<color=#FF1493>[MTG_manager]</color> ";
 
         [UdonSynced, SerializeField]
         public int instanceID = -1;
@@ -29,14 +31,21 @@ namespace MTG
         public VRCUrl[] joinURLs;
         [SerializeField]
         public VRCUrl[] tempURLs;
-        
+
         // Nouveau système de cache d'atlas compatible UdonSharp
+        [SerializeField]
         public Texture2D[] atlasImages;
+        [SerializeField]
         public string[][] atlasCardIds; // [atlas][slot]
+        [SerializeField]
         public Rect[][] atlasCardRects; // [atlas][slot]
+        [SerializeField]
         public bool[] atlasLoaded;
+        [SerializeField]
         public bool[] atlasLoading;
+        [SerializeField]
         public float lastAtlasInfoUpdate = 0f;
+        [SerializeField]
         public const float ATLAS_INFO_UPDATE_INTERVAL = 10f; // 10 secondes
         
         // VRCImageDownloader pour les atlas
@@ -141,13 +150,13 @@ namespace MTG
         {
             if (json == null)
             {
-                Debug.LogError("Null JSON in response");
+                Debug.LogError(LOG_PREFIX + "Null JSON in response");
                 return false;
             }
 
             if (json.Url == null)
             {
-                Debug.LogError("Null URL in response");
+                Debug.LogError(LOG_PREFIX + "Null URL in response");
                 return false;
             }
 
@@ -183,7 +192,7 @@ namespace MTG
             {
                 if (result.TokenType != TokenType.DataDictionary)
                 {
-                    Debug.LogError($"Error parsing response: {json.Result}");
+                    Debug.LogError(LOG_PREFIX + $"Error parsing response: {json.Result}");
                     _isSyncing = false;
                     if (!agree)
                         syncInterface.Show();
@@ -200,7 +209,7 @@ namespace MTG
                     // Vérifier si l'ID existe dans l'instance
                     if (!instanceDict.ContainsKey("id") || instanceDict["id"].TokenType != TokenType.Double)
                     {
-                        Debug.LogError($"Error parsing response: missing 'id' in instance object: {json.Result}");
+                        Debug.LogError(LOG_PREFIX + $"Error parsing response: missing 'id' in instance object: {json.Result}");
                         _isSyncing = false;
                         if (!agree)
                             syncInterface.Show();
@@ -213,7 +222,7 @@ namespace MTG
                     // OU alternative plus sûre :
                     // instanceID = Mathf.RoundToInt((float)instanceDict["id"].Double);
 
-                    Debug.Log($"Joined game {instanceID}");
+                    Debug.Log(LOG_PREFIX + $"Joined game {instanceID}");
                     agree = true;
                     _isSyncing = false;
                     syncInterface.Hide();
@@ -224,7 +233,7 @@ namespace MTG
                 {
                     instanceID = (int)dict["iid"].Double;
                     
-                    Debug.Log($"Joined game {instanceID} (new format)");
+                    Debug.Log(LOG_PREFIX + $"Joined game {instanceID}");
                     agree = true;
                     _isSyncing = false;
                     syncInterface.Hide();
@@ -232,7 +241,7 @@ namespace MTG
                 }
                 else
                 {
-                    Debug.LogError($"Error parsing response: neither 'instance.id' nor 'iid' found: {json.Result}");
+                    Debug.LogError(LOG_PREFIX + $"Error parsing response: neither 'instance.id' nor 'iid' found: {json.Result}");
                     _isSyncing = false;
                     if (!agree)
                         syncInterface.Show();
@@ -240,7 +249,7 @@ namespace MTG
                 }
             }
 
-            Debug.LogError($"Error parsing response: {json.Result}");
+            Debug.LogError(LOG_PREFIX + $"Error parsing response: {json.Result}");
             _isSyncing = false;
             if (!agree)
                 syncInterface.Show();
@@ -251,7 +260,7 @@ namespace MTG
         {
             if (!IsJoinOrCreateResponse(result)) return;
 
-            Debug.LogError($"Error loading URL: {result.Error}");
+            Debug.LogError(LOG_PREFIX + $"Error loading URL: {result.Error}");
             _isSyncing = false;
             if (!agree)
                 syncInterface.Show();
@@ -277,12 +286,26 @@ namespace MTG
         public Texture2D GetAtlasTexture(int atlasIndex)
         {
             if (atlasIndex < 0 || atlasIndex >= atlasImages.Length)
+            {
+                Debug.LogWarning(LOG_PREFIX + $"GetAtlasTexture: Invalid atlas index {atlasIndex}");
                 return null;
+            }
+                
             if (!atlasLoaded[atlasIndex] && !atlasLoading[atlasIndex])
             {
+                Debug.Log(LOG_PREFIX + $"GetAtlasTexture: Atlas {atlasIndex} not loaded yet, triggering download");
                 // Déclencher le téléchargement de l'atlas
                 LoadAtlas(atlasIndex);
             }
+            else if (atlasLoading[atlasIndex])
+            {
+                Debug.Log(LOG_PREFIX + $"GetAtlasTexture: Atlas {atlasIndex} currently loading...");
+            }
+            else if (atlasLoaded[atlasIndex])
+            {
+                Debug.Log(LOG_PREFIX + $"GetAtlasTexture: Atlas {atlasIndex} already loaded, returning texture");
+            }
+            
             return atlasImages[atlasIndex];
         }
         
@@ -291,9 +314,14 @@ namespace MTG
         private void LoadAtlas(int atlasIndex)
         {
             if (atlasIndex < 0 || atlasIndex >= tempURLs.Length || atlasLoading[atlasIndex])
+            {
+                Debug.LogWarning(LOG_PREFIX + $"LoadAtlas: Cannot load atlas {atlasIndex} (index valid: {atlasIndex >= 0 && atlasIndex < tempURLs.Length}, already loading: {atlasIndex >= 0 && atlasIndex < atlasLoading.Length && atlasLoading[atlasIndex]})");
                 return;
+            }
 
             atlasLoading[atlasIndex] = true;
+            
+            Debug.Log(LOG_PREFIX + $"LoadAtlas: Starting download for atlas {atlasIndex} from URL: {tempURLs[atlasIndex]}");
             
             // Utiliser VRCImageDownloader pour télécharger l'image
             imageDownloader.DownloadImage(tempURLs[atlasIndex], null, (IUdonEventReceiver)this);
@@ -326,7 +354,7 @@ namespace MTG
         {
             if (!VRCJson.TryDeserializeFromJson(jsonResult, out DataToken result) || result.TokenType != TokenType.DataDictionary)
             {
-                Debug.LogError("Error parsing atlas info: " + jsonResult);
+                Debug.LogError(LOG_PREFIX + "Error parsing atlas info: " + jsonResult);
                 return;
             }
             
@@ -344,6 +372,8 @@ namespace MTG
             
             var batches = data["batches"].DataList;
             
+            Debug.Log(LOG_PREFIX + $"Processing {batches.Count} atlas batches in manager");
+            
             // Remplir le cache d'atlas (ids et rects) et marquer les atlas nécessaires pour téléchargement
             for (int i = 0; i < batches.Count; i++)
             {
@@ -358,25 +388,85 @@ namespace MTG
                 int count = cardsInBatch.Count;
                 // Clamp à 24 pour éviter overflow
                 if (count > 24) count = 24;
+                
+                // Vérifier si les données de l'atlas ont changé
+                bool atlasDataChanged = HasAtlasDataChanged(atlasIndex, cardsInBatch, count);
+                
+                // Remplir les nouvelles données
                 for (int j = 0; j < count; j++)
                 {
                     var cardInfo = cardsInBatch[j].DataDictionary;
                     if (!cardInfo.ContainsKey("id")) continue;
                     string id = cardInfo["id"].String;
-                    float x = (float)cardInfo["x"].Double;
-                    float y = (float)cardInfo["y"].Double;
-                    float width = (float)cardInfo["width"].Double;
-                    float height = (float)cardInfo["height"].Double;
+                    float x = (float)cardInfo["rect_x"].Double;
+                    float y = (float)cardInfo["rect_y"].Double;
+                    float width = (float)cardInfo["rect_width"].Double;
+                    float height = (float)cardInfo["rect_height"].Double;
                     atlasCardIds[atlasIndex][j] = id;
                     atlasCardRects[atlasIndex][j] = new Rect(x, y, width, height);
                 }
+                
+                // Effacer les slots restants si moins de 24 cartes
+                for (int j = count; j < 24; j++)
+                {
+                    atlasCardIds[atlasIndex][j] = null;
+                    atlasCardRects[atlasIndex][j] = new Rect(0, 0, 1, 1);
+                }
 
-                // Marquer l'atlas pour téléchargement si besoin
-                if (!atlasLoaded[atlasIndex] && !atlasLoading[atlasIndex])
+                // Re-télécharger l'atlas si les données ont changé
+                if (atlasDataChanged)
+                {
+                    Debug.Log(LOG_PREFIX + $"Atlas {atlasIndex} data changed, reloading...");
+                    atlasLoaded[atlasIndex] = false;
+                    atlasLoading[atlasIndex] = false;
+                    atlasImages[atlasIndex] = null;
+                    LoadAtlas(atlasIndex);
+                }
+                // Sinon, marquer l'atlas pour téléchargement si pas encore chargé
+                else if (!atlasLoaded[atlasIndex] && !atlasLoading[atlasIndex])
                 {
                     LoadAtlas(atlasIndex);
                 }
             }
+        }
+        
+        // Vérifie si les données d'un atlas ont changé (nombre de cartes ou IDs différents)
+        private bool HasAtlasDataChanged(int atlasIndex, DataList newCards, int newCount)
+        {
+            // Si l'atlas n'a jamais été chargé, pas de changement à détecter
+            if (!atlasLoaded[atlasIndex])
+                return false;
+            
+            // Compter le nombre de cartes actuellement dans l'atlas
+            int oldCount = 0;
+            for (int i = 0; i < 24; i++)
+            {
+                if (atlasCardIds[atlasIndex][i] != null)
+                    oldCount++;
+                else
+                    break; // Les cartes sont stockées de manière contiguë
+            }
+            
+            // Si le nombre de cartes a changé, c'est un changement
+            if (oldCount != newCount)
+                return true;
+            
+            // Vérifier si les IDs ont changé
+            for (int i = 0; i < newCount; i++)
+            {
+                if (newCards[i].TokenType != TokenType.DataDictionary)
+                    continue;
+                var cardInfo = newCards[i].DataDictionary;
+                if (!cardInfo.ContainsKey("id"))
+                    continue;
+                string newId = cardInfo["id"].String;
+                string oldId = atlasCardIds[atlasIndex][i];
+                
+                if (oldId != newId)
+                    return true;
+            }
+            
+            return false;
         }
         
         private void ProcessAtlasImage(IVRCStringDownload result, int atlasIndex)
@@ -394,7 +484,7 @@ namespace MTG
                 atlasImages[atlasIndex] = result.Result;
                 atlasLoaded[atlasIndex] = true;
                 atlasLoading[atlasIndex] = false;
-                Debug.Log($"Atlas {atlasIndex} loaded successfully via VRCImageDownloader");
+                Debug.Log(LOG_PREFIX + $"Atlas {atlasIndex} loaded successfully via VRCImageDownloader");
                 // Notifier les cartes que l'atlas est disponible
                 NotifyAtlasLoaded(atlasIndex);
             }
@@ -406,7 +496,7 @@ namespace MTG
             if (IsAtlasImageResponse(result, out int atlasIndex))
             {
                 atlasLoading[atlasIndex] = false;
-                Debug.LogError($"Failed to load atlas {atlasIndex}: {result.Error}");
+                Debug.LogError(LOG_PREFIX + $"Failed to load atlas {atlasIndex}: {result.Error}");
             }
         }
         
@@ -473,6 +563,9 @@ namespace MTG
         {
             atlasIndex = -1;
             uvRect = new Rect(0, 0, 1, 1);
+            
+            //Debug.Log(LOG_PREFIX + $"GetAtlasInfoForCard called for: {cardId}");
+            
             for (int i = 0; i < atlasCardIds.Length; i++)
             {
                 for (int j = 0; j < 24; j++)
@@ -482,10 +575,12 @@ namespace MTG
                     {
                         atlasIndex = i;
                         uvRect = atlasCardRects[i][j];
+                        //Debug.Log(LOG_PREFIX + $"Found card {cardId} in atlas {i}, rect: {uvRect}");
                         return true;
                     }
                 }
             }
+            Debug.LogWarning(LOG_PREFIX + $"Card {cardId} NOT FOUND in any atlas!");
             return false;
         }
     }
