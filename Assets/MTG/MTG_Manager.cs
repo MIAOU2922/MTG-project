@@ -12,6 +12,7 @@ namespace MTG
 {
     public class MTG_Manager : UdonSharpBehaviour
     {
+
         [UdonSynced, SerializeField]
         public int instanceID = -1;
         [SerializeField]
@@ -29,8 +30,10 @@ namespace MTG
         [SerializeField]
         public VRCUrl[] tempURLs;
         
-        // Système de cache d'atlas
-        public Texture2D[] atlasCache;
+        // Nouveau système de cache d'atlas compatible UdonSharp
+        public Texture2D[] atlasImages;
+        public string[][] atlasCardIds; // [atlas][slot]
+        public Rect[][] atlasCardRects; // [atlas][slot]
         public bool[] atlasLoaded;
         public bool[] atlasLoading;
         public float lastAtlasInfoUpdate = 0f;
@@ -73,9 +76,20 @@ namespace MTG
         {
             // Initialiser le cache d'atlas
             int maxAtlas = tempURLs.Length;
-            atlasCache = new Texture2D[maxAtlas];
+            atlasImages = new Texture2D[maxAtlas];
+            atlasCardIds = new string[maxAtlas][];
+            atlasCardRects = new Rect[maxAtlas][];
             atlasLoaded = new bool[maxAtlas];
             atlasLoading = new bool[maxAtlas];
+            for (int i = 0; i < maxAtlas; i++) {
+                atlasCardIds[i] = new string[24];
+                atlasCardRects[i] = new Rect[24];
+                for (int j = 0; j < 24; j++) {
+                    atlasCardIds[i][j] = null;
+                    atlasCardRects[i][j] = new Rect(0, 0, 1, 1);
+                }
+                atlasImages[i] = null;
+            }
             
             // Créer VRCImageDownloader
             imageDownloader = new VRCImageDownloader();
@@ -262,16 +276,14 @@ namespace MTG
         
         public Texture2D GetAtlasTexture(int atlasIndex)
         {
-            if (atlasIndex < 0 || atlasIndex >= atlasCache.Length)
+            if (atlasIndex < 0 || atlasIndex >= atlasImages.Length)
                 return null;
-                
             if (!atlasLoaded[atlasIndex] && !atlasLoading[atlasIndex])
             {
                 // Déclencher le téléchargement de l'atlas
                 LoadAtlas(atlasIndex);
             }
-            
-            return atlasCache[atlasIndex];
+            return atlasImages[atlasIndex];
         }
         
 
@@ -332,17 +344,35 @@ namespace MTG
             
             var batches = data["batches"].DataList;
             
-            // Marquer les atlas nécessaires pour téléchargement
+            // Remplir le cache d'atlas (ids et rects) et marquer les atlas nécessaires pour téléchargement
             for (int i = 0; i < batches.Count; i++)
             {
                 if (batches[i].TokenType != TokenType.DataDictionary) continue;
                 var batch = batches[i].DataDictionary;
-                
-                if (!batch.ContainsKey("atlas_link")) continue;
+                if (!batch.ContainsKey("atlas_link") || !batch.ContainsKey("cards")) continue;
                 string atlasLink = batch["atlas_link"].String;
                 int atlasIndex = ConvertAtlasLinkToIndex(atlasLink);
-                
-                if (atlasIndex >= 0 && atlasIndex < atlasCache.Length && !atlasLoaded[atlasIndex] && !atlasLoading[atlasIndex])
+                if (atlasIndex < 0 || atlasIndex >= atlasImages.Length) continue;
+
+                var cardsInBatch = batch["cards"].DataList;
+                int count = cardsInBatch.Count;
+                // Clamp à 24 pour éviter overflow
+                if (count > 24) count = 24;
+                for (int j = 0; j < count; j++)
+                {
+                    var cardInfo = cardsInBatch[j].DataDictionary;
+                    if (!cardInfo.ContainsKey("id")) continue;
+                    string id = cardInfo["id"].String;
+                    float x = (float)cardInfo["x"].Double;
+                    float y = (float)cardInfo["y"].Double;
+                    float width = (float)cardInfo["width"].Double;
+                    float height = (float)cardInfo["height"].Double;
+                    atlasCardIds[atlasIndex][j] = id;
+                    atlasCardRects[atlasIndex][j] = new Rect(x, y, width, height);
+                }
+
+                // Marquer l'atlas pour téléchargement si besoin
+                if (!atlasLoaded[atlasIndex] && !atlasLoading[atlasIndex])
                 {
                     LoadAtlas(atlasIndex);
                 }
@@ -361,11 +391,10 @@ namespace MTG
             // Trouver l'index de l'atlas depuis l'URL
             if (IsAtlasImageResponse(result, out int atlasIndex))
             {
-                atlasCache[atlasIndex] = result.Result;
+                atlasImages[atlasIndex] = result.Result;
                 atlasLoaded[atlasIndex] = true;
                 atlasLoading[atlasIndex] = false;
                 Debug.Log($"Atlas {atlasIndex} loaded successfully via VRCImageDownloader");
-                
                 // Notifier les cartes que l'atlas est disponible
                 NotifyAtlasLoaded(atlasIndex);
             }
@@ -418,13 +447,13 @@ namespace MTG
             
             return FromBase36(base36Suffix);
         }
-        
+
         private int FromBase36(string value)
         {
             const string chars = "0123456789abcdefghijklmnopqrstuvwxyz";
             int result = 0;
             int multiplier = 1;
-            
+
             for (int i = value.Length - 1; i >= 0; i--)
             {
                 char c = value[i];
@@ -436,8 +465,28 @@ namespace MTG
                 result += digit * multiplier;
                 multiplier *= 36;
             }
-            
+
             return result;
+        }
+        // Permet à une carte de retrouver son atlas et son rect à partir de son id
+        public bool GetAtlasInfoForCard(string cardId, out int atlasIndex, out Rect uvRect)
+        {
+            atlasIndex = -1;
+            uvRect = new Rect(0, 0, 1, 1);
+            for (int i = 0; i < atlasCardIds.Length; i++)
+            {
+                for (int j = 0; j < 24; j++)
+                {
+                    if (atlasCardIds[i][j] == null) continue;
+                    if (atlasCardIds[i][j] == cardId)
+                    {
+                        atlasIndex = i;
+                        uvRect = atlasCardRects[i][j];
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
     }
 }

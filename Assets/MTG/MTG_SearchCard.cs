@@ -60,41 +60,37 @@ namespace MTG
             }
         }
         
-        public void SetImage(int atlasIndex, Rect uvRect)
+        public void SetImageFromId()
         {
-            if (manager == null || atlasIndex < 0)
+            if (manager == null || string.IsNullOrEmpty(cardKey))
             {
-                Debug.LogWarning($"Invalid atlas index {atlasIndex} or missing manager");
+                Debug.LogWarning($"Missing manager or cardKey");
                 return;
             }
-            
-            this.atlasIndex = atlasIndex;
-            this.uvRect = uvRect;
-            
-            // Essayer d'obtenir l'atlas depuis le cache
-            Texture2D atlasTexture = manager.GetAtlasTexture(atlasIndex);
-            if (atlasTexture != null)
+            int foundAtlasIndex;
+            Rect foundRect;
+            if (manager.GetAtlasInfoForCard(cardKey, out foundAtlasIndex, out foundRect))
             {
-                // Atlas déjà disponible
-                ApplyAtlasTexture(atlasTexture);
-            }
-            else
-            {
-                // Atlas pas encore chargé, il sera chargé automatiquement par le manager
-                // On vérifiera périodiquement dans Update()
-            }
-        }
-        
-        private void Update()
-        {
-            // Vérifier si l'atlas est maintenant disponible
-            if (atlasIndex >= 0 && cardImage.texture == null && manager != null)
-            {
+                this.atlasIndex = foundAtlasIndex;
+                this.uvRect = foundRect;
                 Texture2D atlasTexture = manager.GetAtlasTexture(atlasIndex);
                 if (atlasTexture != null)
                 {
                     ApplyAtlasTexture(atlasTexture);
                 }
+            }
+            else
+            {
+                Debug.LogWarning($"Atlas info not found for card {cardKey}");
+            }
+        }
+        
+        private void Update()
+        {
+            // Si on n'a pas encore d'image, essayer de la récupérer via le manager
+            if (cardImage.texture == null && manager != null)
+            {
+                SetImageFromId();
             }
         }
         

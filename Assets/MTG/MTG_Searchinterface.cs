@@ -301,10 +301,10 @@ namespace MTG
                             // Convertir l'atlas link en index pour tempURLs
                             int atlasIndex = ConvertAtlasLinkToIndex(atlasLink);
                             
-                            // Assigner l'image à la carte
+                            // Assigner le manager puis demander à la carte de récupérer son image via son id
                             var searchCard = instantiatedCards[i].GetComponent<MTG_SearchCard>();
                             searchCard.manager = manager;
-                            searchCard.SetImage(atlasIndex, uvRect);
+                            searchCard.SetImageFromId();
                             
                             found = true;
                             break;

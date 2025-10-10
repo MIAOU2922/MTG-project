@@ -452,6 +452,12 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 60240560}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &97057393 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8409356795853239681, guid: c7873cba36debde42897cd1cac4828e0,
+    type: 3}
+  m_PrefabInstance: {fileID: 1976353244920868729}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &121157913
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1223,6 +1229,24 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 1117478005}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1195713642 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6084207383969394292, guid: c7873cba36debde42897cd1cac4828e0,
+    type: 3}
+  m_PrefabInstance: {fileID: 1976353244920868729}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1195713648 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8598486990911440521, guid: c7873cba36debde42897cd1cac4828e0,
+    type: 3}
+  m_PrefabInstance: {fileID: 1976353244920868729}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1195713642}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1344c3c82d62a2a41a3576d8abb8e3ea, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1257201521
 GameObject:
   m_ObjectHideFlags: 0
@@ -1770,7 +1794,13 @@ MonoBehaviour:
     Prefab: {fileID: 0}
     PrefabModificationsReferencedUnityObjects: []
     PrefabModifications: []
-    SerializationNodes: []
+    SerializationNodes:
+    - Name: atlasCardIds
+      Entry: 6
+      Data: 
+    - Name: atlasCardRects
+      Entry: 6
+      Data: 
   _udonSharpBackingUdonBehaviour: {fileID: 1627786176}
   instanceID: -1
   syncInterface: {fileID: 1551303545}
@@ -5942,6 +5972,10 @@ MonoBehaviour:
   - url: https://mtg.hactazia.fr/at35p
   - url: https://mtg.hactazia.fr/at35q
   - url: https://mtg.hactazia.fr/at35r
+  atlasImages: []
+  atlasLoaded: 
+  atlasLoading: 
+  lastAtlasInfoUpdate: 0
   BaseURL:
     url: https://mtg.hactazia.fr/a
 --- !u!1001 &1727166218
@@ -6742,6 +6776,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 546618015200965782, guid: c7873cba36debde42897cd1cac4828e0,
         type: 3}
+      propertyPath: manager
+      value: 
+      objectReference: {fileID: 1627786178}
+    - target: {fileID: 546618015200965782, guid: c7873cba36debde42897cd1cac4828e0,
+        type: 3}
       propertyPath: serializationData.Prefab
       value: 
       objectReference: {fileID: 546618015200965782, guid: c7873cba36debde42897cd1cac4828e0,
@@ -6766,6 +6805,42 @@ PrefabInstance:
       propertyPath: m_SizeDelta.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1373234587098986496, guid: c7873cba36debde42897cd1cac4828e0,
+        type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1373234587098986496, guid: c7873cba36debde42897cd1cac4828e0,
+        type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1373234587098986496, guid: c7873cba36debde42897cd1cac4828e0,
+        type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1373234587098986496, guid: c7873cba36debde42897cd1cac4828e0,
+        type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1373234587098986496, guid: c7873cba36debde42897cd1cac4828e0,
+        type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1373234587098986496, guid: c7873cba36debde42897cd1cac4828e0,
+        type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1471625132134334249, guid: c7873cba36debde42897cd1cac4828e0,
+        type: 3}
+      propertyPath: serializationData.Prefab
+      value: 
+      objectReference: {fileID: 1471625132134334249, guid: c7873cba36debde42897cd1cac4828e0,
+        type: 3}
     - target: {fileID: 1565181443047004291, guid: c7873cba36debde42897cd1cac4828e0,
         type: 3}
       propertyPath: m_Name
@@ -6922,6 +6997,32 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3735118544757859317, guid: c7873cba36debde42897cd1cac4828e0,
+        type: 3}
+      propertyPath: m_AnchorMax.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3735118544757859317, guid: c7873cba36debde42897cd1cac4828e0,
+        type: 3}
+      propertyPath: m_AnchorMin.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3735118544757859317, guid: c7873cba36debde42897cd1cac4828e0,
+        type: 3}
+      propertyPath: m_SizeDelta.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3735118544757859317, guid: c7873cba36debde42897cd1cac4828e0,
+        type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -164.61578
+      objectReference: {fileID: 0}
+    - target: {fileID: 3798566729382356188, guid: c7873cba36debde42897cd1cac4828e0,
+        type: 3}
+      propertyPath: serializationData.Prefab
+      value: 
+      objectReference: {fileID: 3798566729382356188, guid: c7873cba36debde42897cd1cac4828e0,
+        type: 3}
     - target: {fileID: 3969335340701243413, guid: c7873cba36debde42897cd1cac4828e0,
         type: 3}
       propertyPath: m_AnchorMax.y
@@ -7046,7 +7147,7 @@ PrefabInstance:
         type: 3}
       propertyPath: m_TargetGraphic
       value: 
-      objectReference: {fileID: 1976353244920868730}
+      objectReference: {fileID: 1195713648}
     - target: {fileID: 4951926911747515011, guid: c7873cba36debde42897cd1cac4828e0,
         type: 3}
       propertyPath: m_AnchorMax.y
@@ -7198,30 +7299,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: c7873cba36debde42897cd1cac4828e0, type: 3}
---- !u!114 &1976353244920868730 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 8598486990911440521, guid: c7873cba36debde42897cd1cac4828e0,
-    type: 3}
-  m_PrefabInstance: {fileID: 1976353244920868729}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1976353244920868732}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1344c3c82d62a2a41a3576d8abb8e3ea, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!1 &1976353244920868731 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 8409356795853239681, guid: c7873cba36debde42897cd1cac4828e0,
-    type: 3}
-  m_PrefabInstance: {fileID: 1976353244920868729}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &1976353244920868732 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 6084207383969394292, guid: c7873cba36debde42897cd1cac4828e0,
-    type: 3}
-  m_PrefabInstance: {fileID: 1976353244920868729}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &2520033173748138747
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -9892,7 +9969,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   launchedFromSDKPipeline: 0
   completedSDKPipeline: 0
-  blueprintId: 
+  blueprintId: wrld_9c9beff2-815b-41af-874e-5d2db695880c
   contentType: 1
   assetBundleUnityVersion: 
   fallbackStatus: 0
@@ -10381,14 +10458,6 @@ MonoBehaviour:
     ID: 31
     SerializedTypeNames:
     - VRC.Udon.UdonBehaviour
-  - gameObject: {fileID: 1976353244920868731}
-    ID: 32
-    SerializedTypeNames:
-    - VRC.Udon.UdonBehaviour
-  - gameObject: {fileID: 1976353244920868732}
-    ID: 33
-    SerializedTypeNames:
-    - VRC.Udon.UdonBehaviour
   - gameObject: {fileID: 2520033173748138769}
     ID: 34
     SerializedTypeNames:
@@ -10611,6 +10680,14 @@ MonoBehaviour:
     - VRC.Udon.UdonBehaviour
   - gameObject: {fileID: 3076418504792912093}
     ID: 77
+    SerializedTypeNames:
+    - VRC.Udon.UdonBehaviour
+  - gameObject: {fileID: 97057393}
+    ID: 78
+    SerializedTypeNames:
+    - VRC.Udon.UdonBehaviour
+  - gameObject: {fileID: 1195713642}
+    ID: 79
     SerializedTypeNames:
     - VRC.Udon.UdonBehaviour
   portraitCameraPositionOffset: {x: 0, y: 0, z: 0}
