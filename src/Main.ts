@@ -4,11 +4,13 @@ import { router } from "@routes/route";
 import cors from 'cors';
 import * as cron from 'cron';
 import Instance from '@/database/Instance';
+import ScryFallSync from '@/sync/index';
 
 export default class Main extends EventEmitter {
     private static _instance: Main;
     private app: Application;
     private port: number;
+    private syncInProgress: boolean = false;
 
     private constructor() {
         super();
@@ -17,6 +19,7 @@ export default class Main extends EventEmitter {
         this.setupMiddleware();
         this.setupRoutes();
         this.setupImageDownloadScheduler();
+        this.setupSyncScheduler();
     }
 
     public static getInstance(): Main {
@@ -78,5 +81,33 @@ export default class Main extends EventEmitter {
 
         cleanupJob.start();
         console.log('📅 Image cleanup scheduler started (runs every hour)');
+    }
+
+    private setupSyncScheduler(): void {
+        // Planifier la sync des cartes tous les jours à 1h du matin
+        // Cron format: minute hour day-of-month month day-of-week
+        // "0 1 * * *" = 01:00 AM tous les jours
+        const syncJob = new cron.CronJob('0 1 * * *', async () => {
+            if (this.syncInProgress) {
+                console.log('⏭️  Sync already in progress, skipping scheduled sync');
+                return;
+            }
+
+            console.log('🔄 Starting scheduled daily sync at 1:00 AM...');
+            this.syncInProgress = true;
+
+            try {
+                const sync = new ScryFallSync();
+                await sync.start({ syncCards: true, syncRulings: true });
+                console.log('✅ Scheduled daily sync completed successfully');
+            } catch (error) {
+                console.error('❌ Error during scheduled daily sync:', error);
+            } finally {
+                this.syncInProgress = false;
+            }
+        });
+
+        syncJob.start();
+        console.log('📅 Daily sync scheduler started (runs at 1:00 AM every day)');
     }
 }

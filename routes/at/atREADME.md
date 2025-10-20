@@ -33,6 +33,7 @@ Retourne toujours des données JSON avec les informations de l'instance.
 
 **Exemple :** `/at/0`, `/at/9`
 
+#### **at0 : Cartes de l'instance (par défaut)**
 ```json
 {
   "time": 1728499200000,
@@ -51,6 +52,47 @@ Retourne toujours des données JSON avec les informations de l'instance.
   }
 }
 ```
+
+#### **at1 : Liste des decks de l'utilisateur** ✨ NEW
+Retourne uniquement l'ID et le nom des decks créés par l'utilisateur.
+
+**Endpoint:** `GET /at/1`
+
+```json
+{
+  "time": 1728499200000,
+  "uid": 12345,
+  "link_id": "1",
+  "link_index": 1,
+  "instance_id": 42,
+  "player_id": "42-12345",
+  "type": "json",
+  "data": {
+    "type": "deck_list",
+    "user_id": 12345,
+    "total_decks": 3,
+    "decks": [
+      {
+        "id": "deck-uuid-1",
+        "name": "Red Aggro"
+      },
+      {
+        "id": "deck-uuid-2",
+        "name": "Control Blue"
+      },
+      {
+        "id": "deck-uuid-3",
+        "name": "Beatdown"
+      }
+    ]
+  }
+}
+```
+
+**Utilisation:**
+- Afficher la liste des decks de l'utilisateur
+- Chaque deck contient un `id` et un `name`
+- Pas besoin d'instance active (ne requiert pas `/ac` ou `/aj` au préalable)
 
 ### **Liens 10+ (base36) : Atlas d'images**
 Génère et retourne un atlas PNG contenant 24 cartes maximum.

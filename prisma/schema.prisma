@@ -143,3 +143,34 @@ model Ruling {
 
   @@map("rulings")
 }
+
+
+model Deck {
+  id           String   @id @default(uuid())
+  user_id      Int
+  name         String
+  description  String?
+  commander    String?
+  created_at   DateTime @default(now())
+  updated_at   DateTime @default(now()) @updatedAt
+  
+  cards DeckCard[]
+
+  @@map("decks")
+}
+
+model DeckCard {
+  id           String   @id @default(uuid())
+  deck_id      String
+  card_id      String
+  count        Int      @default(1)
+  zone         String   @default("main") // main, sideboard, commander, companion, oathbreaker, wishboard
+  is_commander Boolean  @default(false)
+  created_at   DateTime @default(now())
+  updated_at   DateTime @default(now()) @updatedAt
+  
+  deck Deck @relation(fields: [deck_id], references: [id], onDelete: Cascade)
+
+  @@unique([deck_id, card_id, zone])
+  @@map("deck_cards")
+}

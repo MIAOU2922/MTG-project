@@ -241,7 +241,18 @@ export class ScryfallBulkDataClient implements BulkDataClient {
     let batchIndex = 0;
 
     try {
-      const response = await fetch(downloadUrl);
+      // Créer un AbortController avec timeout de 10 minutes
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10 * 60 * 1000); // 10 minutes
+      
+      const response = await fetch(downloadUrl, {
+        signal: controller.signal,
+        headers: {
+          'User-Agent': 'MTG-VRC/1.0'
+        }
+      });
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -259,8 +270,20 @@ export class ScryfallBulkDataClient implements BulkDataClient {
 
       return new Promise<BulkFileMetadata>((resolve, reject) => {
         let streamError: Error | null = null;
+        let streamTimeout: NodeJS.Timeout | null = null;
+
+        const resetTimeout = () => {
+          if (streamTimeout) clearTimeout(streamTimeout);
+          // Timeout de 5 minutes sans activité (au cas où le stream s'arrête)
+          streamTimeout = setTimeout(() => {
+            reject(new Error('Stream inactif pendant 5 minutes - timeout'));
+            jsonParser.destroy();
+            nodeStream.destroy();
+          }, 5 * 60 * 1000);
+        };
 
         jsonParser.on('data', async (item: any) => {
+          resetTimeout(); // Reset le timeout à chaque donnée
           jsonParser.pause(); // Pause pour synchroniser le parsing avec le traitement
           
           if (streamError) {
@@ -326,6 +349,8 @@ export class ScryfallBulkDataClient implements BulkDataClient {
 
         jsonParser.on('end', async () => {
           try {
+            if (streamTimeout) clearTimeout(streamTimeout);
+            
             // Traiter le dernier batch
             if (batch.length > 0 && processingOptions.onBatch) {
               await processingOptions.onBatch([...batch], batchIndex);
@@ -348,14 +373,18 @@ export class ScryfallBulkDataClient implements BulkDataClient {
         });
 
         jsonParser.on('error', (error: Error) => {
+          if (streamTimeout) clearTimeout(streamTimeout);
           reject(new Error(`${ERROR_MESSAGES.BULK_PARSE_ERROR}: ${error.message}`));
         });
 
         // Connecter les streams avec gestion d'erreur
         nodeStream.on('error', (error: Error) => {
+          if (streamTimeout) clearTimeout(streamTimeout);
           reject(new Error(`${ERROR_MESSAGES.BULK_DOWNLOAD_FAILED}: ${error.message}`));
         });
 
+        // Démarrer le timeout
+        resetTimeout();
         // Piping avec backpressure management
         nodeStream.pipe(jsonParser);
       });

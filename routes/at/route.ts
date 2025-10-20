@@ -1,6 +1,7 @@
 import { Request, Response, Router } from "express";
 import User from "@/database/User";
 import Instance from "@/database/Instance";
+import Deck from "@/database/Deck";
 import { uid } from "@/utils";
 import Database from "@/database/Database";
 import fs from "fs";
@@ -54,7 +55,7 @@ async function atHandler(req: Request, res: Response) {
                 instance_id: playerInstance.id,
                 player_id: `${playerInstance.id}-${user.id}`,
                 type: 'json',
-                data: generateJsonData(linkIndex, playerInstance, user.id)
+                data: await generateJsonData(linkIndex, playerInstance, user.id)
             });
         } else if (isAtlasResponse) {
             // Générer et retourner l'atlas d'images
@@ -81,7 +82,7 @@ async function atHandler(req: Request, res: Response) {
                     instance_id: playerInstance.id,
                     player_id: `${playerInstance.id}-${user.id}`,
                     type: 'json',
-                    data: generateJsonData(linkIndex, playerInstance, user.id)
+                    data: await generateJsonData(linkIndex, playerInstance, user.id)
                 });
             } else {
                 // Retourner une image
@@ -129,10 +130,46 @@ async function cleanupOldPlayerAssociations(currentUserId: number): Promise<void
 }
 
 /**
+ * Génère la liste des decks de l'utilisateur
+ * at1 : Retourne juste l'ID et le nom de chaque deck
+ */
+async function generateDeckListData(userId: number): Promise<any> {
+    try {
+        const userDecks = await Deck.findByUserId(userId);
+        
+        const decksList = userDecks.map((deck) => ({
+            id: deck.id,
+            name: deck.name
+        }));
+
+        return {
+            type: 'deck_list',
+            user_id: userId,
+            total_decks: decksList.length,
+            decks: decksList
+        };
+    } catch (error) {
+        console.error('Error generating deck list:', error);
+        return {
+            type: 'deck_list',
+            user_id: userId,
+            total_decks: 0,
+            decks: [],
+            error: 'Failed to fetch decks'
+        };
+    }
+}
+
+/**
  * Génère les données JSON pour un lien donné
  * Utilise le même calcul de coordonnées UV que le script Python
  */
-function generateJsonData(linkIndex: number, instance: Instance, userId: number): any {
+async function generateJsonData(linkIndex: number, instance: Instance, userId: number): Promise<any> {
+    // at1 : Retourner la liste des decks de l'utilisateur
+    if (linkIndex === 1) {
+        return generateDeckListData(userId);
+    }
+
     const cards = instance.card_ids;
     const batchSize = 24;
     const batches = [];

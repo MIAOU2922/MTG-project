@@ -37,7 +37,6 @@ async function asHandler(req: Request, res: Response) {
                 await playerInstance.addUser(user.id);
             }
         }
-
         const searchResults = await performSearch(query);
 
         // Ajouter les IDs des cartes trouvées à l'instance si elle existe
@@ -88,7 +87,6 @@ async function asHandler(req: Request, res: Response) {
         });
     }
 }
-
 import Database from "@/database/Database";
 
 // Recherche les cartes dont le nom contient le texte recherché (insensible à la casse)
@@ -103,11 +101,21 @@ async function performSearch(query: string) {
         where.name = filters.exact_name;
     }
     
+
     // Handle negated terms
     if (filters.negated_terms) {
         where.NOT = filters.negated_terms.map((term: string) => ({
             name: { contains: term, mode: 'insensitive' }
         }));
+    }
+
+    // Exclure les sets de type 'alchemy' sauf si explicitement demandé
+    const settypeFilter = (filters.settype || filters.st || '').toLowerCase();
+    if (settypeFilter !== 'alchemy') {
+        where.NOT = [
+            ...(where.NOT || []),
+            { set: { type: 'alchemy' } }
+        ];
     }
     
     // Recherche simple uniquement si aucun filtre n'est présent ET qu'il y a du texte libre

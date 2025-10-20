@@ -10,14 +10,13 @@ GET /as?q={query}
 
 ## Syntaxe de Recherche
 
-### Recherche Simple
+### Recherche Simple et Sous-type
 
-Les recherches sans filtres spécifiques cherchent dans tous les champs de texte :
+Les recherches sans filtres spécifiques cherchent uniquement dans :
 - Nom anglais (`name`)
 - Nom traduit (`printed_name`)
-- Texte d'oracle anglais (`oracle_text`)
-- Texte d'oracle traduit (`printed_text`)
-- Texte de saveur (`flavor_text`)
+
+**Important :** Les champs oracle, printed_text et flavor_text ne sont utilisés que via filtres avancés (oracle:, o:, etc.)
 
 **Exemples :**
 ```
@@ -113,7 +112,7 @@ Utilisez `>`, `<`, `>=`, `<=`, `=` pour les comparaisons.
 | Filtre | Alias | Description | Exemple |
 |--------|-------|-------------|---------|
 | `block:` | `b:` | Bloc | `block:wwk` |
-| `settype:` | `st:` | Type de set | `settype:expansion` |
+| `settype:` | - | Type de set (⚠️ exclut "alchemy" par défaut) | `settype:expansion`, `settype:alchemy` |
 | `cube:` | - | Cube | `cube:vintage` |
 
 #### Dates et Historique
@@ -178,16 +177,26 @@ Les recherches sans filtres spécifiques cherchent dans tous les champs de texte
 - Texte d'oracle traduit (`printed_text`)
 - Texte de saveur (`flavor_text`)
 
+
 Si le terme n'est pas un filtre connu, il est aussi interprété comme un sous-type (ex: `rat` retournera toutes les créatures de sous-type rat).
+
+**Note importante :** Par défaut, les cartes des sets de type "alchemy" sont exclues de tous les résultats. Pour les inclure, utilisez `settype:alchemy`.
 
 **Exemples :**
 ```
 /as?q=Lightning Bolt
-/as?q=Cycle alimentaire aérien
-/as?q=vol
 /as?q=rat
 /as?q=subtype:angel
+/as?q=t:creature st:rat
 ```
+
+### Comportement par Défaut
+
+- **Langue :** Si aucune langue n'est spécifiée, seules les cartes en anglais (`lang:en`) sont retournées
+- **Sets Alchemy :** Les cartes de type "alchemy" sont automatiquement exclues (utiliser `settype:alchemy` pour les inclure)
+- **Recherche simple :** Cherche uniquement dans les noms (anglais et traduit)
+
+### Recherche avec Filtres
 ```
 
 ### Combinaisons Complexes
@@ -279,8 +288,9 @@ Si le terme n'est pas un filtre connu, il est aussi interprété comme un sous-t
 
 ## Limites
 
-- Maximum 600 résultats par requête
-- Tous les résultats dans toutes les langues disponibles (sauf si `lang:` spécifié)
+- Maximum 240 résultats par requête
+- Par défaut, seuls les résultats en anglais sont retournés (sauf si `lang:` spécifié)
+- Les cartes de sets de type "alchemy" sont automatiquement exclues (sauf si `settype:alchemy` est spécifié)
 - Certains filtres avancés peuvent ne pas être implémentés
 
 ## Codes d'Erreur
@@ -295,5 +305,5 @@ Si le terme n'est pas un filtre connu, il est aussi interprété comme un sous-t
 - La recherche est insensible à la casse
 - Les langues non-anglaises incluent les champs `printed_*` quand disponibles
 - La syntaxe est largement compatible avec Scryfall
-- Les filtres non reconnus sont traités comme recherche de nom
-- Contrairement à Scryfall, cette API retourne toutes les langues par défaut plutôt que de privilégier l'anglais
+- Les filtres non reconnus sont traités comme recherche de sous-type
+- **Différence avec Scryfall :** Cette API filtre par défaut sur l'anglais et exclut les sets "alchemy"
