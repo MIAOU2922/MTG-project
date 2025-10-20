@@ -15,9 +15,6 @@ model User {
   id           Int      @id
   created_at   DateTime @default(now())
   last_seen_at DateTime @default(now()) @updatedAt
-
-  redirects Redirect[]
-
   @@map("users")
 }
 
@@ -29,18 +26,6 @@ model Instance {
   user_ids     Int[]    @default([])
 
   @@map("instances")
-}
-
-model Redirect {
-  id      Int
-  user_id Int
-  url     String
-
-  age  DateTime @default(now()) @updatedAt
-  user User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
-
-  @@id([user_id, id])
-  @@map("redirects")
 }
 
 model Config {
