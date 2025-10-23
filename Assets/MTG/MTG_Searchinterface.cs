@@ -23,12 +23,8 @@ namespace MTG
         public GameObject CardPrefab;
         public Transform CardParent;
         public GameObject CardPreview;
-        public int previousSearch;
-        public int nextSearch;
         
-        [UdonSynced]
-        private int syncedSearchTrigger = 0;
-        private int lastSearchTrigger = 0;
+    // Synchronisation réseau supprimée : tout est local
         
         private int currentLoadIndex = 0;
         private DataList cardsToLoad;
@@ -178,39 +174,11 @@ namespace MTG
             }
             
             Debug.Log(LOG_PREFIX + $"Sending validated search request to: {urlString}", this);
-            
-            // Synchroniser la recherche pour tous les joueurs
-            if (Networking.IsOwner(gameObject))
-            {
-                syncedSearchTrigger++;
-                RequestSerialization();
-            }
-            else
-            {
-                // Prendre ownership puis synchroniser
-                Networking.SetOwner(Networking.LocalPlayer, gameObject);
-                syncedSearchTrigger++;
-                RequestSerialization();
-            }
-            
-            // Charger localement
+            // Recherche totalement locale : on ne fait que la requête locale
             VRCStringDownloader.LoadUrl(userUrl, (IUdonEventReceiver)this);
         }
         
-        public override void OnDeserialization()
-        {
-            // Quand une nouvelle recherche est synchronisée, tous les joueurs rechargent
-            if (syncedSearchTrigger != lastSearchTrigger)
-            {
-                lastSearchTrigger = syncedSearchTrigger;
-                // Recharger la recherche avec l'URL actuelle dans l'input field
-                VRCUrl currentUrl = input.GetUrl();
-                if (currentUrl != null)
-                {
-                    VRCStringDownloader.LoadUrl(currentUrl, (IUdonEventReceiver)this);
-                }
-            }
-        }
+        // Suppression de la synchronisation réseau : plus de OnDeserialization
         public override void OnStringLoadSuccess(IVRCStringDownload json)
         {
             // Validate url
@@ -240,15 +208,6 @@ namespace MTG
 
                 // get dictionary
                 var dict = result.DataDictionary;
-
-                // get next page and previous page
-                // if -1, there is no next/previous page
-                if (dict.ContainsKey("next") && dict["next"].TokenType == TokenType.Double)
-                    nextSearch = dict["next"].Int;
-                else nextSearch = -1;
-                if (dict.ContainsKey("previous") && dict["previous"].TokenType == TokenType.Double)
-                    previousSearch = dict["previous"].Int;
-                else previousSearch = -1;
 
                 if (!dict.ContainsKey("results") || dict["results"].TokenType != TokenType.DataList)
                 {

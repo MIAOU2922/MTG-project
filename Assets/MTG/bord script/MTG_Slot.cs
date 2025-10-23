@@ -86,9 +86,16 @@ namespace MTG
         [ContextMenu("Toggle Top Card Tapped")]
         public void ToggleTopCardTapped()
         {
-            if (parentZone != null)
+            if (parentZone == null) return;
+            // Taper toutes les cartes du slot
+            var stack = parentZone.cardsBySlot != null && slotIndex < parentZone.cardsBySlot.Length ? parentZone.cardsBySlot[slotIndex] : null;
+            if (stack == null) return;
+            for (int i = 0; i < stack.Length; i++)
             {
-                parentZone.ToggleTopCardStateAtSlot(slotIndex);
+                if (stack[i] != null && parentZone.allowPlayerToggleCardState)
+                {
+                    stack[i].TapCard(!stack[i].isTapped);
+                }
             }
         }
         

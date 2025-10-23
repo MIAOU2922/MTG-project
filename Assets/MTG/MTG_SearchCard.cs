@@ -17,12 +17,9 @@ namespace MTG
         public RawImage cardImage;
         public GameObject loading;
         public string cardKey;
-
-        [System.NonSerialized]
         public MTG_Manager manager;
         public MTG_Searchinterface searchInterface;
 
-        
         public Rect uvRect;
         public int atlasIndex = -1;
         public float lastRetryTime = 0f;

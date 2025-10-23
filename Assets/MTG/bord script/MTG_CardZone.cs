@@ -9,6 +9,9 @@ namespace MTG
     [UdonBehaviourSyncMode(BehaviourSyncMode.None)]
     public class MTG_CardZone : UdonSharpBehaviour
     {
+        private const string LOG_PREFIX = "<color=#FF1493>[MTG_CardZone]</color> ";
+
+
         [Header("=== PARAMÈTRES DE ZONE ===")]
         public string zoneName = "Battlefield";
         public Transform[] slots; // positions de base
@@ -31,7 +34,7 @@ namespace MTG
 
         public bool allowFallbackToNearestIfNoneWithinSlotCollider = true;
 
-        [SerializeField] [VRC.Udon.Serialization.OdinSerializer.OdinSerialize] /* UdonSharp auto-upgrade: serialization */  protected MTG_CardInstance[][] cardsBySlot; // initialisé dans Start()
+        [SerializeField] [VRC.Udon.Serialization.OdinSerializer.OdinSerialize] /* UdonSharp auto-upgrade: serialization */  public MTG_CardInstance[][] cardsBySlot; // initialisé dans Start()
 
         void Start()
         {
@@ -63,7 +66,7 @@ namespace MTG
             }
             else
             {
-                Debug.LogWarning("[MTG_CardZone] manager not assigned on " + gameObject.name + ". Assign MTG_bord_Manager in inspector.");
+                Debug.LogWarning(LOG_PREFIX +" manager not assigned on " + gameObject.name + ". Assign MTG_bord_Manager in inspector.");
             }
 
             UpdateSlotReferences();
@@ -104,9 +107,9 @@ namespace MTG
                 else
                 {
 #if UNITY_EDITOR
-                    Debug.LogWarning($"[MTG_CardZone] Slot GameObject '{s.name}' (index {i}) does not have MTG_Slot component. Add MTG_Slot to enable trigger-based detection.", s);
+                    Debug.LogWarning(LOG_PREFIX +" Slot GameObject '{s.name}' (index {i}) does not have MTG_Slot component. Add MTG_Slot to enable trigger-based detection.", s);
 #else
-                    Debug.LogWarning("[MTG_CardZone] Slot missing MTG_Slot component: " + s.name);
+                    Debug.LogWarning(LOG_PREFIX +" Slot missing MTG_Slot component: " + s.name);
 #endif
                 }
             }
@@ -117,7 +120,7 @@ namespace MTG
         {
             if (slotParent == null)
             {
-                Debug.LogWarning("[MTG_CardZone] slotParent not assigned, cannot refresh slots dynamically.");
+                Debug.LogWarning(LOG_PREFIX +" slotParent not assigned, cannot refresh slots dynamically.");
                 return;
             }
 
@@ -146,7 +149,7 @@ namespace MTG
             }
 
             slots = newSlots;
-            Debug.Log($"[MTG_CardZone] Refreshed {slots.Length} slots from parent '{slotParent.name}'");
+            Debug.Log(LOG_PREFIX +" Refreshed {slots.Length} slots from parent '{slotParent.name}'");
         }
         
         [ContextMenu("Tap All Cards")]
@@ -239,7 +242,7 @@ namespace MTG
         }
 
         // ensure no duplicates
-        protected void AddCardToSlotSafely(int slotIndex, MTG_CardInstance card)
+        public void AddCardToSlotSafely(int slotIndex, MTG_CardInstance card)
         {
             if (slotIndex < 0 || slotIndex >= cardsBySlot.Length) return;
             var stack = cardsBySlot[slotIndex];
@@ -271,7 +274,7 @@ namespace MTG
             }
         }
 
-        protected void RepositionStack(int slotIndex)
+        public void RepositionStack(int slotIndex)
         {
             var stack = cardsBySlot[slotIndex];
             var slotTransform = slots[slotIndex];
@@ -286,7 +289,7 @@ namespace MTG
             }
         }
 
-        protected int FindSlotWithSpace()
+        public int FindSlotWithSpace()
         {
             for (int i = 0; i < cardsBySlot.Length; i++)
             {
@@ -316,7 +319,7 @@ namespace MTG
         }
 
         // Applique l'état forcé de la zone à une carte
-        protected void ApplyZoneCardState(MTG_CardInstance card)
+        public void ApplyZoneCardState(MTG_CardInstance card)
         {
             if (card == null) return;
             
@@ -390,7 +393,7 @@ namespace MTG
             }
         }
 
-        protected void AddCardToSlot(int slotIndex, MTG_CardInstance card)
+        public void AddCardToSlot(int slotIndex, MTG_CardInstance card)
         {
             MTG_CardInstance[] old = cardsBySlot[slotIndex];
             MTG_CardInstance[] next = new MTG_CardInstance[old.Length + 1];
@@ -399,7 +402,7 @@ namespace MTG
             cardsBySlot[slotIndex] = next;
         }
 
-        protected void RemoveCardFromSlot(int slotIndex, MTG_CardInstance card)
+        public void RemoveCardFromSlot(int slotIndex, MTG_CardInstance card)
         {
             MTG_CardInstance[] old = cardsBySlot[slotIndex];
             int idx = -1;
@@ -415,7 +418,7 @@ namespace MTG
         }
 
         // --- Slot selection logic used by all zones ---
-        protected virtual int SelectSlotForCard(MTG_CardInstance card, Vector3 dropWorldPosition)
+        public virtual int SelectSlotForCard(MTG_CardInstance card, Vector3 dropWorldPosition)
         {
             if (slots == null || slots.Length == 0) return -1;
 
