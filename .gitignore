@@ -9,3 +9,6 @@ images/cards/
 
 # log files
 logs
+
+# prisma migration folder 
+prisma/migrations
