@@ -1,13 +1,16 @@
-import { Config as IConfig } from 'prisma';
 import Database from '@/database/Database';
 
-export default class Config implements IConfig {
+export default class Config {
     public readonly key: string;
     public readonly value: string;
+    public readonly created_at: Date;
+    public readonly updated_at: Date;
 
-    constructor(data: IConfig) {
+    constructor(data: { key: string; value: string; created_at?: Date; updated_at?: Date }) {
         this.key = data.key;
         this.value = data.value;
+        this.created_at = data.created_at || new Date();
+        this.updated_at = data.updated_at || new Date();
     }
 
     public static async get(key: string, defaultValue: string): Promise<Config> {

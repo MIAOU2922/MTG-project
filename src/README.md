@@ -2,7 +2,27 @@
 
 ## 🎯 Vue d'Ensemble du Projet
 
+````markdown
+# MTG VRC - Documentation du Code Source
+
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
+[![Prisma](https://img.shields.io/badge/Prisma-6.16-blueviolet.svg)](https://www.prisma.io/)
+
+---
+
+## 🎯 Vue d'Ensemble du Projet
+
 **MTG VRC** est un serveur backend Node.js/Express pour gérer une collection MTG (Magic: The Gathering) avec support pour les decks, les cartes, et la synchronisation avec l'API Scryfall.
+
+### Objectifs Principaux
+
+- ✅ **Sync automatique** - 25K+ cartes depuis Scryfall avec scheduler quotidien
+- ✅ **Gestion de decks** - Support complet de 6 zones (main, sideboard, commander, etc.)
+- ✅ **API RESTful** - 6 routes principales pour toutes les opérations
+- ✅ **PostgreSQL + Prisma** - Base de données robuste avec ORM moderne
+- ✅ **Logging détaillé** - Fichiers timestampés, non-bloquant, stack traces complètes
+- ✅ **Batch processing** - 500 cartes/batch pour performance optimale
 
 ### Objectifs Principaux
 - ✅ Sync automatique des cartes MTG depuis Scryfall (25K+ cartes)
@@ -16,29 +36,29 @@
 
 ```
 src/
-├── README.md                    # Ce fichier
-├── Main.ts                      # Point d'entrée et initialiseur
-├── index.ts                     # Configuration Express & routes
-├── scryfall_sync.ts            # Script ancien (deprecated)
-├── download-recent-images.ts   # Utilitaire téléchargement images
-├── utils.ts                    # Fonctions utilitaires globales
+├── README.md                     # Ce fichier
+├── Main.ts                       # Point d'entrée + schedulers
+├── index.ts                      # Configuration Express
+├── scryfall_sync.ts             # Script ancien (deprecated)
+├── download-recent-images.ts    # Téléchargement images instances
+├── utils.ts                      # Fonctions utilitaires globales
 │
-├── database/                   # 💾 Couche données PostgreSQL
-│   ├── dbREADME.md            # Documentation détaillée
-│   ├── Config.ts              # Configuration DB
-│   ├── Database.ts            # Singleton Prisma
-│   ├── Instance.ts            # Gestion de session
-│   ├── User.ts                # Modèle utilisateur
-│   ├── Player.ts              # Modèle joueur MTG
-│   └── Deck.ts                # Système de decks (11 méthodes)
+├── database/                    # 💾 Couche données PostgreSQL + Prisma
+│   ├── dbREADME.md             # 📚 Documentation complète module database
+│   ├── Config.ts               # Gestion configuration DB
+│   ├── Database.ts             # Singleton Prisma client
+│   ├── Instance.ts             # Gestion sessions utilisateur
+│   ├── User.ts                 # Modèle utilisateur (findOrCreate, updateLastSeen)
+│   ├── Player.ts               # Modèle joueur MTG (deprecated)
+│   └── Deck.ts                 # ⭐ Système decks (11 méthodes, 6 zones)
 │
-└── sync/                       # 🔄 Synchronisation Scryfall
-    ├── syncREADME.md          # Documentation détaillée
-    ├── index.ts               # Orchestrateur principal
-    ├── bulk-client.ts         # Client Scryfall bulk API
-    ├── types.ts               # Définitions TypeScript
-    ├── constants.ts           # Constantes & config
-    └── example.ts             # Exemple d'utilisation
+└── sync/                        # 🔄 Synchronisation Scryfall
+    ├── syncREADME.md           # 📚 Documentation complète module sync
+    ├── index.ts                # ⭐ ScryFallSync - Orchestrateur principal
+    ├── bulk-client.ts          # Client API Scryfall bulk data
+    ├── types.ts                # Définitions TypeScript (CoreCard, Ruling, etc.)
+    ├── constants.ts            # Constantes & URLs API
+    └── example.ts              # Exemple d'utilisation sync manuelle
 ```
 
 ## 🔑 Modules Clés
@@ -376,6 +396,11 @@ Pour signaler un problème:
 
 ---
 
-**Dernière mise à jour**: October 20, 2025
-**Version**: 1.0 (Deck system + Sync logging)
-**Status**: ✅ Production-ready (non-blocking sync, detailed logging)
+---
+
+**Dernière mise à jour**: 20 Octobre 2025  
+**Auteur**: MIAOU.2922  
+**Version**: 1.0.0  
+**Status**: ✅ Production Ready
+
+[← Retour au README principal](../README.md)

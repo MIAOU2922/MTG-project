@@ -1,78 +1,45 @@
-# Database Module
+````markdown
+# Module Database - Documentation Complète
 
-## Overview
-Le module `database/` contient toute la logique de gestion de base de données PostgreSQL via Prisma ORM. Il fournit une couche d'abstraction pour interagir avec les données MTG et les décks utilisateur.
+[![Prisma](https://img.shields.io/badge/Prisma-6.16-blueviolet.svg)](https://www.prisma.io/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-blue.svg)](https://www.postgresql.org/)
 
-## Structure
+---
 
-### Config.ts
-Configuration et initialisation de la connexion PostgreSQL.
-- **Responsabilités**:
-  - Définir les variables d'environnement
-  - Configurer les paramètres de connexion
-  - Gérer les timeouts et pools de connexion
+## 📋 Vue d'Ensemble
 
-### Database.ts
-Singleton Prisma pour accès global à la base de données.
-- **Exports**:
-  - `prisma`: Instance centralisée du client Prisma
-  - `default`: Export par défaut
-- **Usage**:
-  ```typescript
-  import Database from '@/database/Database';
-  const users = await Database.prisma.user.findMany();
-  ```
+Le module `database/` contient toute la logique de gestion de base de données PostgreSQL via Prisma ORM. Il fournit une couche d'abstraction complète pour interagir avec les données MTG et les decks utilisateur.
 
-### Instance.ts
-Gestion de l'instance/session serveur.
-- **Responsabilités**:
-  - Tracker la session courante
-  - Gérer les identifiants de session
-  - Stocker les données temporaires de session
+### Composants Principaux
 
-### User.ts
-Modèle et méthodes pour la gestion des utilisateurs.
-- **Fonctionnalités principales**:
-  - Création/mise à jour d'utilisateurs
-  - Authentification et validation
-  - Récupération des données utilisateur
-  - Relation avec les decks
+| Fichier | Description | Responsabilités |
+|---------|-------------|-----------------|
+| `Database.ts` | Singleton Prisma | Instance centralisée du client Prisma |
+| `Config.ts` | Configuration DB | Paramètres connexion, timestamps |
+| `User.ts` | Modèle utilisateur | Création/update utilisateurs, last_seen |
+| `Instance.ts` | Sessions | Gestion instances, card_ids, user_ids |
+| `Deck.ts` | ⭐ Système decks | 11 méthodes, 6 zones, permissions |
 
-### Player.ts
-Modèle spécifique pour les joueurs MTG.
-- **Contient**:
-  - Profil joueur
-  - Statistiques MTG
-  - Historique de jeu
-  - Relation avec les decks et collections
+---
 
-### Deck.ts
-Système complet de gestion des decks MTG.
-- **Modèle**: Représente un deck MTG avec support de 6 zones
-- **Zones supportées**:
-  - `main`: Zone principale (60+ cartes en Constructed)
-  - `sideboard`: Sideboard (15 cartes max)
-  - `commander`: Commander (pour le format Commander)
-  - `companion`: Companion (pour le format Companion)
-  - `oathbreaker`: Oathbreaker (pour le format Oathbreaker)
-  - `wishboard`: Wishboard (pour les decks avec wishes)
+## 🎴 Deck.ts - Documentation Complète des 11 Méthodes
 
-- **Méthodes principales**:
-  1. **saveDeck(userId, deckData)**: Crée ou met à jour un deck
-  2. **loadDeck(deckId)**: Charge un deck avec toutes ses cartes
-  3. **deleteDeck(deckId, userId)**: Supprime un deck (propriétaire uniquement)
-  4. **listDecks(userId, options?)**: Liste les decks d'un utilisateur
-  5. **getDeckCards(deckId)**: Retourne les cartes groupées par zone
-  6. **addCardToDeck(deckId, cardId, zone, quantity)**: Ajoute une carte
-  7. **removeCardFromDeck(deckId, cardId)**: Supprime une carte
-  8. **updateCardQuantity(deckId, cardId, quantity)**: Met à jour la quantité
-  9. **validateDeck(deckData)**: Valide les règles du deck
-  10. **exportDeck(deckId, format)**: Exporte au format demandé
-  11. **getDeckStats(deckId)**: Retourne les statistiques du deck
+### Zones Supportées
 
-## Schéma Prisma Principal
+Le système supporte **6 zones** pour les decks:
 
-### Entités Core
+| Zone | Description | Limite typique | Formats |
+|------|-------------|----------------|---------|
+| `main` | Deck principal | 60+ cartes | Tous formats |
+| `sideboard` | Réserve | 15 cartes max | Constructed |
+| `commander` | Commandant | 1 carte | Commander, Brawl |
+| `companion` | Compagnon | 0-1 carte | Tous formats (optionnel) |
+| `oathbreaker` | Oathbreaker + Signature | 1-2 cartes | Oathbreaker |
+| `wishboard` | Wishboard | Variable | Casual, certains formats |
+
+---
+
+### Méthodes Statiques (Factory)
 ```prisma
 model User {
   id              Int
