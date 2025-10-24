@@ -8,7 +8,8 @@ export function strToHash(str: string): number {
     let hash = 0;
     for (let i = 0; i < str.length; i++)
         hash = (hash * 31 + str.charCodeAt(i)) | 0;
-    return hash;
+    // Utiliser l'opérateur >>> 0 pour convertir en unsigned 32-bit (toujours positif)
+    return hash >>> 0;
 }
 
 export function ip(req: Request): string {
