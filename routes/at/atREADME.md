@@ -31,7 +31,7 @@ La route `/at` fournit un système de liens statiques encodés en base36 qui ret
 ### **Liens 0-9 (base36) : JSON**
 Retourne toujours des données JSON avec les informations de l'instance.
 
-**Exemple :** `/at/0`, `/at/9`
+**Exemple :** `/at0`, `/at9`
 
 #### **at0 : Cartes de l'instance (par défaut)**
 ```json
@@ -56,7 +56,7 @@ Retourne toujours des données JSON avec les informations de l'instance.
 #### **at1 : Liste des decks de l'utilisateur** ✨ NEW
 Retourne uniquement l'ID et le nom des decks créés par l'utilisateur.
 
-**Endpoint:** `GET /at/1`
+**Endpoint:** `GET /at1`
 
 ```json
 {
@@ -93,6 +93,46 @@ Retourne uniquement l'ID et le nom des decks créés par l'utilisateur.
 - Afficher la liste des decks de l'utilisateur
 - Chaque deck contient un `id` et un `name`
 - Pas besoin d'instance active (ne requiert pas `/ac` ou `/aj` au préalable)
+
+#### **at2 : Liste des sets MTG** ✨ NEW
+Retourne la liste complète des sets MTG disponibles dans la base de données.
+
+**Endpoint:** `GET /at2`
+
+```json
+{
+  "time": 1728499200000,
+  "uid": 12345,
+  "link_id": "2",
+  "link_index": 2,
+  "instance_id": 42,
+  "player_id": "42-12345",
+  "type": "json",
+  "data": {
+    "type": "sets_list",
+    "count": 542,
+    "data": [
+      "Kamigawa: Neon Dynasty (neo)",
+      "Streets of New Capenna (snc)",
+      "Dominaria United (dmu)",
+      "The Brothers' War (bro)",
+      "Phyrexia: All Will Be One (one)"
+    ]
+  }
+}
+```
+
+**Structure des données:**
+- **type**: `sets_list` - Identifiant du type de données
+- **count**: Nombre total de sets disponibles
+- **data**: Liste des sets avec format `"Name (CODE)"`
+  - Triés par nom alphabétiquement
+  - Format standard : `"Set Name (set_code)"`
+
+**Utilisation:**
+- Afficher tous les sets disponibles dans la base de données
+- Interface de sélection de sets pour recherche avancée
+- Dropdown/menu de sélection dans l'application client
 
 ### **Liens 10+ (base36) : Atlas d'images**
 Génère et retourne un atlas PNG contenant 24 cartes maximum.

@@ -161,6 +161,40 @@ async function generateDeckListData(userId: number): Promise<any> {
 }
 
 /**
+ * Génère la liste des sets MTG
+ * at2 : Retourne les sets avec format "Name (SET)"
+ */
+async function generateSetsData(): Promise<any> {
+    try {
+        // Récupérer tous les sets de la base de données
+        const allSets = await Database.prisma.set.findMany({
+            orderBy: {
+                name: 'asc'
+            }
+        });
+
+        // Créer la liste des display_name
+        const setsDisplayNames = allSets.map((set) => 
+            `${set.name} (${set.set || set.id})`
+        );
+
+        return {
+            type: 'sets_list',
+            count: setsDisplayNames.length,
+            data: setsDisplayNames
+        };
+    } catch (error) {
+        console.error('Error generating sets data:', error);
+        return {
+            type: 'sets_list',
+            count: 0,
+            data: [],
+            error: 'Failed to fetch sets'
+        };
+    }
+}
+
+/**
  * Génère les données JSON pour un lien donné
  * Utilise le même calcul de coordonnées UV que le script Python
  */
@@ -168,6 +202,11 @@ async function generateJsonData(linkIndex: number, instance: Instance, userId: n
     // at1 : Retourner la liste des decks de l'utilisateur
     if (linkIndex === 1) {
         return generateDeckListData(userId);
+    }
+
+    // at2 : Retourner la liste des sets MTG et des types de sets
+    if (linkIndex === 2) {
+        return generateSetsData();
     }
 
     const cards = instance.card_ids;
