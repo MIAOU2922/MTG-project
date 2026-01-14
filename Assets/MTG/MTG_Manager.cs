@@ -28,6 +28,8 @@ namespace MTG
         [SerializeField]
         public VRCUrl searchURL;
         [SerializeField]
+        public VRCUrl deckURL;
+        [SerializeField]
         public VRCUrl[] joinURLs;
         [SerializeField]
         public VRCUrl[] tempURLs;
@@ -59,6 +61,7 @@ namespace MTG
         {
             createURL = new VRCUrl($"{BaseURL}c");
             searchURL = new VRCUrl($"{BaseURL}s?q=");
+            deckURL = new VRCUrl($"{BaseURL}d?q=");
             joinURLs = new VRCUrl[64];
             for (int i = 0; i < joinURLs.Length; i++)
                 joinURLs[i] = new VRCUrl($"{BaseURL}j{ToBase36(i)}");
@@ -398,12 +401,19 @@ namespace MTG
                     var cardInfo = cardsInBatch[j].DataDictionary;
                     if (!cardInfo.ContainsKey("id")) continue;
                     string id = cardInfo["id"].String;
-                    float x = (float)cardInfo["rect_x"].Double;
-                    float y = (float)cardInfo["rect_y"].Double;
-                    float width = (float)cardInfo["rect_width"].Double;
-                    float height = (float)cardInfo["rect_height"].Double;
+                    
+                    // Calculer automatiquement les rect transforms (grille 6x4)
+                    // Les cartes sont toujours dans le même ordre: ligne par ligne, de gauche à droite
+                    int col = j % 6;  // Colonne (0-5)
+                    int row = j / 6;  // Ligne (0-3)
+                    
+                    float rectWidth = 1f / 6f;  // 0.16666666666666666
+                    float rectHeight = 0.25006751593088666f;  // Hauteur fixe
+                    float x = col * rectWidth;
+                    float y = 0.7499324840691133f - (row * rectHeight);  // Y inversé, commence en haut
+                    
                     atlasCardIds[atlasIndex][j] = id;
-                    atlasCardRects[atlasIndex][j] = new Rect(x, y, width, height);
+                    atlasCardRects[atlasIndex][j] = new Rect(x, y, rectWidth, rectHeight);
                 }
                 
                 // Effacer les slots restants si moins de 24 cartes
@@ -583,5 +593,6 @@ namespace MTG
             Debug.LogWarning(LOG_PREFIX + $"Card {cardId} NOT FOUND in any atlas!");
             return false;
         }
+        
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using TMPro;
 using UdonSharp;
 using UnityEngine;
@@ -9,21 +10,24 @@ using UnityEngine.UI;
 
 namespace MTG
 {
-    public class MTG_SearchCard : UdonSharpBehaviour
+    public class MTG_DeckCard : UdonSharpBehaviour
     {
         // Préfixe coloré pour les logs
-        private const string LOG_PREFIX = "<color=#FF1493>[MTG_SearchCard]</color> ";
+        private const string LOG_PREFIX = "<color=#FF1493>[MTG_DeckCard]</color> ";
         
         public RawImage cardImage;
         public GameObject loading;
         public string cardKey;
         public MTG_Manager manager;
-        public MTG_Searchinterface searchInterface;
+        public MTG_Deckinterface deckInterface;
+        public TextMeshProUGUI countText; // Texte pour afficher la quantité
+
         public Rect uvRect;
         public int atlasIndex = -1;
         public float lastRetryTime = 0f;
         public const float RETRY_INTERVAL = 10f; // Retry toutes les 10 secondes
         private bool imageLoaded = false;
+        private int cardCount = 1; // Nombre de cette carte dans le deck
         
         internal void SetData(DataDictionary cardDict)
         {
@@ -50,6 +54,18 @@ namespace MTG
             // Réinitialiser le flag et le temps pour permettre un retry immédiat
             imageLoaded = false;
             lastRetryTime = -RETRY_INTERVAL; // Permet un retry immédiat au prochain Update
+            
+            // Initialiser le count si présent dans les données
+            if (cardDict.ContainsKey("count") && cardDict["count"].TokenType == TokenType.Double)
+            {
+                cardCount = (int)cardDict["count"].Double;
+            }
+            else
+            {
+                cardCount = 1; // Par défaut, 1 exemplaire
+            }
+            
+            UpdateCountDisplay();
         }
         
         public void SetImageFromId()
@@ -57,18 +73,6 @@ namespace MTG
             if (manager == null || string.IsNullOrEmpty(cardKey))
             {
                 Debug.LogWarning(LOG_PREFIX + $"SetImageFromId: Missing manager ({manager != null}) or cardKey ({!string.IsNullOrEmpty(cardKey)})");
-                return;
-            }
-            
-            // Exception pour les cartes Debug - ne pas charger d'image
-            if (cardKey == "Debug")
-            {
-                //Debug.Log(LOG_PREFIX + "Card is Debug card, skipping image load");
-                imageLoaded = true; // Marquer comme chargé pour ne plus retenter
-                if (loading != null)
-                {
-                    loading.SetActive(false);
-                }
                 return;
             }
             
@@ -134,14 +138,81 @@ namespace MTG
         // Méthode appelée par le bouton sur la carte
         public void OnCardButtonPressed()
         {
-            Debug.Log(LOG_PREFIX + $"Card button pressed for card {cardKey}");
-            if (searchInterface != null)
+            Debug.Log(LOG_PREFIX + $"Deck card button pressed for card {cardKey}");
+            if (deckInterface != null)
             {
-                searchInterface.OnCardPreviewRequest(cardKey);
+                deckInterface.OnCardButtonPressed(cardKey);
             }
             else
             {
-                Debug.LogWarning(LOG_PREFIX + "searchInterface n'est pas assigné sur la carte !");
+                Debug.LogWarning(LOG_PREFIX + "deckInterface n'est pas assigné sur la carte !");
+            }
+        }
+        
+        // Ajouter 1 exemplaire de cette carte
+        public void AddOne()
+        {
+            cardCount++;
+            UpdateCountDisplay();
+            Debug.Log(LOG_PREFIX + $"Added one {cardKey}, now {cardCount}");
+            
+            // Notifier le deck interface du changement
+            if (deckInterface != null)
+            {
+                deckInterface.OnCardCountChanged(cardKey, cardCount);
+            }
+        }
+        
+        // Retirer 1 exemplaire de cette carte
+        public void RemoveOne()
+        {
+            if (cardCount > 0)
+            {
+                cardCount--;
+                UpdateCountDisplay();
+                Debug.Log(LOG_PREFIX + $"Removed one {cardKey}, now {cardCount}");
+                
+                // Notifier le deck interface du changement
+                if (deckInterface != null)
+                {
+                    deckInterface.OnCardCountChanged(cardKey, cardCount);
+                }
+            }
+
+            // Si le count atteint 0, supprimer le GameObject
+            if (cardCount == 0)
+            {
+                Debug.Log(LOG_PREFIX + $"Card {cardKey} count reached 0, destroying GameObject");
+                
+                // Notifier le deck interface avant destruction
+                if (deckInterface != null)
+                {
+                    deckInterface.OnCardRemoved(cardKey);
+                }
+                
+                Destroy(gameObject);
+            }
+        }
+        
+        // Définir le nombre exact
+        public void SetCount(int count)
+        {
+            cardCount = Mathf.Max(0, count);
+            UpdateCountDisplay();
+        }
+        
+        // Obtenir le nombre actuel
+        public int GetCount()
+        {
+            return cardCount;
+        }
+        
+        // Mettre à jour l'affichage du nombre
+        private void UpdateCountDisplay()
+        {
+            if (countText != null)
+            {
+                countText.text = cardCount.ToString();
             }
         }
     }
