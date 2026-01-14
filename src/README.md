@@ -71,6 +71,8 @@ src/
 - Modèles: User, Player, Deck, DeckCard, Card, Oracle, Set, Ruling
 - Opérations CRUD sur les decks
 - Validation et gestion des permissions
+- **✨ Nouveau:** Cache d'atlas 48h avec invalidation intelligente
+- **✨ Nouveau:** Stockage format `{card_id}:{face_index}` pour cartes double face
 
 **Fichiers importants**:
 - `Deck.ts`: 11 méthodes pour gestion complète des decks

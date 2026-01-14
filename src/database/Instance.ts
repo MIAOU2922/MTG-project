@@ -22,12 +22,109 @@ export default class Instance implements IInstance {
     private static recentDownloadTimeout: NodeJS.Timeout | null = null;
     private static readonly RECENT_DOWNLOAD_DELAY = 30000; // 30 secondes de délai
 
+    // Dossiers de cache
+    private static readonly CARDS_DIR = path.join(process.cwd(), 'images', 'cards');
+    private static readonly ATLAS_DIR = path.join(process.cwd(), 'images', 'atlas');
+    private static readonly CACHE_THRESHOLD_HOURS = 48; // 48 heures pour le cache
+
     constructor(data: IInstance) {
         this.id = data.id;
         this.created_at = data.created_at;
         this.last_seen_at = data.last_seen_at;
         this.card_ids = (data as any).card_ids || [];
         this.user_ids = (data as any).user_ids || [];
+    }
+
+    /**
+     * Initialise les dossiers de cache nécessaires
+     */
+    private static ensureCacheDirectories(): void {
+        if (!fs.existsSync(this.CARDS_DIR)) {
+            fs.mkdirSync(this.CARDS_DIR, { recursive: true });
+        }
+        if (!fs.existsSync(this.ATLAS_DIR)) {
+            fs.mkdirSync(this.ATLAS_DIR, { recursive: true });
+        }
+    }
+
+    /**
+     * Génère le chemin du fichier atlas pour une instance et un batch donné
+     * Inclut le nombre de cartes dans le nom pour détecter les changements
+     */
+    public static getAtlasPath(instanceId: number, batchIndex: number, cardCount: number): string {
+        this.ensureCacheDirectories();
+        return path.join(this.ATLAS_DIR, `instance_${instanceId}_batch_${batchIndex}_n${cardCount}.png`);
+    }
+
+    /**
+     * Vérifie si un atlas existe en cache pour le nombre de cartes donné
+     */
+    public static hasAtlasCache(instanceId: number, batchIndex: number, cardCount: number): boolean {
+        const atlasPath = this.getAtlasPath(instanceId, batchIndex, cardCount);
+        return fs.existsSync(atlasPath);
+    }
+
+    /**
+     * Lit un atlas depuis le cache
+     */
+    public static readAtlasCache(instanceId: number, batchIndex: number, cardCount: number): Buffer | null {
+        if (!this.hasAtlasCache(instanceId, batchIndex, cardCount)) {
+            return null;
+        }
+        const atlasPath = this.getAtlasPath(instanceId, batchIndex, cardCount);
+        return fs.readFileSync(atlasPath);
+    }
+
+    /**
+     * Sauvegarde un atlas dans le cache
+     * Nettoie d'abord les anciens atlas du même batch (avec un nombre de cartes différent)
+     */
+    public static saveAtlasCache(instanceId: number, batchIndex: number, cardCount: number, imageBuffer: Buffer): void {
+        // Nettoyer les anciens atlas du même batch avec un nombre de cartes différent
+        this.ensureCacheDirectories();
+        const files = fs.readdirSync(this.ATLAS_DIR);
+        const oldAtlasPattern = new RegExp(`^instance_${instanceId}_batch_${batchIndex}_n\\d+\\.png$`);
+        
+        for (const file of files) {
+            if (oldAtlasPattern.test(file) && !file.includes(`_n${cardCount}.png`)) {
+                try {
+                    fs.unlinkSync(path.join(this.ATLAS_DIR, file));
+                    console.log(`🗑️ Removed outdated atlas: ${file}`);
+                } catch (error) {
+                    console.error(`❌ Error deleting outdated atlas ${file}:`, error);
+                }
+            }
+        }
+        
+        // Sauvegarder le nouveau atlas
+        const atlasPath = this.getAtlasPath(instanceId, batchIndex, cardCount);
+        fs.writeFileSync(atlasPath, imageBuffer);
+        console.log(`💾 Saved atlas cache: instance ${instanceId}, batch ${batchIndex}, ${cardCount} cards`);
+    }
+
+    /**
+     * Supprime tous les atlas d'une instance donnée
+     */
+    public static clearInstanceAtlasCache(instanceId: number): void {
+        this.ensureCacheDirectories();
+        const files = fs.readdirSync(this.ATLAS_DIR);
+        const instancePattern = new RegExp(`^instance_${instanceId}_batch_\\d+\\.png$`);
+        
+        let deleted = 0;
+        for (const file of files) {
+            if (instancePattern.test(file)) {
+                try {
+                    fs.unlinkSync(path.join(this.ATLAS_DIR, file));
+                    deleted++;
+                } catch (error) {
+                    console.error(`❌ Error deleting atlas ${file}:`, error);
+                }
+            }
+        }
+        
+        if (deleted > 0) {
+            console.log(`🗑️ Cleared ${deleted} atlas cache files for instance ${instanceId}`);
+        }
     }
 
     /**
@@ -143,6 +240,8 @@ export default class Instance implements IInstance {
             });
             this.card_ids = [...currentCardIds, cardId];
 
+            // Note: L'atlas sera automatiquement régénéré à la demande si le nombre de cartes a changé
+
             // Déclencher le téléchargement de l'image individuelle en arrière-plan
             this.downloadCardImage(cardId).catch(error => {
                 console.error(`Failed to download image for card ${cardId}:`, error);
@@ -161,6 +260,8 @@ export default class Instance implements IInstance {
             data: { card_ids: newCardIds } as any
         });
         this.card_ids = newCardIds;
+        
+        // Note: L'atlas sera automatiquement régénéré à la demande si le nombre de cartes a changé
     }
 
     public async clearCards(): Promise<void> {
@@ -169,6 +270,8 @@ export default class Instance implements IInstance {
             data: { card_ids: [] } as any
         });
         this.card_ids = [];
+        
+        // Note: Les atlas vides seront nettoyés par le cleanup automatique
     }
 
     public hasCard(cardId: string): boolean {
@@ -191,24 +294,28 @@ export default class Instance implements IInstance {
         const usedIds = new Set(existingInstances.map(instance => instance.id));
         
         // Find first unused ID in range 0-63
-        for (let i = 0; i <= Instance.MAX_INSTANCES - 1; i++) 
+        for (let i = 0; i <= Instance.MAX_INSTANCES - 1; i++) {
             if (!usedIds.has(i)) {
                 nextId = i;
                 break;
             }
+        }
         
-        // If all IDs are used (64 instances), reuse the oldest one (rotation)
+        // If all IDs are used (64 instances), reuse the least recently seen one (rotation)
         if (usedIds.size >= Instance.MAX_INSTANCES) {
-            // Find the oldest instance by created_at timestamp
+            // Find the instance with the oldest last_seen_at timestamp
             const oldestInstance = await Database.prisma.instance.findFirst({
-                orderBy: { created_at: 'asc' }
+                orderBy: { last_seen_at: 'asc' }
             });
 
             if (oldestInstance) {
                 nextId = oldestInstance.id;
 
+                // Nettoyer le cache atlas de l'ancienne instance
+                this.clearInstanceAtlasCache(nextId);
+
                 // Reset card_ids and user_ids, and update last_seen_at
-                await Database.prisma.instance.update({
+                const updatedInstance = await Database.prisma.instance.update({
                     where: { id: nextId },
                     data: {
                         card_ids: [],
@@ -216,6 +323,9 @@ export default class Instance implements IInstance {
                         last_seen_at: new Date()
                     } as any
                 });
+                
+                console.log(`🔄 Instance ${nextId} recycled (was oldest) - atlas cache cleared`);
+                return new Instance(updatedInstance);
             }
         }
         
@@ -287,8 +397,13 @@ export default class Instance implements IInstance {
      * Télécharge une seule image de carte
      */
     private async downloadSingleCardImage(cardId: string): Promise<void> {
-        const imageDir = path.join(process.cwd(), 'images', 'cards');
-        const imagePath = path.join(imageDir, `${cardId}.jpg`);
+        Instance.ensureCacheDirectories();
+        
+        // Parser le format card_id:face_index (ex: "abc123:0")
+        const [actualCardId, faceIndexStr] = cardId.includes(':') ? cardId.split(':') : [cardId, '0'];
+        const faceIndex = parseInt(faceIndexStr, 10);
+        
+        const imagePath = path.join(Instance.CARDS_DIR, `${cardId}.jpg`);
 
         // Vérifier si l'image existe déjà
         if (fs.existsSync(imagePath)) {
@@ -296,19 +411,20 @@ export default class Instance implements IInstance {
         }
 
         try {
-            // Créer le dossier s'il n'existe pas
-            if (!fs.existsSync(imageDir)) {
-                fs.mkdirSync(imageDir, { recursive: true });
-            }
 
-            // Récupérer l'URL de l'image depuis la base de données
-            const face = await Database.prisma.face.findFirst({
-                where: { card_id: cardId },
+            // Récupérer l'URL de l'image depuis la base de données pour la face spécifique
+            const face = await Database.prisma.face.findUnique({
+                where: { 
+                    card_id_index: {
+                        card_id: actualCardId,
+                        index: faceIndex
+                    }
+                },
                 select: { image_url: true }
             });
 
             if (!face?.image_url) {
-                console.error(`No image URL found for card ${cardId}`);
+                console.error(`No image URL found for card ${actualCardId} face ${faceIndex}`);
                 return;
             }
 
@@ -325,18 +441,19 @@ export default class Instance implements IInstance {
     }
 
     /**
-     * Télécharge toutes les images des cartes des instances actives récemment (< 24h)
+     * Télécharge toutes les images des cartes des instances actives récemment (< 48h)
      */
     public static async downloadRecentInstanceImages(): Promise<void> {
-        console.log('🔄 Starting download of images for recent instances (< 24h)...');
+        console.log('🔄 Starting download of images for recent instances (< 48h)...');
+        this.ensureCacheDirectories();
 
-        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const threshold = new Date(Date.now() - this.CACHE_THRESHOLD_HOURS * 60 * 60 * 1000);
 
         // Trouver toutes les instances avec des interactions récentes
         const recentInstances = await Database.prisma.instance.findMany({
             where: {
                 last_seen_at: {
-                    gte: twentyFourHoursAgo
+                    gte: threshold
                 },
                 card_ids: {
                     isEmpty: false // Seulement les instances qui ont des cartes
@@ -365,12 +482,6 @@ export default class Instance implements IInstance {
 
         console.log(`🃏 Found ${allCardIds.size} unique cards to check for images`);
 
-        // Télécharger les images manquantes
-        const imageDir = path.join(process.cwd(), 'images', 'cards');
-        if (!fs.existsSync(imageDir)) {
-            fs.mkdirSync(imageDir, { recursive: true });
-        }
-
         let downloaded = 0;
         let skipped = 0;
         let errors = 0;
@@ -383,29 +494,41 @@ export default class Instance implements IInstance {
             const batch = cardIdsArray.slice(i, i + batchSize);
             console.log(`Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(cardIdsArray.length / batchSize)} (${batch.length} cards)...`);
 
-            // Récupérer les URLs des images pour ce lot
+            // Parser les IDs et récupérer les URLs des images pour ce lot
+            const facesToFetch: Array<{ card_id: string; index: number; fullId: string }> = [];
+            for (const cardId of batch) {
+                const [actualCardId, faceIndexStr] = cardId.includes(':') ? cardId.split(':') : [cardId, '0'];
+                const faceIndex = parseInt(faceIndexStr, 10);
+                facesToFetch.push({ card_id: actualCardId, index: faceIndex, fullId: cardId });
+            }
+
+            // Récupérer les URLs des images pour toutes les faces de ce lot
             const faces = await Database.prisma.face.findMany({
                 where: {
-                    card_id: { in: batch },
-                    image_url: { not: '' }
+                    OR: facesToFetch.map(f => ({
+                        card_id: f.card_id,
+                        index: f.index
+                    }))
                 },
                 select: {
                     card_id: true,
+                    index: true,
                     image_url: true
                 }
             });
 
-            // Créer une map card_id -> image_url
+            // Créer une map fullId -> image_url
             const imageUrls = new Map<string, string>();
             faces.forEach(face => {
                 if (face.image_url) {
-                    imageUrls.set(face.card_id, face.image_url);
+                    const fullId = `${face.card_id}:${face.index}`;
+                    imageUrls.set(fullId, face.image_url);
                 }
             });
 
             // Télécharger les images manquantes pour ce lot
             const downloadPromises = batch.map(async (cardId) => {
-                const imagePath = path.join(imageDir, `${cardId}.jpg`);
+                const imagePath = path.join(this.CARDS_DIR, `${cardId}.jpg`);
 
                 // Vérifier si l'image existe déjà
                 if (fs.existsSync(imagePath)) {
@@ -445,78 +568,103 @@ export default class Instance implements IInstance {
     }
 
     /**
-     * Nettoie les images des instances anciennes (> 24h) pour libérer de l'espace
+     * Nettoie les images et atlas des instances anciennes (> 48h) pour libérer de l'espace
      */
     public static async cleanupOldInstanceImages(): Promise<void> {
-        console.log('🧹 Starting cleanup of old instance images (> 24h)...');
+        console.log('🧹 Starting cleanup of old instance data (> 48h)...');
+        this.ensureCacheDirectories();
 
-        const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+        const threshold = new Date(Date.now() - this.CACHE_THRESHOLD_HOURS * 60 * 60 * 1000);
 
-        // Trouver toutes les instances avec des interactions récentes (< 24h)
+        // Trouver toutes les instances avec des interactions récentes (< 48h)
         const recentInstances = await Database.prisma.instance.findMany({
             where: {
                 last_seen_at: {
-                    gte: twentyFourHoursAgo
+                    gte: threshold
                 },
                 card_ids: {
                     isEmpty: false
                 }
             },
             select: {
+                id: true,
                 card_ids: true
             }
         });
 
         // Collecter tous les card_ids des instances récentes
         const recentCardIds = new Set<string>();
+        const recentInstanceIds = new Set<number>();
+        
         for (const instance of recentInstances) {
+            recentInstanceIds.add(instance.id);
             const cardIds = (instance as any).card_ids || [];
             cardIds.forEach((cardId: string) => recentCardIds.add(cardId));
         }
 
-        console.log(`📊 Found ${recentCardIds.size} cards used in recent instances (< 24h)`);
+        console.log(`📊 Found ${recentCardIds.size} cards used in recent instances (< 48h)`);
+        console.log(`📊 Found ${recentInstanceIds.size} active instances (< 48h)`);
 
-        // Lister toutes les images présentes dans le dossier
-        const imageDir = path.join(process.cwd(), 'images', 'cards');
-        if (!fs.existsSync(imageDir)) {
-            console.log('ℹ️ Image directory does not exist');
-            return;
-        }
+        // ===== NETTOYAGE DES IMAGES DE CARTES =====
+        let deletedCards = 0;
+        let cardErrors = 0;
 
-        const imageFiles = fs.readdirSync(imageDir).filter(file => file.endsWith('.jpg'));
-        console.log(`📁 Found ${imageFiles.length} image files in directory`);
+        const imageFiles = fs.readdirSync(this.CARDS_DIR).filter(file => file.endsWith('.jpg'));
+        console.log(`📁 Found ${imageFiles.length} card image files`);
 
         // Identifier les images à supprimer (celles qui ne sont pas utilisées récemment)
-        const imagesToDelete = imageFiles.filter(fileName => {
+        const cardsToDelete = imageFiles.filter(fileName => {
             // Extraire le card_id du nom de fichier (sans l'extension .jpg)
             const cardId = fileName.replace('.jpg', '');
             return !recentCardIds.has(cardId);
         });
 
-        console.log(`🗑️ Will delete ${imagesToDelete.length} unused images`);
+        console.log(`🗑️ Will delete ${cardsToDelete.length} unused card images`);
 
-        if (imagesToDelete.length === 0) {
-            console.log('✅ No unused images to delete');
-            return;
+        for (const imageFile of cardsToDelete) {
+            try {
+                const imagePath = path.join(this.CARDS_DIR, imageFile);
+                fs.unlinkSync(imagePath);
+                deletedCards++;
+            } catch (error) {
+                console.error(`❌ Error deleting card image ${imageFile}:`, error);
+                cardErrors++;
+            }
         }
 
-        // Supprimer les images inutilisées
-        let deleted = 0;
-        let errors = 0;
+        // ===== NETTOYAGE DES ATLAS =====
+        let deletedAtlas = 0;
+        let atlasErrors = 0;
 
-        for (const imageFile of imagesToDelete) {
+        const atlasFiles = fs.readdirSync(this.ATLAS_DIR).filter(file => file.endsWith('.png'));
+        console.log(`📁 Found ${atlasFiles.length} atlas files`);
+
+        // Extraire les IDs d'instance depuis les noms de fichiers atlas
+        const atlasPattern = /^instance_(\d+)_batch_\d+_n\d+\.png$/;
+        const atlasToDelete = atlasFiles.filter(fileName => {
+            const match = fileName.match(atlasPattern);
+            if (!match) return true; // Supprimer les fichiers mal formés
+            
+            const instanceId = parseInt(match[1], 10);
+            return !recentInstanceIds.has(instanceId);
+        });
+
+        console.log(`🗑️ Will delete ${atlasToDelete.length} old atlas files`);
+
+        for (const atlasFile of atlasToDelete) {
             try {
-                const imagePath = path.join(imageDir, imageFile);
-                fs.unlinkSync(imagePath);
-                deleted++;
+                const atlasPath = path.join(this.ATLAS_DIR, atlasFile);
+                fs.unlinkSync(atlasPath);
+                deletedAtlas++;
             } catch (error) {
-                console.error(`❌ Error deleting image ${imageFile}:`, error);
-                errors++;
+                console.error(`❌ Error deleting atlas ${atlasFile}:`, error);
+                atlasErrors++;
             }
         }
 
         console.log('🎉 Cleanup completed!');
-        console.log(`📊 Summary: ${deleted} images deleted, ${errors} errors`);
+        console.log(`📊 Card images: ${deletedCards} deleted, ${cardErrors} errors`);
+        console.log(`📊 Atlas files: ${deletedAtlas} deleted, ${atlasErrors} errors`);
     }
 
     /**

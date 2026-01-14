@@ -58,10 +58,37 @@ async function atHandler(req: Request, res: Response) {
                 data: await generateJsonData(linkIndex, playerInstance, user.id)
             });
         } else if (isAtlasResponse) {
-            // Générer et retourner l'atlas d'images
+            // Calculer l'index du batch
+            const batchIndex = linkIndex - 10;
+            const batchSize = 24;
+            
+            // Calculer le nombre de cartes dans ce batch spécifique
+            const cards = playerInstance.card_ids;
+            const startIndex = batchIndex * batchSize;
+            const batchCards = cards.slice(startIndex, startIndex + batchSize);
+            const currentCardCount = batchCards.length;
+
+            // Vérifier si l'atlas est en cache ET correspond au nombre de cartes actuel
+            if (Instance.hasAtlasCache(playerInstance.id, batchIndex, currentCardCount)) {
+                console.log(`📦 Serving atlas from cache: instance ${playerInstance.id}, batch ${batchIndex}, ${currentCardCount} cards`);
+                const cachedAtlas = Instance.readAtlasCache(playerInstance.id, batchIndex, currentCardCount);
+                if (cachedAtlas) {
+                    res.setHeader('Content-Type', 'image/png');
+                    res.setHeader('X-Cache', 'HIT');
+                    return res.send(cachedAtlas);
+                }
+            }
+
+            // L'atlas n'existe pas OU le nombre de cartes a changé -> régénérer
             try {
+                console.log(`🎨 Generating atlas: instance ${playerInstance.id}, batch ${batchIndex}, ${currentCardCount} cards`);
                 const atlasImage = await generateAtlasImage(linkIndex, playerInstance);
+                
+                // Sauvegarder dans le cache avec le nombre de cartes
+                Instance.saveAtlasCache(playerInstance.id, batchIndex, currentCardCount, atlasImage);
+                
                 res.setHeader('Content-Type', 'image/png');
+                res.setHeader('X-Cache', 'MISS');
                 return res.send(atlasImage);
             } catch (error) {
                 console.error('Error generating atlas:', error);
@@ -243,43 +270,11 @@ async function generateJsonData(linkIndex: number, instance: Instance, userId: n
         const batchIndex = Math.floor(i / batchSize);
         const atlasLinkId = batchIndex + 10;
 
-        // Calculer les coordonnées UV pour chaque carte du batch
-        // Compatible Unity (origine en bas à gauche)
-        const cardsWithOffsets = batchCards.map((cardId, cardIndex) => {
-            const col = cardIndex % cols;
-            const row = Math.floor(cardIndex / cols);
-            
-            // Position en pixels dans l'atlas redimensionné
-            const pixelX = col * scaledCardWidth;
-            const pixelY = row * scaledCardHeight;
-            
-            // Normaliser les coordonnées (0-1) pour Unity
-            // Unity utilise l'origine en bas à gauche, donc on inverse Y
-            const rectX = pixelX / atlasWidth;
-            const rectY = 1.0 - (pixelY + scaledCardHeight) / atlasHeight;
-            const rectWidth = scaledCardWidth / atlasWidth;
-            const rectHeight = scaledCardHeight / atlasHeight;
-
-            return {
-                id: cardId,
-                // Coordonnées Unity Rect (x, y, width, height) normalisées
-                rect_x: rectX,
-                rect_y: rectY,
-                rect_width: rectWidth,
-                rect_height: rectHeight,
-                // Aussi fournir les dimensions en pixels pour référence
-                width: Math.floor(scaledCardWidth),
-                height: Math.floor(scaledCardHeight)
-            };
-        });
-
         batches.push({
             batch_index: batchIndex,
             card_count: batchCards.length,
             atlas_link: `/at${atlasLinkId.toString(36)}`,
-            atlas_width: atlasWidth,
-            atlas_height: atlasHeight,
-            cards: cardsWithOffsets
+            cards: batchCards
         });
     }
 
@@ -306,6 +301,19 @@ async function generateAtlasImage(linkIndex: number, instance: Instance): Promis
 
     if (batchCards.length === 0) {
         throw new Error('No cards in this batch');
+    }
+
+    // Vérifier que toutes les images sont disponibles avant de générer l'atlas
+    const missingImages: string[] = [];
+    for (const cardId of batchCards) {
+        const imagePath = path.join(process.cwd(), 'images', 'cards', `${cardId}.jpg`);
+        if (!fs.existsSync(imagePath)) {
+            missingImages.push(cardId);
+        }
+    }
+
+    if (missingImages.length > 0) {
+        throw new Error(`Cannot generate atlas: ${missingImages.length}/${batchCards.length} images not yet downloaded from Scryfall. Please wait for image download to complete.`);
     }
 
     // Dimensions d'une carte MTG standard

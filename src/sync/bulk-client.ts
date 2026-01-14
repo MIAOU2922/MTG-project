@@ -6,6 +6,9 @@
 const JSONStream = require('JSONStream');
 import { Readable } from 'stream';
 import { pipeline } from 'stream/promises';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
 
 import {
   BulkData,
@@ -216,8 +219,229 @@ export class ScryfallBulkDataClient implements BulkDataClient {
    * Télécharge et traite un fichier bulk data en streaming
    * Recommandé pour les gros fichiers (> 500MB)
    * Utilise JSONStream pour un parsing efficace sans accumulation mémoire
+   * 
+   * STRATÉGIE: Télécharge d'abord le fichier complet, puis le traite localement
+   * pour éviter les timeouts de connexion réseau pendant le traitement
    */
   async downloadBulkDataStream<T extends BulkDataType>(
+    type: T,
+    processingOptions: StreamProcessingOptions<any>,
+    downloadOptions: BulkDataDownloadOptions = {}
+  ): Promise<BulkFileMetadata> {
+    // Récupérer les infos du fichier
+    const bulkDataInfo = await this.getBulkDataByType(type);
+
+    if ('object' in bulkDataInfo && bulkDataInfo.object === 'error') {
+      throw new Error(`Impossible de récupérer les infos du fichier ${type}: ${bulkDataInfo.details}`);
+    }
+
+    const downloadUrl = bulkDataInfo.download_uri;
+    const fileSize = bulkDataInfo.size;
+    const batchSize = processingOptions.batchSize || getRecommendedBufferSize(type);
+
+    // Créer un fichier temporaire pour le téléchargement
+    const tempDir = os.tmpdir();
+    const tempFilePath = path.join(tempDir, `scryfall-${type}-${Date.now()}.json`);
+
+    try {
+      console.log(`📥 Downloading bulk file to ${tempFilePath}...`);
+      console.log(`📦 Expected file size: ${Math.round(fileSize / (1024 * 1024))}MB`);
+
+      // ÉTAPE 1: Télécharger le fichier complet
+      const downloadStartTime = Date.now();
+      const response = await fetch(downloadUrl, {
+        headers: {
+          'User-Agent': 'MTG-VRC/1.0'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      if (!response.body) {
+        throw new Error('Pas de contenu dans la réponse');
+      }
+
+      // Écrire le fichier
+      const fileStream = fs.createWriteStream(tempFilePath);
+      const nodeStream = Readable.fromWeb(response.body as any);
+      
+      await new Promise<void>((resolve, reject) => {
+        let downloadedBytes = 0;
+        let lastProgressLog = 0;
+        
+        nodeStream.on('data', (chunk) => {
+          downloadedBytes += chunk.length;
+          const now = Date.now();
+          
+          // Log toutes les 5 secondes
+          if (now - lastProgressLog > 5000) {
+            const progressPct = ((downloadedBytes / fileSize) * 100).toFixed(1);
+            const downloadedMB = (downloadedBytes / (1024 * 1024)).toFixed(1);
+            const totalMB = (fileSize / (1024 * 1024)).toFixed(1);
+            console.log(`  📥 Downloaded ${downloadedMB}MB / ${totalMB}MB (${progressPct}%)`);
+            lastProgressLog = now;
+          }
+        });
+        
+        nodeStream.pipe(fileStream);
+        fileStream.on('finish', resolve);
+        fileStream.on('error', reject);
+        nodeStream.on('error', reject);
+      });
+
+      const downloadTime = Date.now() - downloadStartTime;
+      console.log(`✅ Download complete in ${Math.round(downloadTime / 1000)}s`);
+      console.log(`🔄 Processing file locally...`);
+
+      // ÉTAPE 2: Traiter le fichier localement
+      return await this.processLocalBulkFile(tempFilePath, type, bulkDataInfo, processingOptions, batchSize);
+
+    } catch (error) {
+      // Nettoyer le fichier temporaire en cas d'erreur
+      if (fs.existsSync(tempFilePath)) {
+        fs.unlinkSync(tempFilePath);
+      }
+      throw new Error(`${ERROR_MESSAGES.BULK_DOWNLOAD_FAILED}: ${error}`);
+    } finally {
+      // Nettoyer le fichier temporaire après traitement
+      if (fs.existsSync(tempFilePath)) {
+        try {
+          fs.unlinkSync(tempFilePath);
+          console.log(`🧹 Cleaned up temporary file`);
+        } catch (err) {
+          console.warn(`Failed to clean up temp file: ${err}`);
+        }
+      }
+    }
+  }
+
+  /**
+   * Traite un fichier bulk data local
+   */
+  private async processLocalBulkFile<T extends BulkDataType>(
+    filePath: string,
+    type: T,
+    bulkDataInfo: BulkData,
+    processingOptions: StreamProcessingOptions<any>,
+    batchSize: number
+  ): Promise<BulkFileMetadata> {
+    const fileSize = bulkDataInfo.size;
+    let totalItems = 0;
+    let processedItems = 0;
+    const startTime = Date.now();
+    const stats: Record<string, number> = {};
+    let batch: any[] = [];
+    let batchIndex = 0;
+
+    try {
+      const fileStream = fs.createReadStream(filePath, { encoding: 'utf8' });
+      const jsonParser = JSONStream.parse('*');
+
+      return new Promise<BulkFileMetadata>((resolve, reject) => {
+        jsonParser.on('data', async (item: any) => {
+          jsonParser.pause(); // Pause pour synchroniser le parsing avec le traitement
+          
+          try {
+            totalItems++;
+
+            // Statistiques
+            const objType = item.object || 'unknown';
+            stats[objType] = (stats[objType] || 0) + 1;
+
+            // Traitement individuel
+            if (processingOptions.onItem) {
+              try {
+                await processingOptions.onItem(item, totalItems - 1);
+              } catch (error) {
+                if (processingOptions.onError) {
+                  processingOptions.onError(error as Error, item, totalItems - 1);
+                }
+              }
+            }
+
+            // Ajout au batch
+            batch.push(item);
+
+            if (batch.length >= batchSize) {
+              if (processingOptions.onBatch) {
+                try {
+                  const t0 = Date.now();
+                  await processingOptions.onBatch([...batch], batchIndex);
+                  const t1 = Date.now();
+                  console.log(`Batch ${batchIndex} processed in ${t1 - t0} ms`);
+                  
+                  processedItems += batch.length;
+                  batch = [];
+                  batchIndex++;
+
+                  // Force garbage collection hint périodiquement
+                  if (batchIndex % 5 === 0 && global.gc) {
+                    global.gc();
+                  }
+                } catch (error) {
+                  if (processingOptions.onError) {
+                    processingOptions.onError(error as Error);
+                  }
+                }
+              } else {
+                processedItems += batch.length;
+                batch = [];
+                batchIndex++;
+              }
+            }
+          } catch (error) {
+            jsonParser.emit('error', error);
+          }
+
+          jsonParser.resume(); // Resume après traitement
+        });
+
+        jsonParser.on('end', async () => {
+          try {
+            // Traiter le dernier batch
+            if (batch.length > 0 && processingOptions.onBatch) {
+              await processingOptions.onBatch([...batch], batchIndex);
+              processedItems += batch.length;
+            }
+
+            const processingTime = Date.now() - startTime;
+
+            resolve({
+              type,
+              totalItems,
+              fileSize,
+              lastUpdated: bulkDataInfo.updated_at,
+              processingTime,
+              stats
+            });
+          } catch (error) {
+            reject(error);
+          }
+        });
+
+        jsonParser.on('error', (error: Error) => {
+          reject(new Error(`${ERROR_MESSAGES.BULK_PARSE_ERROR}: ${error.message}`));
+        });
+
+        fileStream.on('error', (error: Error) => {
+          reject(new Error(`Error reading local file: ${error.message}`));
+        });
+
+        fileStream.pipe(jsonParser);
+      });
+
+    } catch (error) {
+      throw new Error(`${ERROR_MESSAGES.BULK_DOWNLOAD_FAILED}: ${error}`);
+    }
+  }
+
+  /**
+   * ANCIENNE MÉTHODE - Streaming direct (conservée pour référence)
+   * Note: Peut échouer sur de longues connexions réseau
+   */
+  private async downloadBulkDataStreamDirect<T extends BulkDataType>(
     type: T,
     processingOptions: StreamProcessingOptions<any>,
     downloadOptions: BulkDataDownloadOptions = {}
@@ -381,6 +605,18 @@ export class ScryfallBulkDataClient implements BulkDataClient {
         nodeStream.on('error', (error: Error) => {
           if (streamTimeout) clearTimeout(streamTimeout);
           reject(new Error(`${ERROR_MESSAGES.BULK_DOWNLOAD_FAILED}: ${error.message}`));
+        });
+
+        // Gérer la fermeture prématurée du stream
+        nodeStream.on('close', () => {
+          // Si le stream se ferme avant la fin du JSON, c'est une erreur
+          if (!jsonParser.destroyed && totalItems > 0) {
+            console.warn(`Stream fermé prématurément après ${totalItems} items`);
+          }
+        });
+
+        jsonParser.on('close', () => {
+          if (streamTimeout) clearTimeout(streamTimeout);
         });
 
         // Démarrer le timeout

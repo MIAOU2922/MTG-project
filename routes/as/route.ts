@@ -41,9 +41,22 @@ async function asHandler(req: Request, res: Response) {
 
         // Ajouter les IDs des cartes trouvées à l'instance si elle existe
         if (playerInstance) {
-            const cardIds = (searchResults.items as { id: string }[]).map((card: { id: string }) => card.id).filter((id: string) => id);
-            for (const cardId of cardIds) {
-                await playerInstance.addCard(cardId);
+            // Pour chaque carte trouvée, ajouter toutes ses faces à l'instance
+            for (const card of searchResults.items as any[]) {
+                if (!card.id) continue;
+                
+                // Récupérer toutes les faces de cette carte pour avoir leurs indices
+                const facesWithIndex = await Database.prisma.face.findMany({
+                    where: { card_id: card.id },
+                    select: { index: true },
+                    orderBy: { index: 'asc' }
+                });
+                
+                // Ajouter chaque face individuellement à l'instance
+                for (const face of facesWithIndex) {
+                    const faceId = `${card.id}:${face.index}`;
+                    await playerInstance.addCard(faceId);
+                }
             }
             // Mise à jour du last_seen fait automatiquement dans user.updateLastSeen()
         }
@@ -57,27 +70,10 @@ async function asHandler(req: Request, res: Response) {
             results: (searchResults.items as any[]).map((item: any) => ({
                 id: item.id,
                 name: item.name,
-                printed_name: item.printed_name,
                 set: item.set?.set,
                 collector_number: item.collector_number,
                 lang: item.lang,
-                rarity: item.rarity,
-                faces: (item.faces as any[]).map((face: any) => ({
-                    name: face.name,
-                    type_line: face.type_line,
-                    printed_type_line: face.printed_type_line,
-                    mana_cost: face.mana_cost,
-                    cmc: face.cmc,
-                    power: face.power,
-                    toughness: face.toughness,
-                    loyalty: face.loyalty,
-                    colors: face.colors,
-                    color_identities: face.color_identities,
-                    keywords: face.keywords,
-                    oracle_text: face.oracle?.text,
-                    printed_text: face.printed_text,
-                    flavor_text: face.flavor_text,
-                })),
+                faces: (item.faces as any[])?.length || 0
             })),
         });
     } catch (error) {
@@ -115,6 +111,14 @@ async function performSearch(query: string) {
         where.NOT = [
             ...(where.NOT || []),
             { set: { type: 'alchemy' } }
+        ];
+    }
+
+    // Exclure les cartes d'alchimie (nom commence par "A-") sauf si explicitement demandé
+    if (settypeFilter !== 'alchemy' && !filters.include_alchemy) {
+        where.NOT = [
+            ...(where.NOT || []),
+            { name: { startsWith: 'A-' } }
         ];
     }
     
@@ -364,6 +368,8 @@ async function performSearch(query: string) {
             collector_number: true,
             lang: true,
             rarity: true,
+            image_status: true,
+            set_id: true,
             faces: {
                 select: {
                     name: true,
@@ -390,11 +396,90 @@ async function performSearch(query: string) {
         take: 240, // Limite de sécurité pour éviter les réponses trop volumineuses
     });
     
+    // Remplacer les cartes avec image_status problématique par leurs versions alternatives
+    const processedCards = await replaceProblematicCards(cards);
+    
     return {
         query,
-        count: cards.length,
-        items: cards,
+        count: processedCards.length,
+        items: processedCards,
     };
+}
+
+/**
+ * Remplace les cartes avec image_status "missing" ou "placeholder" par des versions alternatives
+ * Priorité: anglais > première version disponible avec image valide
+ * Supprime la carte si aucune version valide n'existe
+ */
+async function replaceProblematicCards(cards: any[]): Promise<any[]> {
+    const processedCards: any[] = [];
+    
+    for (const card of cards) {
+        const imageStatus = card.image_status;
+        
+        // Si l'image est OK, garder la carte telle quelle
+        if (imageStatus && imageStatus !== 'missing' && imageStatus !== 'placeholder') {
+            processedCards.push(card);
+            continue;
+        }
+        
+        // Chercher une version alternative avec le même set et collector_number
+        const alternatives = await Database.prisma.card.findMany({
+            where: {
+                set_id: card.set_id,
+                collector_number: card.collector_number,
+                image_status: {
+                    notIn: ['missing', 'placeholder']
+                }
+            },
+            select: {
+                id: true,
+                name: true,
+                printed_name: true,
+                set: true,
+                collector_number: true,
+                lang: true,
+                rarity: true,
+                image_status: true,
+                set_id: true,
+                faces: {
+                    select: {
+                        name: true,
+                        type_line: true,
+                        printed_type_line: true,
+                        mana_cost: true,
+                        cmc: true,
+                        power: true,
+                        toughness: true,
+                        loyalty: true,
+                        colors: true,
+                        color_identities: true,
+                        keywords: true,
+                        oracle: {
+                            select: {
+                                text: true,
+                            }
+                        },
+                        printed_text: true,
+                        flavor_text: true,
+                    }
+                }
+            },
+            orderBy: [
+                // Priorité à l'anglais
+                { lang: 'asc' }
+            ]
+        });
+        
+        if (alternatives.length > 0) {
+            // Chercher d'abord une version en anglais
+            const englishVersion = alternatives.find(alt => alt.lang === 'en');
+            processedCards.push(englishVersion || alternatives[0]);
+        }
+        // Si aucune alternative valide, on ne retourne pas la carte (elle est omise)
+    }
+    
+    return processedCards;
 }
 
 function parseQuery(query: string): Record<string, any> {
@@ -499,6 +584,11 @@ function parseQuery(query: string): Record<string, any> {
                 case 'settype':
                 case 'st':
                     filters.settype = cleanValue;
+                    break;
+                case 'include_alchemy':
+                case 'alchemy':
+                    // Permet d'inclure les cartes d'alchimie si explicitement demandé
+                    filters.include_alchemy = cleanValue.toLowerCase() === 'true' || cleanValue === '1';
                     break;
                 case 'year':
                     filters.year = parseNumericValue(cleanValue);

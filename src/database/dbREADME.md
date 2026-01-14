@@ -17,8 +17,53 @@ Le module `database/` contient toute la logique de gestion de base de données P
 | `Database.ts` | Singleton Prisma | Instance centralisée du client Prisma |
 | `Config.ts` | Configuration DB | Paramètres connexion, timestamps |
 | `User.ts` | Modèle utilisateur | Création/update utilisateurs, last_seen |
-| `Instance.ts` | Sessions | Gestion instances, card_ids, user_ids |
+| `Instance.ts` | Sessions + Cache ✨ | Gestion instances, card_ids (format `id:index`), cache atlas 48h |
 | `Deck.ts` | ⭐ Système decks | 11 méthodes, 6 zones, permissions |
+
+---
+
+## 🖼️ Instance.ts - Système de Cache d'Atlas
+
+### Gestion Intelligente des Images
+
+**Format de stockage des cartes:** `{card_id}:{face_index}`
+- Exemple: `"abc123:0"`, `"abc123:1"` pour une carte double face
+- Permet de stocker chaque face individuellement
+- Compatible avec cartes transform, modal_dfc, etc.
+
+### Cache des Atlas
+
+**Répertoires:**
+- `images/cards/` - Images individuelles des cartes (format: `{card_id}:{face_index}.jpg`)
+- `images/atlas/` - Atlas générés (format: `instance_{id}_batch_{index}_n{count}.png`)
+
+**Caractéristiques:**
+- ⏱️ **Durée de cache:** 48 heures
+- 🔄 **Invalidation automatique:** Si le nombre de cartes du batch change
+- 📦 **Nom de fichier intelligent:** Inclut le nombre de cartes pour validation rapide
+- 🧹 **Nettoyage automatique:** Suppression des anciennes versions lors de la régénération
+
+**Méthodes clés:**
+```typescript
+static hasAtlasCache(instanceId: number, batchIndex: number, cardCount: number): boolean
+static readAtlasCache(instanceId: number, batchIndex: number, cardCount: number): Buffer | null
+static saveAtlasCache(instanceId: number, batchIndex: number, cardCount: number, imageBuffer: Buffer): void
+static clearInstanceAtlasCache(instanceId: number): void
+```
+
+### Téléchargement des Images
+
+**Téléchargement individuel:**
+- Appelé automatiquement lors de `addCard()`
+- Parse le format `{card_id}:{face_index}`
+- Utilise `findUnique` avec clé composée `card_id_index`
+- Télécharge l'image de la face spécifique
+
+**Téléchargement groupé:**
+- Exécuté toutes les heures (scheduler)
+- Télécharge uniquement les images des instances < 48h
+- Traitement par batch de 50 cartes
+- Support complet du format `{card_id}:{face_index}`
 
 ---
 

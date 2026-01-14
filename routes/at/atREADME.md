@@ -4,7 +4,7 @@ La route `/at` fournit un système de liens statiques encodés en base36 qui ret
 
 ## 📋 Vue d'ensemble
 
-**Endpoint :** `GET /at/{linkId}`
+**Endpoint :** `GET /at{linkId}`
 
 **Paramètres :**
 - `linkId` : ID du lien en base36 (caractères alphanumériques minuscules)
@@ -48,10 +48,28 @@ Retourne toujours des données JSON avec les informations de l'instance.
     "instance_id": 42,
     "player_id": "42-12345",
     "cards_loaded_count": 150,
-    "batches": [...]
+    "batches": [
+      {
+        "batch_index": 0,
+        "card_count": 24,
+        "atlas_link": "/ata",
+        "cards": [
+          "abc123:0",
+          "abc123:1",
+          "def456:0",
+          ...
+        ]
+      }
+    ]
   }
 }
 ```
+
+**✨ Nouveautés:**
+- Chaque batch contient maintenant un tableau `cards` avec la liste complète des IDs
+- Format: `{card_id}:{face_index}` pour supporter les cartes double face
+- Les coordonnées UV ont été supprimées (calculées côté client)
+- `atlas_width` et `atlas_height` supprimés (toujours 2048px max)
 
 #### **at1 : Liste des decks de l'utilisateur** ✨ NEW
 Retourne uniquement l'ID et le nom des decks créés par l'utilisateur.
@@ -137,12 +155,17 @@ Retourne la liste complète des sets MTG disponibles dans la base de données.
 ### **Liens 10+ (base36) : Atlas d'images**
 Génère et retourne un atlas PNG contenant 24 cartes maximum.
 
-**Exemple :** `/at/a`, `/at/1f` (10, 31 en décimal)
+**Exemple :** `/ata`, `/at1f` (10, 31 en décimal)
 
 - **Format :** PNG
 - **Dimensions :** Maximum 2048px (redimensionné automatiquement)
 - **Layout :** 6 colonnes × 4 lignes = 24 cartes maximum
 - **Téléchargement automatique :** Les images manquantes sont téléchargées en arrière-plan
+- **Cache intelligent ✨ NEW :** 
+  - Durée: 48 heures
+  - Fichiers: `images/atlas/instance_{id}_batch_{index}_n{count}.png`
+  - Invalidation automatique si le nombre de cartes change
+  - Header `X-Cache: HIT|MISS` pour monitoring
 
 ## 🃏 Structure des données JSON
 
@@ -159,7 +182,7 @@ Chaque batch représente un atlas de 24 cartes :
 {
   "batch_index": 0,
   "card_count": 24,
-  "atlas_link": "/at/a",
+  "atlas_link": "/ata",
   "atlas_width": 1464,
   "atlas_height": 1360,
   "cards": [

@@ -77,8 +77,19 @@ function parseAdQuery(queryParam: string): ParsedQuery {
             break;
             
         case 'load':
-            // load:deck_id
-            result.deckId = parts[1];
+            // load:deck_id OR load:format:deck_list_encoded:lang
+            // If parts[1] looks like a UUID, treat as deck_id
+            // Otherwise, treat as inline deck list
+            const firstParam = parts[1];
+            if (firstParam && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(firstParam)) {
+                // UUID format - loading saved deck
+                result.deckId = firstParam;
+            } else {
+                // Inline deck list - loading unsaved deck
+                result.format = parts[1] || 'auto';
+                result.deckList = decodeURIComponent(parts[2] || '');
+                result.lang = parts[3] || 'en';
+            }
             break;
             
         case 'delete':
@@ -134,7 +145,7 @@ async function adHandler(req: Request, res: Response) {
                         error: 'User is not in any instance'
                     });
                 }
-                return await handleLoad(res, user, currentInstance, parsedQuery.deckId, undefined);
+                return await handleLoad(res, user, currentInstance, parsedQuery.deckId, undefined, parsedQuery.deckList, parsedQuery.format, parsedQuery.lang);
                 
             case 'delete':
                 return await handleDelete(res, user, parsedQuery.deckId);
@@ -400,80 +411,103 @@ async function handleSave(
 
 /**
  * LOAD action: Load a deck and add its cards to the instance
+ * Supports:
+ * - Loading from saved deck by ID/name: load:deck_uuid or load with deckName
+ * - Loading from inline deck list: load:format:deck_list:lang
  */
 async function handleLoad(
     res: Response,
     user: any,
     instance: Instance,
     deckId: string | undefined,
-    deckName: string | undefined
+    deckName: string | undefined,
+    deckList: string | undefined,
+    format: string = 'auto',
+    lang: string = 'en'
 ): Promise<Response> {
-    if (!deckId && !deckName) {
+    // Check if we have either a saved deck reference or an inline deck list
+    if (!deckId && !deckName && !deckList) {
         return res.status(400).json({
-            error: 'Either deck ID "id" or deck name "name" is required for load action'
+            error: 'Either deck ID, deck name, or deck list is required for load action'
         });
     }
 
     try {
         let deck: Deck | null = null;
+        let isTemporaryDeck = false;
+        let parsedCards: ParsedCard[] = [];
+        let deckCards: any[] = [];
 
-        if (deckId) {
-            // Load by ID (anyone can load any public deck)
-            deck = await Deck.findById(deckId);
-        } else if (deckName) {
-            // Load by name (search for user's decks first, then public)
-            deck = await Deck.findByNameAndUser(deckName, user.id);
-            if (!deck) {
-                const publicDecks = await Deck.findByNamePublic(deckName);
-                if (publicDecks.length > 0) {
-                    deck = publicDecks[0];
+        // Check if loading from saved deck or inline deck list
+        if (deckList) {
+            // Loading from inline deck list (temporary/unsaved deck)
+            isTemporaryDeck = true;
+
+            // Parse the deck list using the same logic as parse/save
+            if (format === 'deckstats' || format === 'auto') {
+                parsedCards = parseDeckstatsFormat(deckList);
+            }
+            if (parsedCards.length === 0 && (format === 'moxfield' || format === 'auto')) {
+                parsedCards = parseMoxfieldFormat(deckList);
+            }
+            if (parsedCards.length === 0) {
+                parsedCards = parseGenericFormat(deckList);
+            }
+
+            if (parsedCards.length === 0) {
+                return res.status(400).json({
+                    error: 'No valid cards found in deck list'
+                });
+            }
+
+            // Lookup cards in database
+            for (const parsedCard of parsedCards) {
+                try {
+                    const result = await lookupCard(parsedCard, lang);
+                    if (result.found && result.card_id) {
+                        deckCards.push({
+                            card_id: result.card_id,
+                            count: result.count,
+                            name: result.name,
+                            zone: result.zone || 'main',
+                            is_commander: result.is_commander
+                        });
+                    }
+                } catch (error) {
+                    console.error(`Failed to lookup card ${parsedCard.name}:`, error);
                 }
             }
-        }
 
-        if (!deck) {
-            return res.status(404).json({
-                error: 'Deck not found'
-            });
-        }
-
-        // Get the card IDs (repeated by count)
-        const cardIds = await deck.getCardIds();
-
-        // Add cards to the instance
-        for (const cardId of cardIds) {
-            await instance.addCard(cardId);
-        }
-
-        // Fetch all cards grouped by zone
-        const deckCards = await Database.prisma.deckCard.findMany({
-            where: { deck_id: deck.id }
-        });
-
-        // Get card details
-        const deckCardIds = deckCards.map(dc => dc.card_id);
-        const cardsDetails = await Database.prisma.card.findMany({
-            where: { id: { in: deckCardIds } },
-            select: {
-                id: true,
-                name: true
+            if (deckCards.length === 0) {
+                return res.status(400).json({
+                    error: 'No cards could be found in database from the deck list'
+                });
             }
-        });
+        } else {
+            // Loading from saved deck
+            if (deckId) {
+                // Load by ID (anyone can load any public deck)
+                deck = await Deck.findById(deckId);
+            } else if (deckName) {
+                // Load by name (search for user's decks first, then public)
+                deck = await Deck.findByNameAndUser(deckName, user.id);
+                if (!deck) {
+                    const publicDecks = await Deck.findByNamePublic(deckName);
+                    if (publicDecks.length > 0) {
+                        deck = publicDecks[0];
+                    }
+                }
+            }
 
-        // Create a map for quick lookup
-        const cardsMap = new Map(cardsDetails.map(c => [c.id, c]));
-
-        // Group cards by zone
-        interface CardByZone {
-            [zone: string]: Array<{
-                count: number;
-                name: string;
-                card_id: string;
-                is_commander?: boolean;
-            }>;
+            if (!deck) {
+                return res.status(404).json({
+                    error: 'Deck not found'
+                });
+            }
         }
 
-        const cardsByZone: CardByZone = {
+        let cardIds: string[] = [];
+        let cardsByZone: any = {
             main: [],
             sideboard: [],
             commander: [],
@@ -482,44 +516,104 @@ async function handleLoad(
             wishboard: []
         };
 
-        for (const deckCard of deckCards) {
-            const card = cardsMap.get(deckCard.card_id);
-            if (!card) continue;
-
-            const zone = (deckCard.zone || 'main') as string;
-            if (!cardsByZone[zone]) {
-                cardsByZone[zone] = [];
+        if (isTemporaryDeck) {
+            // For temporary deck, use the already parsed deckCards
+            // Extract card IDs repeated by count
+            for (const card of deckCards) {
+                for (let i = 0; i < card.count; i++) {
+                    cardIds.push(card.card_id);
+                }
             }
 
-            const cardData: any = {
-                count: deckCard.count,
-                name: card.name,
-                card_id: card.id
-            };
-
-            if (deckCard.is_commander) {
-                cardData.is_commander = true;
+            // Group by zone
+            for (const card of deckCards) {
+                const zone = card.zone || 'main';
+                if (!cardsByZone[zone]) {
+                    cardsByZone[zone] = [];
+                }
+                const cardData: any = {
+                    count: card.count,
+                    name: card.name,
+                    card_id: card.card_id
+                };
+                if (card.is_commander) {
+                    cardData.is_commander = true;
+                }
+                cardsByZone[zone].push(cardData);
             }
+        } else {
+            // For saved deck, get the card IDs (repeated by count)
+            cardIds = await deck!.getCardIds();
 
-            cardsByZone[zone].push(cardData);
+            // Fetch all cards grouped by zone
+            const savedDeckCards = await Database.prisma.deckCard.findMany({
+                where: { deck_id: deck!.id }
+            });
+
+            // Get card details
+            const deckCardIds = savedDeckCards.map(dc => dc.card_id);
+            const cardsDetails = await Database.prisma.card.findMany({
+                where: { id: { in: deckCardIds } },
+                select: {
+                    id: true,
+                    name: true
+                }
+            });
+
+            // Create a map for quick lookup
+            const cardsMap = new Map(cardsDetails.map(c => [c.id, c]));
+
+            // Group cards by zone
+            for (const deckCard of savedDeckCards) {
+                const card = cardsMap.get(deckCard.card_id);
+                if (!card) continue;
+
+                const zone = (deckCard.zone || 'main') as string;
+                if (!cardsByZone[zone]) {
+                    cardsByZone[zone] = [];
+                }
+
+                const cardData: any = {
+                    count: deckCard.count,
+                    name: card.name,
+                    card_id: card.id
+                };
+
+                if (deckCard.is_commander) {
+                    cardData.is_commander = true;
+                }
+
+                cardsByZone[zone].push(cardData);
+            }
         }
 
-        const uniqueCardIds = await deck.getUniqueCardIds();
-        const deckSize = await deck.getDeckSize();
+        // Add cards to the instance
+        for (const cardId of cardIds) {
+            await instance.addCard(cardId);
+        }
+
+        // Calculate deck statistics
+        const uniqueCardIds = isTemporaryDeck 
+            ? [...new Set(cardIds)]
+            : await deck!.getUniqueCardIds();
+        const deckSize = cardIds.length;
 
         return res.json({
             time: Date.now(),
             uid: user.id,
             iid: instance.id,
             action: 'load',
-            deck_id: deck.id,
-            deck_name: deck.name,
-            commander: deck.commander,
+            deck_type: isTemporaryDeck ? 'temporary' : 'saved',
+            deck_id: deck?.id,
+            deck_name: deck?.name || 'Temporary Deck',
+            commander: deck?.commander,
             unique_cards: uniqueCardIds.length,
             total_cards: deckSize,
             cards_added_to_instance: cardIds.length,
             cards_by_zone: cardsByZone,
-            message: 'Deck loaded successfully and cards added to instance'
+            message: isTemporaryDeck 
+                ? 'Temporary deck loaded successfully and cards added to instance'
+                : 'Deck loaded successfully and cards added to instance'
         });
     } catch (error) {
         console.error('Error in handleLoad:', error);

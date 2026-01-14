@@ -145,7 +145,7 @@ public class DeckListParser
     }
 
     /// <summary>
-    /// Génère une query pour charger un deck existant
+    /// Génère une query pour charger un deck existant (sauvegardé en base)
     /// Format API: /ad?q=load:deck_id
     /// </summary>
     public static string LoadDeck(string deckId)
@@ -154,6 +154,29 @@ public class DeckListParser
             return "";
 
         return $"load:{deckId}";
+    }
+
+    /// <summary>
+    /// Génère une query pour charger un deck temporaire (non sauvegardé)
+    /// Format API: /ad?q=load:format:deck_list_encoded:lang
+    /// Le deck est parsé et chargé dans l'instance sans être sauvegardé en base
+    /// </summary>
+    /// <param name="deckListInput">Contenu du deck (texte brut avec zones optionnelles)</param>
+    /// <param name="lang">Langue des cartes (défaut: en)</param>
+    /// <returns>Query string complète: load:format:content:lang</returns>
+    public static string LoadDeckTemporary(string deckListInput, string lang = "en")
+    {
+        if (string.IsNullOrWhiteSpace(deckListInput))
+            return "";
+
+        var lines = deckListInput.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+        var detectedFormat = DetectFormat(lines);
+
+        var deckListContent = deckListInput.Trim();
+        var encodedDeckList = Uri.EscapeDataString(deckListContent);
+
+        // Format: load:format:deck_list_encoded:lang
+        return $"load:{detectedFormat}:{encodedDeckList}:{lang}";
     }
 
     /// <summary>
@@ -231,9 +254,36 @@ public class DeckListParser
     // Teste la validité du deck sans le sauvegarder
 
 
-    // EXEMPLE 4: Charger un deck existant
+    // EXEMPLE 4: Charger un deck existant (sauvegardé)
     string query4 = DeckListParser.LoadDeck("550e8400-e29b-41d4-a716-446655440000");
     // Résultat: load:550e8400-e29b-41d4-a716-446655440000
+
+
+    // EXEMPLE 4b: Charger un deck temporaire (non sauvegardé)
+    string tempDeckInput = @"4 Lightning Bolt
+20 Mountain
+16 Forest";
+
+    string query4b = DeckListParser.LoadDeckTemporary(tempDeckInput, "en");
+    // Résultat: load:auto:4%20Lightning%20Bolt%0A20%20Mountain%0A16%20Forest:en
+    
+    string fullUrl4b = "https://mtg.hactazia.fr/ad?q=" + query4b;
+    // Charge le deck directement sans le sauvegarder en base
+    // Utile pour tester rapidement un deck ou partager une liste
+
+
+    // EXEMPLE 4c: Charger un deck temporaire avec zones Deckstats
+    string tempDeckWithZones = @"//Main
+4 Lightning Bolt
+20 Mountain
+
+//Sideboard
+2 Negate
+1 Counterspell";
+
+    string query4c = DeckListParser.LoadDeckTemporary(tempDeckWithZones, "en");
+    // Résultat: load:deckstats:...contenu encodé avec zones...:en
+    // Les zones seront parsées automatiquement par le serveur
 
 
     // EXEMPLE 5: Supprimer un deck
@@ -288,6 +338,7 @@ public class DeckListParser
     {
         private const string API_BASE = "https://mtg.hactazia.fr/ad?q=";
 
+        // Sauvegarder un deck de manière permanente
         public IEnumerator UploadDeck(string deckContent, string deckName)
         {
             // Générer la query
@@ -303,6 +354,52 @@ public class DeckListParser
                 {
                     Debug.Log("Deck créé: " + request.downloadHandler.text);
                     // Parser la réponse JSON pour obtenir deck_id
+                }
+                else
+                {
+                    Debug.LogError("Erreur: " + request.error);
+                }
+            }
+        }
+
+        // Charger un deck temporaire (sans sauvegarder)
+        public IEnumerator LoadTemporaryDeck(string deckContent)
+        {
+            // Générer la query pour load temporaire
+            string query = DeckListParser.LoadDeckTemporary(deckContent, "en");
+            string fullUrl = API_BASE + query;
+
+            using (UnityWebRequest request = UnityWebRequest.Get(fullUrl))
+            {
+                yield return request.SendWebRequest();
+
+                if (request.result == UnityWebRequest.Result.Success)
+                {
+                    Debug.Log("Deck temporaire chargé: " + request.downloadHandler.text);
+                    // Les cartes sont ajoutées à l'instance sans sauvegarder le deck
+                    // Response contient: deck_type: "temporary"
+                }
+                else
+                {
+                    Debug.LogError("Erreur: " + request.error);
+                }
+            }
+        }
+
+        // Charger un deck sauvegardé existant
+        public IEnumerator LoadSavedDeck(string deckId)
+        {
+            string query = DeckListParser.LoadDeck(deckId);
+            string fullUrl = API_BASE + query;
+
+            using (UnityWebRequest request = UnityWebRequest.Get(fullUrl))
+            {
+                yield return request.SendWebRequest();
+
+                if (request.result == UnityWebRequest.Result.Success)
+                {
+                    Debug.Log("Deck sauvegardé chargé: " + request.downloadHandler.text);
+                    // Response contient: deck_type: "saved", deck_id, deck_name, etc.
                 }
                 else
                 {

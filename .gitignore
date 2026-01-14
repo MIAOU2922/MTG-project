@@ -6,6 +6,7 @@ node_modules
 
 # Images des cartes (téléchargées automatiquement)
 images/cards/
+images/atlas/
 
 # log files
 logs

@@ -57,6 +57,7 @@ model Card {
   collector_number String
   rarity           String
   image_url        String
+  image_status     String? // highres_scan, lowres, placeholder, missing
   release_at       DateTime
   faces            Face[]
   legalities       Json     @default("{}")

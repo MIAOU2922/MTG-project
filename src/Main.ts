@@ -68,9 +68,9 @@ export default class Main extends EventEmitter {
             console.error('❌ Error during initial image download:', error);
         });
 
-        // Planifier un nettoyage périodique des images anciennes (toutes les heures)
+        // Planifier un nettoyage périodique des images et atlas anciens (toutes les heures)
         const cleanupJob = new cron.CronJob('0 * * * *', async () => {
-            console.log('🧹 Running periodic cleanup of old instance images (> 24h)...');
+            console.log('🧹 Running periodic cleanup of old data (> 48h)...');
             try {
                 await Instance.cleanupOldInstanceImages();
                 console.log('✅ Periodic cleanup completed');
@@ -80,7 +80,7 @@ export default class Main extends EventEmitter {
         });
 
         cleanupJob.start();
-        console.log('📅 Image cleanup scheduler started (runs every hour)');
+        console.log('📅 Image and atlas cleanup scheduler started (runs every hour, 48h threshold)');
     }
 
     private setupSyncScheduler(): void {
@@ -97,7 +97,7 @@ export default class Main extends EventEmitter {
             this.syncInProgress = true;
 
             try {
-                const sync = new ScryFallSync();
+                const sync = new ScryFallSync(5); // 5 cartes/rulings en parallèle
                 await sync.start({ syncCards: true, syncRulings: true });
                 console.log('✅ Scheduled daily sync completed successfully');
             } catch (error) {

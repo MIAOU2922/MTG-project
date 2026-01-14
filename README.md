@@ -54,6 +54,9 @@
 - ✅ **Multi-langues** supportées (EN, FR, ES, DE, IT, PT, JA, etc.)
 - ✅ **Images haute qualité** avec URLs Scryfall
 - ✅ **Légalités** par format (Standard, Modern, Commander, etc.)
+- ✅ **Cartes double face** complètement supportées (transform, modal_dfc, etc.)
+- ✅ **Cache d'atlas intelligent** - 48h de cache avec invalidation automatique
+- ✅ **Format de stockage** - `{card_id}:{face_index}` pour chaque face
 
 ### 🗂️ Système de Decks
 

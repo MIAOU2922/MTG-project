@@ -66,26 +66,43 @@ GET /ad?q=save:Mon%20Deck:deckstats:%2F%2FMain%0A4%20Lightning%20Bolt%0A%2F%2FSi
 
 ### 3. `load` - Charger un deck et ajouter ses cartes à l'instance
 
-**Description:** Charge un deck (créé par l'utilisateur ou public) et ajoute toutes ses cartes à l'instance active de l'utilisateur. Retourne les cartes groupées par zone.
+**Description:** Charge un deck et ajoute toutes ses cartes à l'instance active de l'utilisateur. Supporte deux modes :
+- **Mode sauvegardé** : Charge un deck depuis la base de données (créé par l'utilisateur ou public)
+- **Mode temporaire** : Parse une deck list inline sans la sauvegarder (✨ **NEW**)
 
-**Syntaxe:**
+**Syntaxe (Mode sauvegardé):**
 ```
 /ad?q=load:deck_id
 ```
 
-**Paramètres:**
+**Syntaxe (Mode temporaire):**
+```
+/ad?q=load:format:deck_list_encoded:lang
+```
+
+**Paramètres (Mode sauvegardé):**
 - `load` - Action
-- `deck_id` - ID unique du deck (requis, UUID)
+- `deck_id` - ID unique du deck (UUID, format: `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`)
+
+**Paramètres (Mode temporaire):**
+- `load` - Action
+- `format` - `deckstats`, `moxfield`, `auto` (optionnel, défaut: `auto`)
+- `deck_list_encoded` - Contenu encodé en URL (requis)
+- `lang` - Code langue `en`, `fr`, etc. (optionnel, défaut: `en`)
+
+**Détection automatique du mode:**
+Le système détecte automatiquement si le premier paramètre après `load:` est un UUID (mode sauvegardé) ou un format/deck list (mode temporaire).
 
 **Permissions:**
-- N'importe qui peut charger n'importe quel deck public
-- Les decks sont toujours accessibles via leur ID unique
+- N'importe qui peut charger n'importe quel deck public sauvegardé
+- Les decks temporaires sont accessibles à tous (pas de propriété)
 
 **Réponse:**
 Retourne les cartes groupées par zone avec count et flag `is_commander` si applicable.
 
 ```json
 {
+  "deck_type": "saved",  // ou "temporary"
   "cards_by_zone": {
     "main": [
       { "count": 1, "name": "Lightning Bolt", "card_id": "..." },
@@ -100,10 +117,22 @@ Retourne les cartes groupées par zone avec count et flag `is_commander` si appl
 }
 ```
 
-**Exemple:**
+**Exemples:**
 ```
+# Mode sauvegardé - Charger par UUID
 GET /ad?q=load:550e8400-e29b-41d4-a716-446655440000
+
+# Mode temporaire - Charger une deck list inline
+GET /ad?q=load:auto:4%20Lightning%20Bolt%0A2%20Island:en
+
+# Mode temporaire - Avec zones Deckstats
+GET /ad?q=load:deckstats:%2F%2FMain%0A4%20Lightning%20Bolt%0A%2F%2FSideboard%0A2%20Island:en
 ```
+
+**Différences entre modes:**
+- **Sauvegardé** : Détecté automatiquement si le premier paramètre est un UUID valide
+- **Temporaire** : Utilisé si le premier paramètre n'est pas un UUID (format de deck)
+- Les cartes temporaires sont ajoutées à l'instance mais le deck n'est pas sauvegardé en DB
 
 ### 4. `delete` - Supprimer un deck
 
