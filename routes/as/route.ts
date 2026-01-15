@@ -67,14 +67,19 @@ async function asHandler(req: Request, res: Response) {
             query: query,
             count: searchResults.count,
             instance_id: playerInstance?.id,
-            results: (searchResults.items as any[]).map((item: any) => ({
-                id: item.id,
-                name: item.name,
-                set: item.set?.set,
-                collector_number: item.collector_number,
-                lang: item.lang,
-                faces: (item.faces as any[])?.length || 0
-            })),
+            results: (searchResults.items as any[]).map((item: any) => {
+                const oracleId = (item.faces as any[] || []).find((f: any) => f.oracle_id)?.oracle_id || null;
+                
+                return {
+                    id: item.id,
+                    name: item.name,
+                    set: item.set?.set,
+                    collector_number: item.collector_number,
+                    lang: item.lang,
+                    oracle_id: oracleId,
+                    faces: (item.faces as any[])?.length || 0
+                };
+            }),
         });
     } catch (error) {
         console.error('Error in asHandler:', error);
@@ -373,6 +378,7 @@ async function performSearch(query: string) {
             faces: {
                 select: {
                     name: true,
+                    oracle_id: true,
                     type_line: true,
                     printed_type_line: true,
                     mana_cost: true,
@@ -445,6 +451,7 @@ async function replaceProblematicCards(cards: any[]): Promise<any[]> {
                 faces: {
                     select: {
                         name: true,
+                        oracle_id: true,
                         type_line: true,
                         printed_type_line: true,
                         mana_cost: true,

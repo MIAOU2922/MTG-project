@@ -893,13 +893,18 @@ async function lookupCard(
                 name: true,
                 rarity: true,
                 faces: {
-                    select: { type_line: true },
-                    take: 1
+                    select: { 
+                        type_line: true,
+                        oracle_id: true
+                    },
+                    take: 10
                 }
             }
         });
 
         if (card) {
+            const oracleId = card.faces.find(f => f.oracle_id)?.oracle_id || null;
+            
             return {
                 count: parsedCard.count,
                 name: card.name,
@@ -909,6 +914,7 @@ async function lookupCard(
                 card_id: card.id,
                 rarity: card.rarity,
                 type_line: card.faces[0]?.type_line,
+                oracle_id: oracleId,
                 is_commander: parsedCard.is_commander,
                 zone: parsedCard.zone || 'main',
                 found: true,
@@ -935,8 +941,11 @@ async function lookupCard(
             set_id: true,
             collector_number: true,
             faces: {
-                select: { type_line: true },
-                take: 1
+                select: { 
+                    type_line: true,
+                    oracle_id: true
+                },
+                take: 10
             }
         },
         take: 1
@@ -960,8 +969,11 @@ async function lookupCard(
                 set_id: true,
                 collector_number: true,
                 faces: {
-                    select: { type_line: true },
-                    take: 1
+                    select: { 
+                        type_line: true,
+                        oracle_id: true
+                    },
+                    take: 10
                 }
             },
             take: 1
@@ -969,6 +981,8 @@ async function lookupCard(
     }
 
     if (card) {
+        const oracleId = card.faces.find(f => f.oracle_id)?.oracle_id || null;
+        
         return {
             count: parsedCard.count,
             name: card.name,
@@ -978,6 +992,7 @@ async function lookupCard(
             card_id: card.id,
             rarity: card.rarity,
             type_line: card.faces[0]?.type_line,
+            oracle_id: oracleId,
             is_commander: parsedCard.is_commander,
             zone: parsedCard.zone || 'main',
             found: true,

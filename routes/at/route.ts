@@ -222,6 +222,152 @@ async function generateSetsData(): Promise<any> {
 }
 
 /**
+ * Génère la liste des cartes de l'instance avec leurs légalités et rulings
+ * at3 : Retourne les cartes de l'instance avec leurs détails complets
+ */
+async function generateInstanceCardsData(instance: Instance): Promise<any> {
+    try {
+        const cardIds = instance.card_ids;
+
+        if (cardIds.length === 0) {
+            return {
+                type: 'instance_cards',
+                instance_id: instance.id,
+                total_cards: 0,
+                cards: []
+            };
+        }
+
+        // Extraire les UUIDs de base (sans les suffixes :0 ou :1 pour les faces)
+        const cardIdMap = new Map<string, { baseId: string, faceIndex: number | null }>();
+        const baseCardIds = new Set<string>();
+
+        cardIds.forEach(cardId => {
+            const parts = cardId.split(':');
+            const baseId = parts[0];
+            const faceIndex = parts.length > 1 ? parseInt(parts[1]) : null;
+            
+            cardIdMap.set(cardId, { baseId, faceIndex });
+            baseCardIds.add(baseId);
+        });
+
+        // Récupérer toutes les cartes de l'instance avec leurs faces
+        const cards = await Database.prisma.card.findMany({
+            where: {
+                id: {
+                    in: Array.from(baseCardIds)
+                }
+            },
+            include: {
+                faces: {
+                    include: {
+                        oracle: {
+                            include: {
+                                rulings: {
+                                    orderBy: {
+                                        published_at: 'desc'
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                set: true
+            }
+        });
+
+        // Créer un map pour préserver l'ordre des cartes dans l'instance
+        const cardMap = new Map(cards.map(card => [card.id, card]));
+
+        // Dédupliquer les cartes basées sur leur base_id (pour éviter les doublons des cartes double face)
+        const seenBaseIds = new Set<string>();
+        const uniqueCardIds = cardIds.filter(cardId => {
+            const idInfo = cardIdMap.get(cardId);
+            if (!idInfo) return true; // Garder les IDs invalides pour le message d'erreur
+            
+            if (seenBaseIds.has(idInfo.baseId)) {
+                return false; // Carte déjà vue, ignorer
+            }
+            
+            seenBaseIds.add(idInfo.baseId);
+            return true;
+        });
+
+        // Grouper les cartes par oracle_id
+        const oracleGroups = new Map<string, {
+            ids: string[],
+            legalities: any,
+            rulings: Map<string, any>
+        }>();
+
+        uniqueCardIds.forEach(cardId => {
+            const idInfo = cardIdMap.get(cardId);
+            if (!idInfo) return;
+
+            const card = cardMap.get(idInfo.baseId);
+            if (!card) return;
+
+            // Trouver l'oracle_id
+            const oracleId = card.faces.find(f => f.oracle_id)?.oracle_id;
+            if (!oracleId) return;
+
+            // Créer ou récupérer le groupe pour cet oracle_id
+            if (!oracleGroups.has(oracleId)) {
+                oracleGroups.set(oracleId, {
+                    ids: [],
+                    legalities: card.legalities,
+                    rulings: new Map()
+                });
+            }
+
+            const group = oracleGroups.get(oracleId)!;
+            
+            // Ajouter l'ID de la carte
+            group.ids.push(card.id);
+
+            // Collecter les rulings
+            card.faces.forEach(face => {
+                if (face.oracle?.rulings) {
+                    face.oracle.rulings.forEach(ruling => {
+                        if (!group.rulings.has(ruling.id)) {
+                            group.rulings.set(ruling.id, {
+                                id: ruling.id,
+                                published_at: ruling.published_at,
+                                comment: ruling.comment
+                            });
+                        }
+                    });
+                }
+            });
+        });
+
+        // Formater les données groupées par oracle
+        const cardsData = Array.from(oracleGroups.entries()).map(([oracleId, group]) => ({
+            oracle_id: oracleId,
+            ids: group.ids,
+            legalities: group.legalities,
+            rulings: Array.from(group.rulings.values())
+        }));
+
+        return {
+            type: 'instance_cards',
+            instance_id: instance.id,
+            total_cards: cardsData.length,
+            cards: cardsData
+        };
+    } catch (error) {
+        console.error('Error generating instance cards data:', error);
+        return {
+            type: 'instance_cards',
+            instance_id: instance.id,
+            total_cards: 0,
+            cards: [],
+            error: 'Failed to fetch instance cards'
+        };
+    }
+}
+
+/**
  * Génère les données JSON pour un lien donné
  * Utilise le même calcul de coordonnées UV que le script Python
  */
@@ -234,6 +380,11 @@ async function generateJsonData(linkIndex: number, instance: Instance, userId: n
     // at2 : Retourner la liste des sets MTG et des types de sets
     if (linkIndex === 2) {
         return generateSetsData();
+    }
+
+    // at3 : Retourner la liste des cartes de l'instance avec légalités et rulings
+    if (linkIndex === 3) {
+        return generateInstanceCardsData(instance);
     }
 
     const cards = instance.card_ids;

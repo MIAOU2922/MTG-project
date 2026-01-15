@@ -152,6 +152,79 @@ Retourne la liste complète des sets MTG disponibles dans la base de données.
 - Interface de sélection de sets pour recherche avancée
 - Dropdown/menu de sélection dans l'application client
 
+#### **at3 : Cartes de l'instance avec légalités et rulings** ✨ NEW
+Retourne la liste des cartes de l'instance avec leurs légalités et rulings, groupées par oracle_id.
+
+**Endpoint:** `GET /at3`
+
+```json
+{
+  "time": 1728499200000,
+  "uid": 12345,
+  "link_id": "3",
+  "link_index": 3,
+  "instance_id": 42,
+  "player_id": "42-12345",
+  "type": "json",
+  "data": {
+    "type": "instance_cards",
+    "instance_id": 42,
+    "total_cards": 6,
+    "cards": [
+      {
+        "oracle_id": "8485cfaa-1dbf-432b-b5d0-92a6aa6a329b",
+        "ids": [
+          "14dc88ee-bba9-4625-af0d-89f3762a0ead",
+          "529451ef-2c7e-4566-8627-a1f25e010829",
+          "66904768-09d0-4836-a6a0-c474678f19c1",
+          "9ff4efdf-c0bb-443a-a100-2f3850571e91"
+        ],
+        "legalities": {
+          "standard": "not_legal",
+          "pioneer": "legal",
+          "modern": "legal",
+          "legacy": "legal",
+          "vintage": "legal",
+          "commander": "legal",
+          "brawl": "legal",
+          "historic": "legal",
+          "timeless": "legal"
+        },
+        "rulings": [
+          {
+            "id": "8485cfaa-1dbf-432b-b5d0-92a6aa6a329b_2021-02-05_02a90bc2",
+            "published_at": "2021-02-05T00:00:00.000Z",
+            "comment": "In the Commander variant, a double-faced card's color identity..."
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+**Structure des données:**
+- **type**: `instance_cards` - Identifiant du type de données
+- **instance_id**: ID de l'instance
+- **total_cards**: Nombre total de cartes groupées par oracle
+- **cards**: Tableau de cartes groupées par oracle_id
+  - **oracle_id**: Identifiant unique de la carte Oracle (partagé entre impressions)
+  - **ids**: Liste des UUIDs de toutes les impressions de cette carte dans l'instance
+  - **legalities**: Objet des formats légaux (standard, commander, etc.)
+  - **rulings**: Tableau des rulings officiels pour cette carte
+
+**Particularités:**
+- Les cartes double face (MDFC) sont groupées ensemble (même oracle_id)
+- Les différentes impressions d'une même carte sont listées sous `ids`
+- Évite la duplication des légalités et rulings identiques
+- Optimisé pour réduire la taille de la réponse JSON
+
+**Utilisation:**
+- Vérifier la légalité des cartes de l'instance pour un format donné
+- Afficher les rulings officiels pour chaque carte unique
+- Interface de gestion de deck avec validation de format
+- Liste dédupliquée des cartes présentes dans l'instance
+
 ### **Liens 10+ (base36) : Atlas d'images**
 Génère et retourne un atlas PNG contenant 24 cartes maximum.
 
@@ -163,9 +236,11 @@ Génère et retourne un atlas PNG contenant 24 cartes maximum.
 - **Téléchargement automatique :** Les images manquantes sont téléchargées en arrière-plan
 - **Cache intelligent ✨ NEW :** 
   - Durée: 48 heures
-  - Fichiers: `images/atlas/instance_{id}_batch_{index}_n{count}.png`
+  - Structure: `images/atlas/instance_{id}/batch_{index}_n{count}.png`
+  - Un sous-dossier par instance pour une meilleure organisation
   - Invalidation automatique si le nombre de cartes change
   - Header `X-Cache: HIT|MISS` pour monitoring
+  - Suppression automatique du dossier lors de la destruction de l'instance
 
 ## 🃏 Structure des données JSON
 

@@ -48,12 +48,24 @@ export default class Instance implements IInstance {
     }
 
     /**
+     * Initialise le dossier de cache pour une instance spécifique
+     */
+    private static ensureInstanceAtlasDirectory(instanceId: number): string {
+        this.ensureCacheDirectories();
+        const instanceDir = path.join(this.ATLAS_DIR, `instance_${instanceId}`);
+        if (!fs.existsSync(instanceDir)) {
+            fs.mkdirSync(instanceDir, { recursive: true });
+        }
+        return instanceDir;
+    }
+
+    /**
      * Génère le chemin du fichier atlas pour une instance et un batch donné
      * Inclut le nombre de cartes dans le nom pour détecter les changements
      */
     public static getAtlasPath(instanceId: number, batchIndex: number, cardCount: number): string {
-        this.ensureCacheDirectories();
-        return path.join(this.ATLAS_DIR, `instance_${instanceId}_batch_${batchIndex}_n${cardCount}.png`);
+        const instanceDir = this.ensureInstanceAtlasDirectory(instanceId);
+        return path.join(instanceDir, `batch_${batchIndex}_n${cardCount}.png`);
     }
 
     /**
@@ -81,14 +93,14 @@ export default class Instance implements IInstance {
      */
     public static saveAtlasCache(instanceId: number, batchIndex: number, cardCount: number, imageBuffer: Buffer): void {
         // Nettoyer les anciens atlas du même batch avec un nombre de cartes différent
-        this.ensureCacheDirectories();
-        const files = fs.readdirSync(this.ATLAS_DIR);
-        const oldAtlasPattern = new RegExp(`^instance_${instanceId}_batch_${batchIndex}_n\\d+\\.png$`);
+        const instanceDir = this.ensureInstanceAtlasDirectory(instanceId);
+        const files = fs.readdirSync(instanceDir);
+        const oldAtlasPattern = new RegExp(`^batch_${batchIndex}_n\\d+\\.png$`);
         
         for (const file of files) {
             if (oldAtlasPattern.test(file) && !file.includes(`_n${cardCount}.png`)) {
                 try {
-                    fs.unlinkSync(path.join(this.ATLAS_DIR, file));
+                    fs.unlinkSync(path.join(instanceDir, file));
                     console.log(`🗑️ Removed outdated atlas: ${file}`);
                 } catch (error) {
                     console.error(`❌ Error deleting outdated atlas ${file}:`, error);
@@ -106,24 +118,24 @@ export default class Instance implements IInstance {
      * Supprime tous les atlas d'une instance donnée
      */
     public static clearInstanceAtlasCache(instanceId: number): void {
-        this.ensureCacheDirectories();
-        const files = fs.readdirSync(this.ATLAS_DIR);
-        const instancePattern = new RegExp(`^instance_${instanceId}_batch_\\d+\\.png$`);
+        const instanceDir = path.join(this.ATLAS_DIR, `instance_${instanceId}`);
         
-        let deleted = 0;
-        for (const file of files) {
-            if (instancePattern.test(file)) {
-                try {
-                    fs.unlinkSync(path.join(this.ATLAS_DIR, file));
-                    deleted++;
-                } catch (error) {
-                    console.error(`❌ Error deleting atlas ${file}:`, error);
-                }
-            }
+        if (!fs.existsSync(instanceDir)) {
+            return; // Aucun dossier à supprimer
         }
         
-        if (deleted > 0) {
-            console.log(`🗑️ Cleared ${deleted} atlas cache files for instance ${instanceId}`);
+        try {
+            // Supprimer tous les fichiers dans le dossier de l'instance
+            const files = fs.readdirSync(instanceDir);
+            for (const file of files) {
+                fs.unlinkSync(path.join(instanceDir, file));
+            }
+            
+            // Supprimer le dossier lui-même
+            fs.rmdirSync(instanceDir);
+            console.log(`🗑️ Cleared atlas cache directory for instance ${instanceId} (${files.length} files)`);
+        } catch (error) {
+            console.error(`❌ Error clearing atlas cache for instance ${instanceId}:`, error);
         }
     }
 
