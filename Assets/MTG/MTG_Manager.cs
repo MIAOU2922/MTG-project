@@ -17,38 +17,28 @@ namespace MTG
 
         [UdonSynced, SerializeField]
         public int instanceID = -1;
-        [SerializeField]
-        public MTG_SyncInterface syncInterface;
-        [SerializeField]
-        private bool _isSyncing = false;
-        [SerializeField]
-        private bool agree = false;
-        [SerializeField]
-        public VRCUrl createURL;
-        [SerializeField]
-        public VRCUrl searchURL;
-        [SerializeField]
-        public VRCUrl deckURL;
-        [SerializeField]
-        public VRCUrl[] joinURLs;
-        [SerializeField]
-        public VRCUrl[] tempURLs;
+        [SerializeField] public MTG_SyncInterface syncInterface;
+        [SerializeField] private bool _isSyncing = false;
+        [SerializeField] private bool agree = false;
+        [SerializeField] public VRCUrl createURL;
+        [SerializeField] public VRCUrl searchURL;
+        [SerializeField] public VRCUrl deckURL;
+        [SerializeField] public VRCUrl[] joinURLs;
+        [SerializeField] public VRCUrl[] tempURLs;
 
         // Nouveau système de cache d'atlas compatible UdonSharp
-        [SerializeField]
-        public Texture2D[] atlasImages;
-        [SerializeField]
-        public string[][] atlasCardIds; // [atlas][slot]
-        [SerializeField]
-        public Rect[][] atlasCardRects; // [atlas][slot]
-        [SerializeField]
-        public bool[] atlasLoaded;
-        [SerializeField]
-        public bool[] atlasLoading;
-        [SerializeField]
-        public float lastAtlasInfoUpdate = 0f;
-        [SerializeField]
-        public const float ATLAS_INFO_UPDATE_INTERVAL = 10f; // 10 secondes
+        [SerializeField] public Texture2D[] atlasImages;
+        [SerializeField] public string[][] atlasCardIds; // [atlas][slot]
+        [SerializeField] public Rect[][] atlasCardRects; // [atlas][slot]
+        [SerializeField] public bool[] atlasLoaded;
+        [SerializeField] public bool[] atlasLoading;
+        [SerializeField] public float lastAtlasInfoUpdate = 0f;
+        [SerializeField] public const float ATLAS_INFO_UPDATE_INTERVAL = 10f; // 10 secondes
+        
+        // Cache des légalités et rulings (groupés par oracle_id)
+        [SerializeField] private string[] cachedOracleIds; // Liste des oracle_ids
+        [SerializeField] private DataDictionary[] cachedLegalities; // Légalités pour chaque oracle_id
+        [SerializeField] private DataList[] cachedRulings; // Rulings pour chaque oracle_id
         
         // VRCImageDownloader pour les atlas
         private VRCImageDownloader imageDownloader;
@@ -102,6 +92,11 @@ namespace MTG
                 }
                 atlasImages[i] = null;
             }
+            
+            // Initialiser le cache des légalités et rulings
+            cachedOracleIds = new string[0];
+            cachedLegalities = new DataDictionary[0];
+            cachedRulings = new DataList[0];
             
             // Créer VRCImageDownloader
             imageDownloader = new VRCImageDownloader();
@@ -174,6 +169,13 @@ namespace MTG
 
         public override void OnStringLoadSuccess(IVRCStringDownload json)
         {
+            // Vérifier si c'est une réponse de légalités/rulings
+            if (IsLegalitiesResponse(json))
+            {
+                ProcessLegalitiesAndRulings(json.Result);
+                return;
+            }
+            
             // Vérifier si c'est une réponse d'atlas info
             if (IsAtlasInfoResponse(json))
             {
@@ -283,6 +285,12 @@ namespace MTG
             if (tempURLs.Length > 0)
             {
                 VRCStringDownloader.LoadUrl(tempURLs[0], (IUdonEventReceiver)this);
+            }
+            
+            // Charger aussi les légalités et rulings depuis /at3 (tempURLs[3])
+            if (tempURLs.Length > 3)
+            {
+                VRCStringDownloader.LoadUrl(tempURLs[3], (IUdonEventReceiver)this);
             }
         }
         
@@ -398,9 +406,9 @@ namespace MTG
                 // Remplir les nouvelles données
                 for (int j = 0; j < count; j++)
                 {
-                    var cardInfo = cardsInBatch[j].DataDictionary;
-                    if (!cardInfo.ContainsKey("id")) continue;
-                    string id = cardInfo["id"].String;
+                    // Les cartes sont maintenant de simples strings: "card_id:face"
+                    if (cardsInBatch[j].TokenType != TokenType.String) continue;
+                    string id = cardsInBatch[j].String;
                     
                     // Calculer automatiquement les rect transforms (grille 6x4)
                     // Les cartes sont toujours dans le même ordre: ligne par ligne, de gauche à droite
@@ -464,12 +472,9 @@ namespace MTG
             // Vérifier si les IDs ont changé
             for (int i = 0; i < newCount; i++)
             {
-                if (newCards[i].TokenType != TokenType.DataDictionary)
+                if (newCards[i].TokenType != TokenType.String)
                     continue;
-                var cardInfo = newCards[i].DataDictionary;
-                if (!cardInfo.ContainsKey("id"))
-                    continue;
-                string newId = cardInfo["id"].String;
+                string newId = newCards[i].String;
                 string oldId = atlasCardIds[atlasIndex][i];
                 
                 if (oldId != newId)
@@ -592,6 +597,182 @@ namespace MTG
             }
             Debug.LogWarning(LOG_PREFIX + $"Card {cardId} NOT FOUND in any atlas!");
             return false;
+        }
+        
+        // === Méthodes pour les légalités et rulings ===
+        
+        /// <summary>
+        /// Charge les légalités et rulings depuis /at3 (tempURLs[3])
+        /// Appelée automatiquement toutes les 10 secondes via UpdateAtlasInfo()
+        /// </summary>
+        public void LoadLegalitiesAndRulings()
+        {
+            if (instanceID == -1)
+            {
+                Debug.LogWarning(LOG_PREFIX + "Cannot load legalities: no instance");
+                return;
+            }
+            
+            if (tempURLs == null || tempURLs.Length <= 3)
+            {
+                Debug.LogError(LOG_PREFIX + "tempURLs not initialized or too short");
+                return;
+            }
+            
+            Debug.Log(LOG_PREFIX + "Loading legalities and rulings from /at3...");
+            VRCStringDownloader.LoadUrl(tempURLs[3], (IUdonEventReceiver)this);
+        }
+        
+        private bool IsLegalitiesResponse(IVRCStringDownload json)
+        {
+            if (json == null || json.Url == null) return false;
+            if (tempURLs == null || tempURLs.Length <= 3) return false;
+            return json.Url.ToString() == tempURLs[3].ToString();
+        }
+        
+        private void ProcessLegalitiesAndRulings(string jsonResult)
+        {
+            if (!VRCJson.TryDeserializeFromJson(jsonResult, out DataToken result) || result.TokenType != TokenType.DataDictionary)
+            {
+                Debug.LogError(LOG_PREFIX + "Error parsing legalities response: " + jsonResult);
+                return;
+            }
+            
+            var dict = result.DataDictionary;
+            if (!dict.ContainsKey("data") || dict["data"].TokenType != TokenType.DataDictionary)
+            {
+                Debug.LogError(LOG_PREFIX + "Missing 'data' in legalities response");
+                return;
+            }
+            
+            var data = dict["data"].DataDictionary;
+            if (!data.ContainsKey("cards") || data["cards"].TokenType != TokenType.DataList)
+            {
+                Debug.LogError(LOG_PREFIX + "Missing 'cards' in legalities data");
+                return;
+            }
+            
+            var cards = data["cards"].DataList;
+            int cardCount = cards.Count;
+            
+            Debug.Log(LOG_PREFIX + $"Processing legalities for {cardCount} unique cards");
+            
+            // Initialiser les nouveaux tableaux
+            cachedOracleIds = new string[cardCount];
+            cachedLegalities = new DataDictionary[cardCount];
+            cachedRulings = new DataList[cardCount];
+            
+            // Parser chaque carte
+            for (int i = 0; i < cardCount; i++)
+            {
+                if (cards[i].TokenType != TokenType.DataDictionary) continue;
+                
+                var card = cards[i].DataDictionary;
+                
+                // Récupérer oracle_id
+                if (!card.ContainsKey("oracle_id") || card["oracle_id"].TokenType != TokenType.String)
+                    continue;
+                    
+                string oracleId = card["oracle_id"].String;
+                cachedOracleIds[i] = oracleId;
+                
+                // Récupérer légalités
+                if (card.ContainsKey("legalities") && card["legalities"].TokenType == TokenType.DataDictionary)
+                {
+                    cachedLegalities[i] = card["legalities"].DataDictionary;
+                }
+                else
+                {
+                    cachedLegalities[i] = new DataDictionary();
+                }
+                
+                // Récupérer rulings
+                if (card.ContainsKey("rulings") && card["rulings"].TokenType == TokenType.DataList)
+                {
+                    cachedRulings[i] = card["rulings"].DataList;
+                }
+                else
+                {
+                    cachedRulings[i] = new DataList();
+                }
+            }
+            
+            Debug.Log(LOG_PREFIX + $"✅ Legalities and rulings loaded for {cardCount} cards");
+        }
+        
+        /// <summary>
+        /// Récupère les légalités pour un oracle_id donné
+        /// </summary>
+        public bool GetLegalitiesForOracle(string oracleId, out DataDictionary legalities)
+        {
+            legalities = new DataDictionary();
+            
+            if (cachedOracleIds == null || cachedOracleIds.Length == 0)
+            {
+                return false;
+            }
+            
+            for (int i = 0; i < cachedOracleIds.Length; i++)
+            {
+                if (cachedOracleIds[i] == oracleId)
+                {
+                    legalities = cachedLegalities[i];
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+        
+        /// <summary>
+        /// Récupère les rulings pour un oracle_id donné
+        /// </summary>
+        public bool GetRulingsForOracle(string oracleId, out DataList rulings)
+        {
+            rulings = new DataList();
+            
+            if (cachedOracleIds == null || cachedOracleIds.Length == 0)
+            {
+                return false;
+            }
+            
+            for (int i = 0; i < cachedOracleIds.Length; i++)
+            {
+                if (cachedOracleIds[i] == oracleId)
+                {
+                    rulings = cachedRulings[i];
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+        
+        /// <summary>
+        /// Vérifie si une carte est légale dans un format donné
+        /// </summary>
+        public bool IsCardLegalInFormat(string oracleId, string format, out string legalityStatus)
+        {
+            legalityStatus = "not_legal";
+            
+            if (GetLegalitiesForOracle(oracleId, out DataDictionary legalities))
+            {
+                if (legalities.ContainsKey(format) && legalities[format].TokenType == TokenType.String)
+                {
+                    legalityStatus = legalities[format].String;
+                    return legalityStatus == "legal";
+                }
+            }
+            
+            return false;
+        }
+        
+        /// <summary>
+        /// Retourne le nombre de cartes uniques (par oracle) en cache
+        /// </summary>
+        public int GetCachedOracleCount()
+        {
+            return cachedOracleIds != null ? cachedOracleIds.Length : 0;
         }
         
     }

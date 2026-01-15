@@ -8,7 +8,8 @@ namespace MTG
     public class MTG_CardInstance : UdonSharpBehaviour
     {
         [Header("=== LIENS ===")]
-        public MTG_Card cardData; // Les données de la carte (scriptable ou instance)
+        // Remplacer la référence à MTG_Card par un identifiant de carte simple
+        public string cardId; // Identifiant unique de la carte (print id)
         public MTG_CardZone currentZone;
         public VRC_Pickup pickup;
 

@@ -8,6 +8,20 @@ Une API REST complète pour rechercher des cartes Magic: The Gathering avec une 
 GET /as?q={query}
 ```
 
+## ⚠️ Important : Cartes Double Face
+
+Lorsqu'une carte avec plusieurs faces est trouvée (transform, modal_dfc, etc.), **toutes les faces sont automatiquement ajoutées à l'instance**.
+
+**Format de stockage:** `{card_id}:{face_index}`
+- Face 0 : `abc123:0` (recto)
+- Face 1 : `abc123:1` (verso)
+
+**Exemple:** Une recherche pour "Tergrid" trouvera "Tergrid, God of Fright // Tergrid's Lantern" et ajoutera:
+- `{card_id}:0` → Tergrid, God of Fright
+- `{card_id}:1` → Tergrid's Lantern
+
+Chaque face aura sa propre image téléchargée et sera incluse dans les atlas générés.
+
 ## Syntaxe de Recherche
 
 ### Recherche Simple et Sous-type
@@ -211,35 +225,26 @@ Si le terme n'est pas un filtre connu, il est aussi interprété comme un sous-t
 ```json
 {
   "time": 1728345600000,
-  "uid": "user123",
-  "query": "cmc:3 type:Instant",
-  "count": 42,
+  "uid": -1645995041,
+  "query": "name:\"tergrid\" l:fr",
+  "count": 2,
+  "instance_id": 28,
   "results": [
     {
-      "name": "Lightning Bolt",
-      "printed_name": "Éclair",
-      "set": "m21",
-      "collector_number": "153",
+      "id": "595ae6ab-f0d4-489b-bb99-99a3f1b96e93",
+      "name": "Tergrid, God of Fright // Tergrid's Lantern",
+      "set": "khm",
+      "collector_number": "112",
       "lang": "fr",
-      "rarity": "uncommon",
-      "faces": [
-        {
-          "name": "Lightning Bolt",
-          "type_line": "Instant",
-          "printed_type_line": "Éphémère",
-          "mana_cost": "{R}",
-          "cmc": 1,
-          "power": null,
-          "toughness": null,
-          "loyalty": null,
-          "colors": ["R"],
-          "color_identities": ["R"],
-          "keywords": ["Flying"],
-          "oracle_text": "Lightning Bolt deals 3 damage to any target.",
-          "printed_text": "L'Éclair inflige 3 blessures à une cible, créature ou joueur.",
-          "flavor_text": null
-        }
-      ]
+      "faces": 2
+    },
+    {
+      "id": "074f1a78-3ddc-4e93-821c-d16cd41437b9",
+      "name": "Tergrid's Shadow",
+      "set": "khm",
+      "collector_number": "113",
+      "lang": "fr",
+      "faces": 1
     }
   ]
 }
@@ -250,41 +255,22 @@ Si le terme n'est pas un filtre connu, il est aussi interprété comme un sous-t
 | Champ | Type | Description |
 |-------|------|-------------|
 | `time` | number | Timestamp de la réponse |
-| `uid` | string | ID utilisateur |
+| `uid` | number | ID utilisateur |
 | `query` | string | Requête originale |
 | `count` | number | Nombre total de résultats |
+| `instance_id` | number\|null | ID de l'instance active (si connecté) |
 | `results` | array | Liste des cartes |
 
 ### Champs par Carte
 
 | Champ | Type | Description |
 |-------|------|-------------|
-| `name` | string | Nom anglais |
-| `printed_name` | string\|null | Nom traduit |
-| `set` | string | Code du set |
+| `id` | string | ID unique de la carte |
+| `name` | string | Nom de la carte (anglais) |
+| `set` | string | Code du set (ex: `khm`, `m21`) |
 | `collector_number` | string | Numéro de collectionneur |
-| `lang` | string | Code langue |
-| `rarity` | string | Rareté |
-| `faces` | array | Faces de la carte |
-
-### Champs par Face
-
-| Champ | Type | Description |
-|-------|------|-------------|
-| `name` | string | Nom de la face |
-| `type_line` | string | Type anglais |
-| `printed_type_line` | string\|null | Type traduit |
-| `mana_cost` | string\|null | Coût de mana |
-| `cmc` | number\|null | Coût de mana converti |
-| `power` | string\|null | Force |
-| `toughness` | string\|null | Endurance |
-| `loyalty` | string\|null | Loyauté |
-| `colors` | array | Couleurs |
-| `color_identities` | array | Identité colorielle |
-| `keywords` | array | Mots-clés |
-| `oracle_text` | string\|null | Texte d'oracle anglais |
-| `printed_text` | string\|null | Texte d'oracle traduit |
-| `flavor_text` | string\|null | Texte de saveur |
+| `lang` | string | Code langue (ex: `en`, `fr`, `es`) |
+| `faces` | number | Nombre de faces (1 pour cartes normales, 2+ pour double face) |
 
 ## Limites
 

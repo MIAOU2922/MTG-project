@@ -14,16 +14,23 @@ namespace MTG
         // Préfixe coloré pour les logs
         private const string LOG_PREFIX = "<color=#FF1493>[MTG_SearchCard]</color> ";
         
-        public RawImage cardImage;
+        public RawImage cardImage; // Face avant
+        public RawImage cardImageBack; // Face arrière
         public GameObject loading;
+        public GameObject flipButton; // Bouton pour flip la carte
         public string cardKey;
         public MTG_Manager manager;
         public MTG_Searchinterface searchInterface;
         public Rect uvRect;
         public int atlasIndex = -1;
+        public Rect uvRectBack; // UV pour la face arrière
+        public int atlasIndexBack = -1; // Atlas pour la face arrière
         public float lastRetryTime = 0f;
         public const float RETRY_INTERVAL = 10f; // Retry toutes les 10 secondes
         private bool imageLoaded = false;
+        private bool imageBackLoaded = false;
+        private bool isFlipped = false; // État actuel de la carte
+        private bool isDoubleFaced = false; // La carte a-t-elle deux faces?
         
         internal void SetData(DataDictionary cardDict)
         {
@@ -49,7 +56,12 @@ namespace MTG
             
             // Réinitialiser le flag et le temps pour permettre un retry immédiat
             imageLoaded = false;
+            imageBackLoaded = false;
+            isFlipped = false;
             lastRetryTime = -RETRY_INTERVAL; // Permet un retry immédiat au prochain Update
+            
+            // Mettre à jour la visibilité
+            UpdateFlipVisibility();
         }
         
         public void SetImageFromId()
@@ -74,29 +86,63 @@ namespace MTG
             
             //Debug.Log(LOG_PREFIX + $"SetImageFromId: Searching for card {cardKey} in atlas cache");
             
+            // Extraire l'ID de base et l'index de face depuis le cardKey (format: "cardId:0" ou "cardId:1")
+            string baseCardId = cardKey;
+            int faceIndex = 0;
+            if (cardKey.Contains(":"))
+            {
+                string[] parts = cardKey.Split(':');
+                if (parts.Length == 2)
+                {
+                    baseCardId = parts[0];
+                    int.TryParse(parts[1], out faceIndex);
+                }
+            }
+            
+            // Charger la face avant (face 0)
+            string frontFaceKey = baseCardId + ":0";
             int foundAtlasIndex;
             Rect foundRect;
-            if (manager.GetAtlasInfoForCard(cardKey, out foundAtlasIndex, out foundRect))
+            if (manager.GetAtlasInfoForCard(frontFaceKey, out foundAtlasIndex, out foundRect))
             {
-                //Debug.Log(LOG_PREFIX + $"SetImageFromId: Found card {cardKey} in atlas {foundAtlasIndex}");
+                //Debug.Log(LOG_PREFIX + $"SetImageFromId: Found front face {frontFaceKey} in atlas {foundAtlasIndex}");
                 this.atlasIndex = foundAtlasIndex;
                 this.uvRect = foundRect;
                 
                 Texture2D atlasTexture = manager.GetAtlasTexture(atlasIndex);
                 if (atlasTexture != null)
                 {
-                    //Debug.Log(LOG_PREFIX + $"SetImageFromId: Atlas texture ready for card {cardKey}, applying now");
-                    ApplyAtlasTexture(atlasTexture);
+                    //Debug.Log(LOG_PREFIX + $"SetImageFromId: Atlas texture ready for front face, applying now");
+                    ApplyAtlasTexture(atlasTexture, false);
                 }
-                else
+            }
+            
+            // Tenter de charger la face arrière (face 1)
+            string backFaceKey = baseCardId + ":1";
+            int foundAtlasIndexBack;
+            Rect foundRectBack;
+            if (manager.GetAtlasInfoForCard(backFaceKey, out foundAtlasIndexBack, out foundRectBack))
+            {
+                //Debug.Log(LOG_PREFIX + $"SetImageFromId: Found back face {backFaceKey} in atlas {foundAtlasIndexBack}");
+                this.atlasIndexBack = foundAtlasIndexBack;
+                this.uvRectBack = foundRectBack;
+                this.isDoubleFaced = true;
+                
+                Texture2D atlasTextureBack = manager.GetAtlasTexture(atlasIndexBack);
+                if (atlasTextureBack != null)
                 {
-                    //Debug.Log(LOG_PREFIX + $"SetImageFromId: Atlas texture NOT ready for card {cardKey} (atlas {atlasIndex}), will retry in {RETRY_INTERVAL}s");
+                    //Debug.Log(LOG_PREFIX + $"SetImageFromId: Atlas texture ready for back face, applying now");
+                    ApplyAtlasTexture(atlasTextureBack, true);
                 }
             }
             else
             {
-                Debug.LogWarning(LOG_PREFIX + $"SetImageFromId: Atlas info NOT found for card {cardKey}, will retry in {RETRY_INTERVAL}s");
+                // Pas de face arrière = carte simple face
+                this.isDoubleFaced = false;
             }
+            
+            // Mettre à jour la visibilité du bouton flip
+            UpdateFlipVisibility();
         }
         
         private void Update()
@@ -114,21 +160,66 @@ namespace MTG
             }
         }
 
-        private void ApplyAtlasTexture(Texture2D atlasTexture)
+        private void ApplyAtlasTexture(Texture2D atlasTexture, bool isBackFace)
         {
-            cardImage.texture = atlasTexture;
-            cardImage.uvRect = uvRect;
+            if (isBackFace)
+            {
+                if (cardImageBack == null) return;
+                
+                cardImageBack.texture = atlasTexture;
+                cardImageBack.uvRect = uvRectBack;
+                imageBackLoaded = true;
+            }
+            else
+            {
+                if (cardImage == null) return;
+                
+                cardImage.texture = atlasTexture;
+                cardImage.uvRect = uvRect;
+                imageLoaded = true;
+            }
 
-            // Marquer l'image comme chargée
-            imageLoaded = true;
-
-            // Désactiver le loading quand l'image est chargée
-            if (loading != null)
+            // Désactiver le loading quand au moins la face avant est chargée
+            if (imageLoaded && loading != null)
             {
                 loading.SetActive(false);
             }
 
-            //Debug.Log(LOG_PREFIX + $"Atlas texture applied for card {cardKey}");
+            //Debug.Log(LOG_PREFIX + $"Atlas texture applied for {(isBackFace ? "back" : "front")} face");
+        }
+        
+        // Méthode pour flip la carte (appelée par le bouton)
+        public void FlipCard()
+        {
+            if (!isDoubleFaced)
+            {
+                //Debug.Log(LOG_PREFIX + "Cannot flip: card is single-faced");
+                return;
+            }
+            
+            isFlipped = !isFlipped;
+            UpdateFlipVisibility();
+            //Debug.Log(LOG_PREFIX + $"Card flipped to {(isFlipped ? "back" : "front")} face");
+        }
+        
+        // Met à jour la visibilité des faces et du bouton
+        private void UpdateFlipVisibility()
+        {
+            if (cardImage != null)
+            {
+                cardImage.gameObject.SetActive(!isFlipped);
+            }
+            
+            if (cardImageBack != null)
+            {
+                cardImageBack.gameObject.SetActive(isFlipped);
+            }
+            
+            // Afficher le bouton flip seulement si la carte a deux faces
+            if (flipButton != null)
+            {
+                flipButton.SetActive(isDoubleFaced);
+            }
         }
 
         // Méthode appelée par le bouton sur la carte

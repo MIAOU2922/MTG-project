@@ -68,7 +68,7 @@ GET /ad?q=save:Mon%20Deck:deckstats:%2F%2FMain%0A4%20Lightning%20Bolt%0A%2F%2FSi
 
 **Description:** Charge un deck et ajoute toutes ses cartes à l'instance active de l'utilisateur. Supporte deux modes :
 - **Mode sauvegardé** : Charge un deck depuis la base de données (créé par l'utilisateur ou public)
-- **Mode temporaire** : Parse une deck list inline sans la sauvegarder
+- **Mode temporaire** : Parse une deck list inline sans la sauvegarder (✨ **NEW**)
 
 **Syntaxe (Mode sauvegardé):**
 ```
@@ -82,13 +82,16 @@ GET /ad?q=save:Mon%20Deck:deckstats:%2F%2FMain%0A4%20Lightning%20Bolt%0A%2F%2FSi
 
 **Paramètres (Mode sauvegardé):**
 - `load` - Action
-- `deck_id` - ID unique du deck (UUID)
+- `deck_id` - ID unique du deck (UUID, format: `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`)
 
 **Paramètres (Mode temporaire):**
 - `load` - Action
 - `format` - `deckstats`, `moxfield`, `auto` (optionnel, défaut: `auto`)
 - `deck_list_encoded` - Contenu encodé en URL (requis)
 - `lang` - Code langue `en`, `fr`, etc. (optionnel, défaut: `en`)
+
+**Détection automatique du mode:**
+Le système détecte automatiquement si le premier paramètre après `load:` est un UUID (mode sauvegardé) ou un format/deck list (mode temporaire).
 
 **Permissions:**
 - N'importe qui peut charger n'importe quel deck public sauvegardé
