@@ -9,8 +9,13 @@ async function handler(req: Request, res: Response) {
     let user = await User.findOrCreate(strToHash(req.ip?.toString() || 'unknown'));
     user = await user.updateLastSeen();
     return res.json({
+        link_type: 'u',
+        link_id: '',
+        iid: null,
+        uid: user.id,
         time: Date.now(),
-        user_id: user.id,
-        last_seen_at: user.last_seen_at.getTime(),
+        data: {
+            last_seen_at: user.last_seen_at.getTime()
+        }
     });
 }

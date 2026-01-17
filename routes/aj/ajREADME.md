@@ -29,12 +29,38 @@ La route `/aj` permet à un utilisateur de rejoindre une instance existante en u
 
 ## 📊 Réponse
 
+### **Structure JSON standardisée**
+
+Toutes les réponses suivent la structure standardisée suivante :
+
+```json
+{
+  "link_type": "j",      // Type de route (j=join)
+  "link_id": "2a",        // ID d'instance en base36
+  "iid": 42,             // Instance ID rejointe
+  "uid": 12345,          // User ID
+  "time": 1728499200000  // Timestamp de la réponse
+}
+```
+
+### **Champs de réponse**
+
+| Champ | Type | Description |
+|-------|------|-------------|
+| `link_type` | string | Type de route : `"j"` pour join |
+| `link_id` | string | Code de l'instance en base36 (ex: "2a" pour 42) |
+| `iid` | number | ID de l'instance rejointe (0-63) |
+| `uid` | number | ID de l'utilisateur |
+| `time` | number | Timestamp Unix en millisecondes |
+
 ### **Succès (200)**
 ```json
 {
-  "time": 1728499200000,
+  "link_type": "j",
+  "link_id": "2a",
+  "iid": 42,
   "uid": 12345,
-  "iid": 42
+  "time": 1728499200000
 }
 ```
 

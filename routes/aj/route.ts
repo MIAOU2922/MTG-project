@@ -33,9 +33,11 @@ async function ajHandler(req: Request, res: Response) {
         }
 
         return res.json({
-            time: Date.now(),
+            link_type: 'j',
+            link_id: instanceCode,
+            iid: instance.id,
             uid: user.id,
-            iid: instance.id
+            time: Date.now()
         });
     } catch (error) {
         console.error('Error in ajHandler:', error);

@@ -47,15 +47,14 @@ async function atHandler(req: Request, res: Response) {
         const isAtlasResponse = linkIndex >= 10; // Les liens 10+ sont des atlas d'images
 
         if (isJsonResponse) {
+            const data = await generateJsonData(linkIndex, playerInstance, user.id);
             return res.json({
-                time: Date.now(),
+                link_type: 't',
+                link_id: linkIndex.toString(),
+                iid: playerInstance.id,
                 uid: user.id,
-                link_id: linkId,
-                link_index: linkIndex,
-                instance_id: playerInstance.id,
-                player_id: `${playerInstance.id}-${user.id}`,
-                type: 'json',
-                data: await generateJsonData(linkIndex, playerInstance, user.id)
+                time: Date.now(),
+                data: data
             });
         } else if (isAtlasResponse) {
             // Calculer l'index du batch
@@ -101,15 +100,14 @@ async function atHandler(req: Request, res: Response) {
             const returnJson = Math.random() < 0.5;
 
             if (returnJson) {
+                const data = await generateJsonData(linkIndex, playerInstance, user.id);
                 return res.json({
-                    time: Date.now(),
+                    link_type: 't',
+                    link_id: linkIndex.toString(),
+                    iid: playerInstance.id,
                     uid: user.id,
-                    link_id: linkId,
-                    link_index: linkIndex,
-                    instance_id: playerInstance.id,
-                    player_id: `${playerInstance.id}-${user.id}`,
-                    type: 'json',
-                    data: await generateJsonData(linkIndex, playerInstance, user.id)
+                    time: Date.now(),
+                    data: data
                 });
             } else {
                 // Retourner une image
@@ -170,16 +168,12 @@ async function generateDeckListData(userId: number): Promise<any> {
         }));
 
         return {
-            type: 'deck_list',
-            user_id: userId,
             total_decks: decksList.length,
             decks: decksList
         };
     } catch (error) {
         console.error('Error generating deck list:', error);
         return {
-            type: 'deck_list',
-            user_id: userId,
             total_decks: 0,
             decks: [],
             error: 'Failed to fetch decks'
@@ -206,16 +200,14 @@ async function generateSetsData(): Promise<any> {
         );
 
         return {
-            type: 'sets_list',
             count: setsDisplayNames.length,
-            data: setsDisplayNames
+            sets: setsDisplayNames
         };
     } catch (error) {
         console.error('Error generating sets data:', error);
         return {
-            type: 'sets_list',
             count: 0,
-            data: [],
+            sets: [],
             error: 'Failed to fetch sets'
         };
     }
@@ -231,8 +223,6 @@ async function generateInstanceCardsData(instance: Instance): Promise<any> {
 
         if (cardIds.length === 0) {
             return {
-                type: 'instance_cards',
-                instance_id: instance.id,
                 total_cards: 0,
                 cards: []
             };
@@ -350,16 +340,12 @@ async function generateInstanceCardsData(instance: Instance): Promise<any> {
         }));
 
         return {
-            type: 'instance_cards',
-            instance_id: instance.id,
             total_cards: cardsData.length,
             cards: cardsData
         };
     } catch (error) {
         console.error('Error generating instance cards data:', error);
         return {
-            type: 'instance_cards',
-            instance_id: instance.id,
             total_cards: 0,
             cards: [],
             error: 'Failed to fetch instance cards'
@@ -430,9 +416,6 @@ async function generateJsonData(linkIndex: number, instance: Instance, userId: n
     }
 
     return {
-        link_type: linkIndex < 10 ? 'special' : 'normal',
-        instance_id: instance.id,
-        player_id: `${instance.id}-${userId}`,
         cards_loaded_count: instance.getCardCount(),
         batches: batches
     };

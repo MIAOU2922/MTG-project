@@ -266,18 +266,23 @@ async function handleParse(
         const deckCount = deckCards.reduce((sum, card) => sum + card.count, 0);
 
         return res.json({
-            time: Date.now(),
+            link_type: 'd',
+            link_id: 'parse',
+            iid: null,
             uid: user.id,
-            action: 'parse',
-            format: detectedFormat,
-            deck_count: deckCount,
-            commander: commander,
-            cards: deckCards,
-            stats: {
-                found: foundCount,
-                not_found: notFoundCount,
-                partial_matches: partialMatches,
-                errors: errors.length > 0 ? errors : []
+            time: Date.now(),
+            data: {
+                action: 'parse',
+                format: detectedFormat,
+                deck_count: deckCount,
+                commander: commander,
+                cards: deckCards,
+                stats: {
+                    found: foundCount,
+                    not_found: notFoundCount,
+                    partial_matches: partialMatches,
+                    errors: errors.length > 0 ? errors : []
+                }
             }
         });
     } catch (error) {
@@ -390,16 +395,21 @@ async function handleSave(
         }
 
         return res.json({
-            time: Date.now(),
+            link_type: 'd',
+            link_id: 'save',
+            iid: null,
             uid: user.id,
-            action: 'save',
-            deck_id: deck.id,
-            deck_name: deck.name,
-            commander: commander,
-            cards_found: foundCount,
-            cards_not_found: notFoundCount,
-            total_cards: deckCardData.reduce((sum, card) => sum + card.count, 0),
-            message: deckId ? 'Deck updated successfully' : 'Deck created successfully'
+            time: Date.now(),
+            data: {
+                action: 'save',
+                deck_id: deck.id,
+                deck_name: deck.name,
+                commander: commander,
+                cards_found: foundCount,
+                cards_not_found: notFoundCount,
+                total_cards: deckCardData.reduce((sum, card) => sum + card.count, 0),
+                message: deckId ? 'Deck updated successfully' : 'Deck created successfully'
+            }
         });
     } catch (error) {
         console.error('Error in handleSave:', error);
@@ -599,21 +609,25 @@ async function handleLoad(
         const deckSize = cardIds.length;
 
         return res.json({
-            time: Date.now(),
-            uid: user.id,
+            link_type: 'd',
+            link_id: 'load',
             iid: instance.id,
-            action: 'load',
-            deck_type: isTemporaryDeck ? 'temporary' : 'saved',
-            deck_id: deck?.id,
-            deck_name: deck?.name || 'Temporary Deck',
-            commander: deck?.commander,
-            unique_cards: uniqueCardIds.length,
-            total_cards: deckSize,
-            cards_added_to_instance: cardIds.length,
-            cards_by_zone: cardsByZone,
-            message: isTemporaryDeck 
-                ? 'Temporary deck loaded successfully and cards added to instance'
-                : 'Deck loaded successfully and cards added to instance'
+            uid: user.id,
+            time: Date.now(),
+            data: {
+                action: 'load',
+                deck_type: isTemporaryDeck ? 'temporary' : 'saved',
+                deck_id: deck?.id,
+                deck_name: deck?.name || 'Temporary Deck',
+                commander: deck?.commander,
+                unique_cards: uniqueCardIds.length,
+                total_cards: deckSize,
+                cards_added_to_instance: cardIds.length,
+                cards_by_zone: cardsByZone,
+                message: isTemporaryDeck 
+                    ? 'Temporary deck loaded successfully and cards added to instance'
+                    : 'Deck loaded successfully and cards added to instance'
+            }
         });
     } catch (error) {
         console.error('Error in handleLoad:', error);
@@ -657,12 +671,17 @@ async function handleDelete(
         await deck.delete(user.id);
 
         return res.json({
-            time: Date.now(),
+            link_type: 'd',
+            link_id: 'delete',
+            iid: null,
             uid: user.id,
-            action: 'delete',
-            deck_id: deck.id,
-            deck_name: deck.name,
-            message: 'Deck deleted successfully'
+            time: Date.now(),
+            data: {
+                action: 'delete',
+                deck_id: deck.id,
+                deck_name: deck.name,
+                message: 'Deck deleted successfully'
+            }
         });
     } catch (error) {
         console.error('Error in handleDelete:', error);
@@ -706,12 +725,17 @@ async function handleList(
         );
 
         return res.json({
-            time: Date.now(),
+            link_type: 'd',
+            link_id: 'list',
+            iid: null,
             uid: user.id,
-            action: 'list',
-            search_name: deckName || null,
-            decks_count: decks.length,
-            decks: deckList
+            time: Date.now(),
+            data: {
+                action: 'list',
+                search_name: deckName || null,
+                decks_count: decks.length,
+                decks: deckList
+            }
         });
     } catch (error) {
         console.error('Error in handleList:', error);

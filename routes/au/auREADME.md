@@ -24,12 +24,46 @@ La route `/au` gère la création et la récupération automatique des utilisate
 
 ## 📊 Réponse
 
+### **Structure JSON standardisée**
+
+Toutes les réponses suivent la structure standardisée suivante :
+
+```json
+{
+  "link_type": "u",      // Type de route (u=user)
+  "link_id": "",          // ID du lien (vide pour au)
+  "iid": null,           // Instance ID (null si aucune instance)
+  "uid": 12345,          // User ID
+  "time": 1728499200000, // Timestamp de la réponse
+  "data": {              // Données spécifiques à l'utilisateur
+    "last_seen_at": 1728499200000
+  }
+}
+```
+
+### **Champs de réponse**
+
+| Champ | Type | Description |
+|-------|------|-------------|
+| `link_type` | string | Type de route : `"u"` pour user |
+| `link_id` | string | ID du lien (toujours vide pour au) |
+| `iid` | number\|null | ID de l'instance (null pour cette route) |
+| `uid` | number | ID de l'utilisateur |
+| `time` | number | Timestamp Unix en millisecondes |
+| `data` | object | Données utilisateur |
+| `data.last_seen_at` | number | Dernière activité de l'utilisateur |
+
 ### **Succès (200)**
 ```json
 {
+  "link_type": "u",
+  "link_id": "",
+  "iid": null,
+  "uid": 12345,
   "time": 1728499200000,
-  "user_id": 12345,
-  "last_seen_at": 1728499200000
+  "data": {
+    "last_seen_at": 1728499200000
+  }
 }
 ```
 

@@ -62,24 +62,28 @@ async function asHandler(req: Request, res: Response) {
         }
 
         return res.json({
-            time: Date.now(),
+            link_type: 's',
+            link_id: query,
+            iid: playerInstance?.id || null,
             uid: user.id,
-            query: query,
-            count: searchResults.count,
-            instance_id: playerInstance?.id,
-            results: (searchResults.items as any[]).map((item: any) => {
-                const oracleId = (item.faces as any[] || []).find((f: any) => f.oracle_id)?.oracle_id || null;
-                
-                return {
-                    id: item.id,
-                    name: item.name,
-                    set: item.set?.set,
-                    collector_number: item.collector_number,
-                    lang: item.lang,
-                    oracle_id: oracleId,
-                    faces: (item.faces as any[])?.length || 0
-                };
-            }),
+            time: Date.now(),
+            data: {
+                query: query,
+                count: searchResults.count,
+                results: (searchResults.items as any[]).map((item: any) => {
+                    const oracleId = (item.faces as any[] || []).find((f: any) => f.oracle_id)?.oracle_id || null;
+                    
+                    return {
+                        id: item.id,
+                        name: item.name,
+                        set: item.set?.set,
+                        collector_number: item.collector_number,
+                        lang: item.lang,
+                        oracle_id: oracleId,
+                        faces: (item.faces as any[])?.length || 0
+                    };
+                })
+            }
         });
     } catch (error) {
         console.error('Error in asHandler:', error);

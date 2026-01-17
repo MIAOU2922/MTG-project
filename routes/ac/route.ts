@@ -19,9 +19,11 @@ async function acHandler(req: Request, res: Response) {
         await instance.addUser(user.id);
 
         return res.json({
-            time: Date.now(),
+            link_type: 'c',
+            link_id: '',
+            iid: instance.id,
             uid: user.id,
-            iid: instance.id
+            time: Date.now()
         });
     } catch (error) {
         console.error('Error in acHandler:', error);
