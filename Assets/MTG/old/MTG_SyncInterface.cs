@@ -33,9 +33,9 @@ namespace MTG
 
         internal void Show()
         {
-            if (Networking.LocalPlayer != null && Networking.LocalPlayer.isMaster && Manager.GetGameInstanceID() == -1)
+            if (Networking.LocalPlayer != null && Networking.LocalPlayer.isMaster && Manager.GetInstanceID() == -1)
                 ShowCreate();
-            else if (Manager.GetGameInstanceID() != -1)
+            else if (Manager.GetInstanceID() != -1)
                 ShowJoin();
         }
 

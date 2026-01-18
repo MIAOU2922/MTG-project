@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEditor;
 using UdonSharpEditor;
-
+/*
 namespace MTG.Editor
 {
     [CustomEditor(typeof(MTG_PhysicCardPoolManager))]
@@ -243,3 +243,4 @@ namespace MTG.Editor
         }
     }
 }
+*/

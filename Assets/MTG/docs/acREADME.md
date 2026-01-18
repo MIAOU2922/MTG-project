@@ -23,12 +23,38 @@ La route `/ac` permet de créer une nouvelle instance utilisateur avec un systè
 
 ## 📊 Réponse
 
+### **Structure JSON standardisée**
+
+Toutes les réponses suivent la structure standardisée suivante :
+
+```json
+{
+  "link_type": "c",      // Type de route (c=create)
+  "link_id": "",          // ID du lien (vide pour ac)
+  "iid": 42,             // Instance ID créée
+  "uid": 12345,          // User ID
+  "time": 1728499200000  // Timestamp de la réponse
+}
+```
+
+### **Champs de réponse**
+
+| Champ | Type | Description |
+|-------|------|-------------|
+| `link_type` | string | Type de route : `"c"` pour create |
+| `link_id` | string | ID du lien (toujours vide pour ac) |
+| `iid` | number | ID de l'instance créée (0-63) |
+| `uid` | number | ID de l'utilisateur |
+| `time` | number | Timestamp Unix en millisecondes |
+
 ### **Succès (200)**
 ```json
 {
-  "time": 1728499200000,
+  "link_type": "c",
+  "link_id": "",
+  "iid": 42,
   "uid": 12345,
-  "iid": 42
+  "time": 1728499200000
 }
 ```
 

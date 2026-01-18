@@ -200,7 +200,7 @@ if (manager.GetRulingsForOracle(oracleId, out rulings)) {
 4. Configurer le MTG_Manager :
    - BaseURL : `https://mtg.hactazia.fr/a`
    - Créer 64 joinURLs (base36: j0-j1z)
-   - Créer 4096 tempURLs (base36: t0-t2lr)
+   - Créer 4096 TempURLs (base36: t0-t2lr)
 
 ### Configuration Scene
 1. Créer un GameObject "MTG_Manager"

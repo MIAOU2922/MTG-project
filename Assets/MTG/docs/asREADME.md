@@ -222,54 +222,85 @@ Si le terme n'est pas un filtre connu, il est aussi interprété comme un sous-t
 
 ## Format de Réponse JSON
 
+### **Structure JSON standardisée**
+
+Toutes les réponses suivent la structure standardisée suivante :
+
 ```json
 {
-  "time": 1728345600000,
-  "uid": -1645995041,
-  "query": "name:\"tergrid\" l:fr",
-  "count": 2,
-  "instance_id": 28,
-  "results": [
-    {
-      "id": "595ae6ab-f0d4-489b-bb99-99a3f1b96e93",
-      "name": "Tergrid, God of Fright // Tergrid's Lantern",
-      "set": "khm",
-      "collector_number": "112",
-      "lang": "fr",
-      "faces": 2
-    },
-    {
-      "id": "074f1a78-3ddc-4e93-821c-d16cd41437b9",
-      "name": "Tergrid's Shadow",
-      "set": "khm",
-      "collector_number": "113",
-      "lang": "fr",
-      "faces": 1
-    }
-  ]
+  "link_type": "s",        // Type de route (s=search)
+  "link_id": "lightning",  // Requête de recherche
+  "iid": 28,               // Instance ID (ou null)
+  "uid": -1645995041,      // User ID
+  "time": 1728345600000,   // Timestamp de la réponse
+  "data": {                // Données de recherche
+    "query": "lightning",
+    "count": 2,
+    "results": [...]
+  }
 }
 ```
 
-### Champs de Réponse
+### **Champs de réponse**
 
 | Champ | Type | Description |
 |-------|------|-------------|
-| `time` | number | Timestamp de la réponse |
-| `uid` | number | ID utilisateur |
-| `query` | string | Requête originale |
-| `count` | number | Nombre total de résultats |
-| `instance_id` | number\|null | ID de l'instance active (si connecté) |
-| `results` | array | Liste des cartes |
+| `link_type` | string | Type de route : `"s"` pour search |
+| `link_id` | string | Requête de recherche originale |
+| `iid` | number\|null | ID de l'instance active (null si aucune) |
+| `uid` | number | ID de l'utilisateur |
+| `time` | number | Timestamp Unix en millisecondes |
+| `data` | object | Données de la recherche |
+| `data.query` | string | Requête de recherche |
+| `data.count` | number | Nombre total de résultats |
+| `data.results` | array | Liste des cartes trouvées |
+
+### **Exemple complet**
+
+```json
+{
+  "link_type": "s",
+  "link_id": "name:\"tergrid\" l:fr",
+  "iid": 28,
+  "uid": -1645995041,
+  "time": 1728345600000,
+  "data": {
+    "query": "name:\"tergrid\" l:fr",
+    "count": 2,
+    "results": [
+      {
+        "id": "595ae6ab-f0d4-489b-bb99-99a3f1b96e93",
+        "name": "Tergrid, God of Fright // Tergrid's Lantern",
+        "set": "khm",
+        "collector_number": "112",
+        "lang": "fr",
+        "oracle_id": "8485cfaa-1dbf-432b-b5d0-92a6aa6a329b",
+        "faces": 2
+      },
+      {
+        "id": "074f1a78-3ddc-4e93-821c-d16cd41437b9",
+        "name": "Tergrid's Shadow",
+        "set": "khm",
+        "collector_number": "113",
+        "lang": "fr",
+        "oracle_id": "6f348cb3-5c84-4a1b-8e1c-8c8e8c8e8c8e",
+        "faces": 1
+      }
+    ]
+  }
+}
+```
 
 ### Champs par Carte
 
 | Champ | Type | Description |
 |-------|------|-------------|
-| `id` | string | ID unique de la carte |
-| `name` | string | Nom de la carte (anglais) |
+| `id` | string | ID unique de la carte (UUID) |
+| `name` | string | Nom de la carte (anglais ou traduit) |
 | `set` | string | Code du set (ex: `khm`, `m21`) |
 | `collector_number` | string | Numéro de collectionneur |
 | `lang` | string | Code langue (ex: `en`, `fr`, `es`) |
+| `oracle_id` | string | ID Oracle unique (partagé entre impressions) |
 | `faces` | number | Nombre de faces (1 pour cartes normales, 2+ pour double face) |
 
 ## Limites

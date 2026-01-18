@@ -10,21 +10,27 @@ using VRC.SDK3.Image;
 
 namespace MTG
 {
-    public class MTG_Manager : UdonSharpBehaviour
+    public class MTG_Manager_old : UdonSharpBehaviour
     {
         // Préfixe coloré pour les logs
         private const string LOG_PREFIX = "<color=#FF1493>[MTG_manager]</color> ";
 
-        [UdonSynced, SerializeField]
-        public int instanceID = -1;
+        [Header("=== GLOBAL DEBUG ===")]
+        public bool DEBUG = false;
+        public bool VERBOSE_DEBUG = false;
+
+        [UdonSynced, SerializeField] public int instanceID = -1;
+        
         [SerializeField] public MTG_SyncInterface syncInterface;
+
         [SerializeField] private bool _isSyncing = false;
         [SerializeField] private bool agree = false;
+
         [SerializeField] public VRCUrl createURL;
-        [SerializeField] public VRCUrl searchURL;
+        [SerializeField] public VRCUrl SearchURL;
         [SerializeField] public VRCUrl deckURL;
         [SerializeField] public VRCUrl[] joinURLs;
-        [SerializeField] public VRCUrl[] tempURLs;
+        [SerializeField] public VRCUrl[] TempURLs;
 
         // Nouveau système de cache d'atlas compatible UdonSharp
         [SerializeField] public Texture2D[] atlasImages;
@@ -50,14 +56,14 @@ namespace MTG
         private void OnValidate()
         {
             createURL = new VRCUrl($"{BaseURL}c");
-            searchURL = new VRCUrl($"{BaseURL}s?q=");
+            SearchURL = new VRCUrl($"{BaseURL}s?q=");
             deckURL = new VRCUrl($"{BaseURL}d?q=");
             joinURLs = new VRCUrl[64];
             for (int i = 0; i < joinURLs.Length; i++)
                 joinURLs[i] = new VRCUrl($"{BaseURL}j{ToBase36(i)}");
-            tempURLs = new VRCUrl[4096];
-            for (int i = 0; i < tempURLs.Length; i++)
-                tempURLs[i] = new VRCUrl($"{BaseURL}t{ToBase36(i)}");
+            TempURLs = new VRCUrl[4096];
+            for (int i = 0; i < TempURLs.Length; i++)
+                TempURLs[i] = new VRCUrl($"{BaseURL}t{ToBase36(i)}");
         }
 
         private string ToBase36(int value)
@@ -77,7 +83,7 @@ namespace MTG
         private void Start()
         {
             // Initialiser le cache d'atlas
-            int maxAtlas = tempURLs.Length;
+            int maxAtlas = TempURLs.Length;
             atlasImages = new Texture2D[maxAtlas];
             atlasCardIds = new string[maxAtlas][];
             atlasCardRects = new Rect[maxAtlas][];
@@ -271,7 +277,7 @@ namespace MTG
                 syncInterface.Show();
         }
         
-        public int GetGameInstanceID()
+        public int GetInstanceID()
         {
             return instanceID;
         }
@@ -282,15 +288,15 @@ namespace MTG
             if (instanceID == -1) return;
             
             // Utiliser l'URL pré-configurée pour /at/0 (index 0)
-            if (tempURLs.Length > 0)
+            if (TempURLs.Length > 0)
             {
-                VRCStringDownloader.LoadUrl(tempURLs[0], (IUdonEventReceiver)this);
+                VRCStringDownloader.LoadUrl(TempURLs[0], (IUdonEventReceiver)this);
             }
             
-            // Charger aussi les légalités et rulings depuis /at3 (tempURLs[3])
-            if (tempURLs.Length > 3)
+            // Charger aussi les légalités et rulings depuis /at3 (TempURLs[3])
+            if (TempURLs.Length > 3)
             {
-                VRCStringDownloader.LoadUrl(tempURLs[3], (IUdonEventReceiver)this);
+                VRCStringDownloader.LoadUrl(TempURLs[3], (IUdonEventReceiver)this);
             }
         }
         
@@ -320,22 +326,20 @@ namespace MTG
             return atlasImages[atlasIndex];
         }
         
-
-
         private void LoadAtlas(int atlasIndex)
         {
-            if (atlasIndex < 0 || atlasIndex >= tempURLs.Length || atlasLoading[atlasIndex])
+            if (atlasIndex < 0 || atlasIndex >= TempURLs.Length || atlasLoading[atlasIndex])
             {
-                Debug.LogWarning(LOG_PREFIX + $"LoadAtlas: Cannot load atlas {atlasIndex} (index valid: {atlasIndex >= 0 && atlasIndex < tempURLs.Length}, already loading: {atlasIndex >= 0 && atlasIndex < atlasLoading.Length && atlasLoading[atlasIndex]})");
+                Debug.LogWarning(LOG_PREFIX + $"LoadAtlas: Cannot load atlas {atlasIndex} (index valid: {atlasIndex >= 0 && atlasIndex < TempURLs.Length}, already loading: {atlasIndex >= 0 && atlasIndex < atlasLoading.Length && atlasLoading[atlasIndex]})");
                 return;
             }
 
             atlasLoading[atlasIndex] = true;
             
-            Debug.Log(LOG_PREFIX + $"LoadAtlas: Starting download for atlas {atlasIndex} from URL: {tempURLs[atlasIndex]}");
+            Debug.Log(LOG_PREFIX + $"LoadAtlas: Starting download for atlas {atlasIndex} from URL: {TempURLs[atlasIndex]}");
             
             // Utiliser VRCImageDownloader pour télécharger l'image
-            imageDownloader.DownloadImage(tempURLs[atlasIndex], null, (IUdonEventReceiver)this);
+            imageDownloader.DownloadImage(TempURLs[atlasIndex], null, (IUdonEventReceiver)this);
         }
         
         private bool IsAtlasInfoResponse(IVRCStringDownload json)
@@ -350,9 +354,9 @@ namespace MTG
             atlasIndex = -1;
             if (result == null || result.Url == null) return false;
             
-            for (int i = 0; i < tempURLs.Length; i++)
+            for (int i = 0; i < TempURLs.Length; i++)
             {
-                if (result.Url == tempURLs[i])
+                if (result.Url == TempURLs[i])
                 {
                     atlasIndex = i;
                     return true;
@@ -520,9 +524,9 @@ namespace MTG
             atlasIndex = -1;
             if (result == null || result.Url == null) return false;
             
-            for (int i = 0; i < tempURLs.Length; i++)
+            for (int i = 0; i < TempURLs.Length; i++)
             {
-                if (result.Url == tempURLs[i])
+                if (result.Url == TempURLs[i])
                 {
                     atlasIndex = i;
                     return true;
@@ -602,7 +606,7 @@ namespace MTG
         // === Méthodes pour les légalités et rulings ===
         
         /// <summary>
-        /// Charge les légalités et rulings depuis /at3 (tempURLs[3])
+        /// Charge les légalités et rulings depuis /at3 (TempURLs[3])
         /// Appelée automatiquement toutes les 10 secondes via UpdateAtlasInfo()
         /// </summary>
         public void LoadLegalitiesAndRulings()
@@ -613,21 +617,21 @@ namespace MTG
                 return;
             }
             
-            if (tempURLs == null || tempURLs.Length <= 3)
+            if (TempURLs == null || TempURLs.Length <= 3)
             {
-                Debug.LogError(LOG_PREFIX + "tempURLs not initialized or too short");
+                Debug.LogError(LOG_PREFIX + "TempURLs not initialized or too short");
                 return;
             }
             
             Debug.Log(LOG_PREFIX + "Loading legalities and rulings from /at3...");
-            VRCStringDownloader.LoadUrl(tempURLs[3], (IUdonEventReceiver)this);
+            VRCStringDownloader.LoadUrl(TempURLs[3], (IUdonEventReceiver)this);
         }
         
         private bool IsLegalitiesResponse(IVRCStringDownload json)
         {
             if (json == null || json.Url == null) return false;
-            if (tempURLs == null || tempURLs.Length <= 3) return false;
-            return json.Url.ToString() == tempURLs[3].ToString();
+            if (TempURLs == null || TempURLs.Length <= 3) return false;
+            return json.Url.ToString() == TempURLs[3].ToString();
         }
         
         private void ProcessLegalitiesAndRulings(string jsonResult)

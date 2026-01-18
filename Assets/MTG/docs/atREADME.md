@@ -28,6 +28,34 @@ La route `/at` fournit un système de liens statiques encodés en base36 qui ret
 
 ## 📊 Types de réponses
 
+### **Structure JSON standardisée**
+
+Toutes les réponses JSON suivent cette structure :
+
+```json
+{
+  "link_type": "t",        // Type de route (t=texture/atlas)
+  "link_id": "0",          // ID du lien en base 10
+  "iid": 42,               // Instance ID
+  "uid": 12345,            // User ID
+  "time": 1728499200000,   // Timestamp de la réponse
+  "data": {                // Données spécifiques au lien
+    ...
+  }
+}
+```
+
+### **Champs communs**
+
+| Champ | Type | Description |
+|-------|------|-------------|
+| `link_type` | string | Type de route : `"t"` pour texture/atlas |
+| `link_id` | string | ID du lien en base 10 (ex: "0", "1", "10") |
+| `iid` | number | ID de l'instance active |
+| `uid` | number | ID de l'utilisateur |
+| `time` | number | Timestamp Unix en millisecondes |
+| `data` | object | Données spécifiques selon le type de lien |
+
 ### **Liens 0-9 (base36) : JSON**
 Retourne toujours des données JSON avec les informations de l'instance.
 
@@ -36,17 +64,12 @@ Retourne toujours des données JSON avec les informations de l'instance.
 #### **at0 : Cartes de l'instance (par défaut)**
 ```json
 {
-  "time": 1728499200000,
-  "uid": 12345,
+  "link_type": "t",
   "link_id": "0",
-  "link_index": 0,
-  "instance_id": 42,
-  "player_id": "42-12345",
-  "type": "json",
+  "iid": 42,
+  "uid": 12345,
+  "time": 1728499200000,
   "data": {
-    "link_type": "special",
-    "instance_id": 42,
-    "player_id": "42-12345",
     "cards_loaded_count": 150,
     "batches": [
       {
@@ -66,10 +89,10 @@ Retourne toujours des données JSON avec les informations de l'instance.
 ```
 
 **✨ Nouveautés:**
-- Chaque batch contient maintenant un tableau `cards` avec la liste complète des IDs
+- Structure JSON simplifiée avec en-têtes standardisés
+- Chaque batch contient un tableau `cards` avec la liste complète des IDs
 - Format: `{card_id}:{face_index}` pour supporter les cartes double face
 - Les coordonnées UV ont été supprimées (calculées côté client)
-- `atlas_width` et `atlas_height` supprimés (toujours 2048px max)
 
 #### **at1 : Liste des decks de l'utilisateur** ✨ NEW
 Retourne uniquement l'ID et le nom des decks créés par l'utilisateur.
@@ -78,16 +101,12 @@ Retourne uniquement l'ID et le nom des decks créés par l'utilisateur.
 
 ```json
 {
-  "time": 1728499200000,
-  "uid": 12345,
+  "link_type": "t",
   "link_id": "1",
-  "link_index": 1,
-  "instance_id": 42,
-  "player_id": "42-12345",
-  "type": "json",
+  "iid": 42,
+  "uid": 12345,
+  "time": 1728499200000,
   "data": {
-    "type": "deck_list",
-    "user_id": 12345,
     "total_decks": 3,
     "decks": [
       {
@@ -110,7 +129,7 @@ Retourne uniquement l'ID et le nom des decks créés par l'utilisateur.
 **Utilisation:**
 - Afficher la liste des decks de l'utilisateur
 - Chaque deck contient un `id` et un `name`
-- Pas besoin d'instance active (ne requiert pas `/ac` ou `/aj` au préalable)
+- Pas besoin d'instance active (requiert seulement l'authentification utilisateur)
 
 #### **at2 : Liste des sets MTG** ✨ NEW
 Retourne la liste complète des sets MTG disponibles dans la base de données.
@@ -119,17 +138,14 @@ Retourne la liste complète des sets MTG disponibles dans la base de données.
 
 ```json
 {
-  "time": 1728499200000,
-  "uid": 12345,
+  "link_type": "t",
   "link_id": "2",
-  "link_index": 2,
-  "instance_id": 42,
-  "player_id": "42-12345",
-  "type": "json",
+  "iid": 42,
+  "uid": 12345,
+  "time": 1728499200000,
   "data": {
-    "type": "sets_list",
     "count": 542,
-    "data": [
+    "sets": [
       "Kamigawa: Neon Dynasty (neo)",
       "Streets of New Capenna (snc)",
       "Dominaria United (dmu)",
@@ -141,9 +157,8 @@ Retourne la liste complète des sets MTG disponibles dans la base de données.
 ```
 
 **Structure des données:**
-- **type**: `sets_list` - Identifiant du type de données
 - **count**: Nombre total de sets disponibles
-- **data**: Liste des sets avec format `"Name (CODE)"`
+- **sets**: Liste des sets avec format `"Name (CODE)"`
   - Triés par nom alphabétiquement
   - Format standard : `"Set Name (set_code)"`
 
@@ -159,25 +174,19 @@ Retourne la liste des cartes de l'instance avec leurs légalités et rulings, gr
 
 ```json
 {
-  "time": 1728499200000,
-  "uid": 12345,
+  "link_type": "t",
   "link_id": "3",
-  "link_index": 3,
-  "instance_id": 42,
-  "player_id": "42-12345",
-  "type": "json",
+  "iid": 42,
+  "uid": 12345,
+  "time": 1728499200000,
   "data": {
-    "type": "instance_cards",
-    "instance_id": 42,
     "total_cards": 6,
     "cards": [
       {
         "oracle_id": "8485cfaa-1dbf-432b-b5d0-92a6aa6a329b",
         "ids": [
           "14dc88ee-bba9-4625-af0d-89f3762a0ead",
-          "529451ef-2c7e-4566-8627-a1f25e010829",
-          "66904768-09d0-4836-a6a0-c474678f19c1",
-          "9ff4efdf-c0bb-443a-a100-2f3850571e91"
+          "529451ef-2c7e-4566-8627-a1f25e010829"
         ],
         "legalities": {
           "standard": "not_legal",
@@ -185,10 +194,7 @@ Retourne la liste des cartes de l'instance avec leurs légalités et rulings, gr
           "modern": "legal",
           "legacy": "legal",
           "vintage": "legal",
-          "commander": "legal",
-          "brawl": "legal",
-          "historic": "legal",
-          "timeless": "legal"
+          "commander": "legal"
         },
         "rulings": [
           {
@@ -204,8 +210,6 @@ Retourne la liste des cartes de l'instance avec leurs légalités et rulings, gr
 ```
 
 **Structure des données:**
-- **type**: `instance_cards` - Identifiant du type de données
-- **instance_id**: ID de l'instance
 - **total_cards**: Nombre total de cartes groupées par oracle
 - **cards**: Tableau de cartes groupées par oracle_id
   - **oracle_id**: Identifiant unique de la carte Oracle (partagé entre impressions)
@@ -244,13 +248,30 @@ Génère et retourne un atlas PNG contenant 24 cartes maximum.
 
 ## 🃏 Structure des données JSON
 
-### **Informations générales**
-- `link_type` : "special" (liens 0-9) ou "normal" (liens 10+)
-- `instance_id` : ID de l'instance active
-- `player_id` : "instance_id-user_id"
-- `cards_loaded_count` : Nombre total de cartes dans l'instance
+### **En-têtes standardisés**
 
-### **Batches de cartes**
+Tous les liens JSON utilisent les mêmes en-têtes :
+
+| Champ | Type | Description |
+|-------|------|-------------|
+| `link_type` | string | Type de route : `"t"` pour texture/atlas |
+| `link_id` | string | ID du lien en base 10 (ex: "0", "1", "2") |
+| `iid` | number | ID de l'instance active (0-63) |
+| `uid` | number | ID de l'utilisateur |
+| `time` | number | Timestamp Unix en millisecondes |
+| `data` | object | Données spécifiques selon le type de lien |
+
+### **at0 : Batches de cartes**
+
+Le champ `data` pour at0 contient :
+
+```json
+{
+  "cards_loaded_count": 150,
+  "batches": [...]
+}
+```
+
 Chaque batch représente un atlas de 24 cartes :
 
 ```json
@@ -258,24 +279,19 @@ Chaque batch représente un atlas de 24 cartes :
   "batch_index": 0,
   "card_count": 24,
   "atlas_link": "/ata",
-  "atlas_width": 1464,
-  "atlas_height": 1360,
   "cards": [
-    {
-      "id": "card_uuid",
-      "x": 0.0,
-      "y": 0.0,
-      "width": 0.1667,
-      "height": 0.25
-    }
+    "card_uuid:0",
+    "card_uuid:1",
+    ...
   ]
 }
 ```
 
-### **Coordonnées normalisées**
-- `x`, `y` : Position relative (0.0 à 1.0)
-- `width`, `height` : Dimensions relatives (0.0 à 1.0)
-- Calculées pour faciliter le découpage côté client
+**Champs du batch :**
+- `batch_index` : Index du lot (0, 1, 2...)
+- `card_count` : Nombre de cartes dans ce batch
+- `atlas_link` : Lien vers l'atlas PNG correspondant
+- `cards` : Liste des IDs de cartes au format `{uuid}:{face_index}`
 
 ## 🎨 Génération d'atlas
 

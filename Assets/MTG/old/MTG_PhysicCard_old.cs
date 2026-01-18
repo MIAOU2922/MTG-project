@@ -8,8 +8,9 @@ using UnityEngine.UI;
 
 namespace MTG
 {
-    public class MTG_PhysicCard : UdonSharpBehaviour
+    public class MTG_PhysicCard_old : UdonSharpBehaviour
     {
+        
         // Préfixe coloré pour les logs
         private const string LOG_PREFIX = "<color=#FF1493>[MTG_PhysicCard]</color> ";
         

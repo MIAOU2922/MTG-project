@@ -1448,6 +1448,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
+      objectReference: {fileID: 8457362229136726002}
+    - target: {fileID: 426456568290489439, guid: b11819260e46691499468e2eabd3de2c,
+        type: 3}
+      propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: SendCustomEvent
       objectReference: {fileID: 0}
     - target: {fileID: 3419072493784341334, guid: b11819260e46691499468e2eabd3de2c,
         type: 3}

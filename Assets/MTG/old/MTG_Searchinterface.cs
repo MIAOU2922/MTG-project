@@ -183,28 +183,28 @@ namespace MTG
 
         private void LoadDropdownData()
         {
-            // tempURLs[2] correspond à /at2 qui devrait retourner les listes de sets et blocs
-            if (manager.tempURLs != null && manager.tempURLs.Length > 2)
+            // TempURLs[2] correspond à /at2 qui devrait retourner les listes de sets et blocs
+            if (manager.TempURLs != null && manager.TempURLs.Length > 2)
             {
                 Debug.Log(LOG_PREFIX + "Loading dropdown data from /at2");
-                VRCStringDownloader.LoadUrl(manager.tempURLs[2], (IUdonEventReceiver)this);
+                VRCStringDownloader.LoadUrl(manager.TempURLs[2], (IUdonEventReceiver)this);
                 dropdownLoadScheduled = false;
             }
             else
             {
-                Debug.LogError(LOG_PREFIX + "tempURLs[2] not available for dropdown data");
+                Debug.LogError(LOG_PREFIX + "TempURLs[2] not available for dropdown data");
             }
         }
         
         // Surcharge pour les événements OnEndEdit des TMP_InputField (qui passent une string)
-        public void EditSearchUrl(string unused)
+        public void EditSearchURL(string unused)
         {
-            EditSearchUrl();
+            EditSearchURL();
         }
         
-        public void EditSearchUrl()
+        public void EditSearchURL()
         {
-            Debug.Log(LOG_PREFIX + "EditSearchUrl() called");
+            Debug.Log(LOG_PREFIX + "EditSearchURL() called");
             
             // Désactiver temporairement l'interactabilité de tous les champs de texte pour enlever le focus
             DisableAndEnableInputFields();
@@ -272,11 +272,11 @@ namespace MTG
             }
             
             // Lang
-            Debug.Log(LOG_PREFIX + "EditSearchUrl - Checking Lang dropdown...");
+            Debug.Log(LOG_PREFIX + "EditSearchURL - Checking Lang dropdown...");
             if (langDropdown != null)
             {
-                Debug.Log(LOG_PREFIX + $"EditSearchUrl - langDropdown.value = {langDropdown.value}");
-                Debug.Log(LOG_PREFIX + $"EditSearchUrl - langDropdownOptions = {(langDropdownOptions == null ? "NULL" : langDropdownOptions.Length.ToString() + " items")}");
+                Debug.Log(LOG_PREFIX + $"EditSearchURL - langDropdown.value = {langDropdown.value}");
+                Debug.Log(LOG_PREFIX + $"EditSearchURL - langDropdownOptions = {(langDropdownOptions == null ? "NULL" : langDropdownOptions.Length.ToString() + " items")}");
             }
             
             // Plus de vérification > 0 car index 0 est maintenant "EN" (pas de "Select Language")
@@ -286,12 +286,12 @@ namespace MTG
                 queryBuilder.Append("l:");
                 // Utiliser le tableau langDropdownOptions (pré-rempli dans Start)
                 string selectedLang = langDropdownOptions[langDropdown.value].ToLower();
-                Debug.Log(LOG_PREFIX + $"EditSearchUrl - Adding lang filter: l:{selectedLang}");
+                Debug.Log(LOG_PREFIX + $"EditSearchURL - Adding lang filter: l:{selectedLang}");
                 queryBuilder.Append(selectedLang);
             }
             else
             {
-                Debug.Log(LOG_PREFIX + "EditSearchUrl - Lang filter NOT added");
+                Debug.Log(LOG_PREFIX + "EditSearchURL - Lang filter NOT added");
             }
             
             // Colors
@@ -317,7 +317,7 @@ namespace MTG
                 finalQuery = ""; // Requête vide par défaut
             }
             
-            string fullUrl = manager.searchURL.ToString() + finalQuery;
+            string fullUrl = manager.SearchURL.ToString() + finalQuery;
             
             Debug.Log(LOG_PREFIX + "Full URL to set: " + fullUrl);
             
@@ -333,8 +333,8 @@ namespace MTG
             if (string.IsNullOrEmpty(finalQuery))
             {
                 // Pas de filtres, réinitialiser à l'URL de base
-                validatedInput.SetUrl(manager.searchURL);
-                Debug.Log(LOG_PREFIX + "Reset VRCUrlInputField to base searchURL");
+                validatedInput.SetUrl(manager.SearchURL);
+                Debug.Log(LOG_PREFIX + "Reset VRCUrlInputField to base SearchURL");
             }
             else
             {
@@ -449,7 +449,7 @@ namespace MTG
             {
                 colorC_Selected = false;
             }
-            EditSearchUrl();
+            EditSearchURL();
         }
         
         public void OnColorU_Clicked()
@@ -460,7 +460,7 @@ namespace MTG
             {
                 colorC_Selected = false;
             }
-            EditSearchUrl();
+            EditSearchURL();
         }
         
         public void OnColorB_Clicked()
@@ -471,7 +471,7 @@ namespace MTG
             {
                 colorC_Selected = false;
             }
-            EditSearchUrl();
+            EditSearchURL();
         }
         
         public void OnColorR_Clicked()
@@ -482,7 +482,7 @@ namespace MTG
             {
                 colorC_Selected = false;
             }
-            EditSearchUrl();
+            EditSearchURL();
         }
         
         public void OnColorG_Clicked()
@@ -493,7 +493,7 @@ namespace MTG
             {
                 colorC_Selected = false;
             }
-            EditSearchUrl();
+            EditSearchURL();
         }
         
         public void OnColorC_Clicked()
@@ -509,7 +509,7 @@ namespace MTG
                 colorR_Selected = false;
                 colorG_Selected = false;
             }
-            EditSearchUrl();
+            EditSearchURL();
         }
         
         // === FONCTIONS POUR LES BOUTONS DE RARETÉ ===
@@ -518,28 +518,28 @@ namespace MTG
         {
             Debug.Log(LOG_PREFIX + "OnRarityCommon_Clicked() called");
             rarityCommon_Selected = !rarityCommon_Selected;
-            EditSearchUrl();
+            EditSearchURL();
         }
         
         public void OnRarityUncommon_Clicked()
         {
             Debug.Log(LOG_PREFIX + "OnRarityUncommon_Clicked() called");
             rarityUncommon_Selected = !rarityUncommon_Selected;
-            EditSearchUrl();
+            EditSearchURL();
         }
         
         public void OnRarityRare_Clicked()
         {
             Debug.Log(LOG_PREFIX + "OnRarityRare_Clicked() called");
             rarityRare_Selected = !rarityRare_Selected;
-            EditSearchUrl();
+            EditSearchURL();
         }
         
         public void OnRarityMythic_Clicked()
         {
             Debug.Log(LOG_PREFIX + "OnRarityMythic_Clicked() called");
             rarityMythic_Selected = !rarityMythic_Selected;
-            EditSearchUrl();
+            EditSearchURL();
         }
         
         // === FONCTION RESET ===
@@ -573,7 +573,7 @@ namespace MTG
             rarityMythic_Selected = false;
             
             // Mettre à jour l'URL
-            EditSearchUrl();
+            EditSearchURL();
             
             Debug.Log(LOG_PREFIX + "All filters reset");
         }
@@ -591,7 +591,7 @@ namespace MTG
             Debug.Log(LOG_PREFIX + "VRCUrlInputField selected - ready for paste");
         }
         
-        private string BuildSearchUrl()
+        private string BuildSearchURL()
         {
             // Construire la requête de recherche à partir des champs
             StringBuilder queryBuilder = new StringBuilder();
@@ -681,7 +681,7 @@ namespace MTG
             
             // Construire l'URL complète
             string finalQuery = queryBuilder.ToString();
-            string fullUrl = manager.searchURL.ToString() + finalQuery;
+            string fullUrl = manager.SearchURL.ToString() + finalQuery;
             
             return fullUrl;
         }
@@ -730,7 +730,7 @@ namespace MTG
                 return false;
             }
 
-            return IsSearchUrl(json.Url);
+            return IsSearchURL(json.Url);
         }
         
         private bool IsAtlasInfoResponse(IVRCStringDownload json)
@@ -747,9 +747,9 @@ namespace MTG
             return url.Contains("at2"); // at2 pour les données dropdown (sets et blocs)
         }
         
-        private bool IsSearchUrl(VRCUrl url)
+        private bool IsSearchURL(VRCUrl url)
         {
-            return url.ToString().StartsWith(manager.searchURL.ToString());
+            return url.ToString().StartsWith(manager.SearchURL.ToString());
         }
         
         private bool IsValidResponse(IVRCStringDownload json)
@@ -759,11 +759,11 @@ namespace MTG
         
         private bool IsManagerAtlasUrl(IVRCStringDownload json)
         {
-            if (json == null || json.Url == null || manager.tempURLs == null) return false;
+            if (json == null || json.Url == null || manager.TempURLs == null) return false;
             
-            for (int i = 0; i < manager.tempURLs.Length; i++)
+            for (int i = 0; i < manager.TempURLs.Length; i++)
             {
-                if (json.Url == manager.tempURLs[i])
+                if (json.Url == manager.TempURLs[i])
                 {
                     return true;
                 }
@@ -773,10 +773,10 @@ namespace MTG
         
         private bool IsStoredSearchResponse(IVRCStringDownload json)
         {
-            if (json == null || json.Url == null || manager.tempURLs == null) return false;
+            if (json == null || json.Url == null || manager.TempURLs == null) return false;
             
             // Vérifier si c'est le slot tempURL[4095] (réservé pour les recherches)
-            if (manager.tempURLs.Length > 4095 && json.Url == manager.tempURLs[4095])
+            if (manager.TempURLs.Length > 4095 && json.Url == manager.TempURLs[4095])
             {
                 return true;
             }
@@ -944,9 +944,9 @@ namespace MTG
         private void LoadAtlasInfo()
         {
             // Utiliser l'URL préconfigurée dans le manager pour l'atlas 0
-            if (manager.tempURLs != null && manager.tempURLs.Length > 0)
+            if (manager.TempURLs != null && manager.TempURLs.Length > 0)
             {
-                VRCStringDownloader.LoadUrl(manager.tempURLs[0], (IUdonEventReceiver)this);
+                VRCStringDownloader.LoadUrl(manager.TempURLs[0], (IUdonEventReceiver)this);
             }
         }
         
@@ -1134,7 +1134,7 @@ namespace MTG
                                 var searchCard = instantiatedCards[cardIdx].GetComponent<MTG_SearchCard>();
                                 if (searchCard != null)
                                 {
-                                    searchCard.manager = manager;
+                                    searchCard.Manager = manager;
                                     searchCard.SetImageFromId();
                                 }
                             }
@@ -1340,11 +1340,11 @@ namespace MTG
                 var cardComp = card.GetComponent<MTG_SearchCard>();
 
                 // Assigner le manager et l'interface AVANT SetData
-                cardComp.manager = manager;
-                cardComp.searchInterface = this;
+                cardComp.Manager = manager;
+                cardComp.SearchInterface = this;
                 
                 // Ensuite appeler SetData
-                cardComp.SetData(cardDict);
+                //cardComp.SetData(cardDict);
 
                 // Ajouter à la liste des cartes instanciées et clés
                 if (instantiatedCardsCount < instantiatedCards.Length)
@@ -1354,7 +1354,7 @@ namespace MTG
                 }
                 if (cardKeysCount < cardKeys.Length)
                 {
-                    cardKeys[cardKeysCount] = cardComp.cardKey;
+                    cardKeys[cardKeysCount] = cardComp.CardKey;
                     cardKeysCount++;
                 }
             }
@@ -1416,7 +1416,7 @@ namespace MTG
                 Debug.LogWarning(LOG_PREFIX + "CardPreview n'a pas de composant MTG_SearchCard !");
                 return;
             }
-            previewCard.cardKey = cardId;
+            previewCard.CardKey = cardId;
             previewCard.SetImageFromId();
             Debug.Log(LOG_PREFIX + $"CardPreview mis à jour avec l'id {cardId}");
         }
@@ -1439,7 +1439,7 @@ namespace MTG
                 return;
             }
             
-            string cardId = previewCard.cardKey;
+            string cardId = previewCard.CardKey;
             if (string.IsNullOrEmpty(cardId))
             {
                 Debug.LogError(LOG_PREFIX + "CardPreview n'a pas de cardKey défini !");

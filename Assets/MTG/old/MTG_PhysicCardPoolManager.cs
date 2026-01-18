@@ -123,7 +123,7 @@ namespace MTG
             MTG_PhysicCard physicCard = cardObject.GetComponent<MTG_PhysicCard>();
             if (physicCard != null)
             {
-                physicCard.InitializeCard(cardKey, manager);
+                //physicCard.InitializeCard(cardKey);
             }
             
             // Synchroniser la liste pour que les autres joueurs activent leur carte correspondante
@@ -184,7 +184,7 @@ namespace MTG
                         MTG_PhysicCard physicCard = cardObject.GetComponent<MTG_PhysicCard>();
                         if (physicCard != null)
                         {
-                            physicCard.InitializeCard(cardKey, manager);
+                            //physicCard.InitializeCard(cardKey);
                         }
                     }
                 }
