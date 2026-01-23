@@ -8,8 +8,6 @@ using VRC.Udon.Common.Interfaces;
 using VRC.SDK3.StringLoading;
 using VRC.SDK3.Data;
 using VRC.SDK3.Image;
-using System.Security.Cryptography.X509Certificates;
-using System.Runtime.CompilerServices;
 
 namespace MTG
 {
@@ -35,20 +33,20 @@ namespace MTG
         public VRCUrl[] JoinURLs; //aj
         public VRCUrl[] TempURLs; //at
 
+        [Header("=== ORACLE ===")]
+        [VRC.Udon.Serialization.OdinSerializer.OdinSerialize] public String[][] CachedOracleIds;
+        public DataDictionary[] CachedLegalities;
+        public DataList[] CachedRulings;
+
         [Header("=== ATLAS ===")]
         public int MaxAtlas;
         public Texture2D[] AtlasImages;
-        [VRC.Udon.Serialization.OdinSerializer.OdinSerialize] /* UdonSharp auto-upgrade: serialization */ public String[][] AtlasCardIds; // [Atlas][slot]
-        [VRC.Udon.Serialization.OdinSerializer.OdinSerialize] /* UdonSharp auto-upgrade: serialization */ public Rect[][] AtlasCardRects; // [Atlas][slot]
+        [VRC.Udon.Serialization.OdinSerializer.OdinSerialize] public String[][] AtlasCardIds; // [Atlas][slot]
+        [VRC.Udon.Serialization.OdinSerializer.OdinSerialize] public Rect[][] AtlasCardRects; // [Atlas][slot]
         [SerializeField] private bool[] AtlasLoaded;
         [SerializeField] private bool[] AtlasLoading;
         [SerializeField] private float LastAtlasInfoUpdate = 0f;
         [SerializeField] private const float ATLAS_INFO_UPDATE_INTERVAL = 10f;
-
-        [Header("=== ORACLE ===")]
-        [SerializeField] private String[] CachedOracleIds;
-        [SerializeField] private DataDictionary[] CachedLegalities;
-        [SerializeField] private DataList[] CachedRulings;
 
         // Image downloader
         private VRCImageDownloader ImageDownloader;
@@ -67,19 +65,6 @@ namespace MTG
             TempURLs = new VRCUrl[4096];
             for (int i = 0; i < TempURLs.Length; i++)
                 TempURLs[i] = new VRCUrl($"{BaseURL}t{ToBase36(i)}");
-        }
-
-        private String ToBase36(int value)
-        {
-            const String chars = "0123456789abcdefghijklmnopqrstuvwxyz";
-            if (value == 0) return "0";
-            String result = "";
-            while (value > 0)
-            {
-                result = chars[value % chars.Length] + result;
-                value /= chars.Length;
-            }
-            return result;
         }
 #endif
         protected override void Start()
@@ -102,14 +87,15 @@ namespace MTG
                 }
                 AtlasImages[i] = null;
             }
-            CachedOracleIds = new String[0];
+            CachedOracleIds = new string[0][];
             CachedLegalities = new DataDictionary[0];
             CachedRulings = new DataList[0];
             ImageDownloader = new VRCImageDownloader();
             LastAtlasInfoUpdate = Time.time;
         }
-        private void Update()
+        protected override void Update()
         {
+            base.Update();
             if (Time.time - LastAtlasInfoUpdate >= ATLAS_INFO_UPDATE_INTERVAL)
             {
                 LastAtlasInfoUpdate = Time.time;
@@ -198,6 +184,8 @@ namespace MTG
             this.Log($"Error message: {_Json.Error}");
             IsSyncing = false;
         }
+        // methodes for response processing
+        // obtient le type de reponse
         public void ReponseType(IVRCStringDownload _Json, out String _Type)
         {
             this.Log("ReponseType called");
@@ -230,7 +218,7 @@ namespace MTG
         private void IsDeckResponse(IVRCStringDownload _Json)
         {
             this.Log("IsDeckResponse called");
-            // to be implemented
+            // rien pour l'instant
         }
         // verifie la reponse de join d'instance
         private void IsJoinResponse(IVRCStringDownload _Json, out bool _IsValid)
@@ -262,21 +250,187 @@ namespace MTG
         private void IsSearchResponse(IVRCStringDownload _Json)
         {
             this.Log("IsSearchResponse called");
-            // to be implemented
+            // rien pour l'instant
         }
-        // verifie la reponse des tempsurls
+        // verifie la reponse des tempsurls si json
         private void IsTempURLsResponse(IVRCStringDownload _Json)
         {
             this.Log("IsTempURLsResponse called");
-            // to be implemented
+            if (_Json == null || _Json.Url == null) return;
+            if (_Json.Url == TempURLs[0])
+            {
+                ProcessCardInstanceResponse(_Json);
+            }
+            else if (_Json.Url == TempURLs[1])
+            {
+                ProcessDeckListResponse(_Json);
+            }
+            else if (_Json.Url == TempURLs[2])
+            {
+                ProcessSetListResponse(_Json);
+            }
+            else if (_Json.Url == TempURLs[3])
+            {
+                ProcessOracleDataResponse(_Json);
+            }
         }
         // verifie la reponse de user
         private void IsUserResponse(IVRCStringDownload _Json)
         {
             this.Log("IsUserResponse called");
-            // to be implemented
+            // rien pour l'instant
+        }
+        // process card instance response (at0)
+        private void ProcessCardInstanceResponse(IVRCStringDownload _Json)
+        {
+            this.Log("ProcessCardInstanceResponse called");
+            String _JsonData = _Json.Result;
+            DataToken _Token;
+            DataDictionary _RootDict;
+            DataDictionary _DataDict;
+            DataDictionary _Batch;
+            DataList _Batches;
+            DataList _Cards;
+            int _CardCount = 0;
+
+            int _Col , _Row ;
+            float _RectWidth  = 1f / 6f;
+            float _RectHeight = 0.25006751593088666f;
+            float _uvX , _uvY ;
+
+            if (!VRCJson.TryDeserializeFromJson(_JsonData, out _Token)) return;
+            _RootDict = _Token.DataDictionary;
+            if (!_RootDict.TryGetValue("data", out _Token)) return;
+            _DataDict = _Token.DataDictionary;
+            if (!_DataDict.TryGetValue("batches", out _Token)) return;
+            _Batches = _Token.DataList;
+            for (int i = 0; i < _Batches.Count; i++)
+            {
+                _Batch = _Batches[i].DataDictionary;
+                _CardCount = _Batch["card_count"].Int;
+
+                AtlasCardIds[i] = new String[_CardCount];
+                AtlasCardRects[i] = new Rect[_CardCount];
+
+                _Cards = _Batch["cards"].DataList;
+                for (int j = 0; j < _Cards.Count; j++)
+                {
+                    AtlasCardIds[i][j] = _Cards[j].String;
+                    _Col = j % 6;
+                    _Row = j / 6;
+                    _uvX = _Col * _RectWidth;
+                    _uvY = 0.7499324840691133f - (_Row * _RectHeight);
+                    AtlasCardRects[i][j] = new Rect(_uvX, _uvY, _RectWidth, _RectHeight);
+                }
+            }
+        }
+        // process deck list response (at1)
+        private void ProcessDeckListResponse(IVRCStringDownload _Json)
+        {
+            this.Log("ProcessDeckListResponse called");
+
+        }
+        // process set liste response (at2)
+        private void ProcessSetListResponse(IVRCStringDownload _Json)
+        {
+            this.Log("ProcessSetListResponse called");
+
+        }
+        // process oracle data response (at3)
+        private void ProcessOracleDataResponse(IVRCStringDownload _Json)
+        {
+
+            this.Log("ProcessOracleDataResponse called");
+            String _JsonData = _Json.Result;
+            DataToken _Token;
+            DataDictionary _RootDict;
+            DataDictionary _DataDict;
+            DataDictionary _Card;
+            DataList _CardsList;
+            DataList _IdsList;
+            int _Count = 0;
+            string[] _IdsArr;
+
+            if (!VRCJson.TryDeserializeFromJson(_JsonData, out _Token)) return;
+            _RootDict = _Token.DataDictionary;
+            if (!_RootDict.TryGetValue("data", out _Token)) return;
+            _DataDict = _Token.DataDictionary;
+            if (!_DataDict.TryGetValue("cards", out _Token)) return;
+            _CardsList = _Token.DataList;
+
+            _Count = _CardsList.Count;
+            CachedOracleIds = new string[_Count][];
+            CachedLegalities = new DataDictionary[_Count];
+            CachedRulings = new DataList[_Count];
+
+            for (int i = 0; i < _Count; i++)
+            {
+                _Card = _CardsList[i].DataDictionary;
+
+                if (_Card.TryGetValue("ids", out _Token))
+                {
+                    _IdsList = _Token.DataList;
+                    _IdsArr = new string[_IdsList.Count];
+                    for (int j = 0; j < _IdsList.Count; j++)
+                        _IdsArr[j] = _IdsList[j].String;
+                    CachedOracleIds[i] = _IdsArr;
+                }
+                else
+                    CachedOracleIds[i] = new string[0];
+
+                if (_Card.TryGetValue("legalities", out _Token))
+                    CachedLegalities[i] = _Token.DataDictionary;
+                else
+                    CachedLegalities[i] = new DataDictionary();
+
+                if (_Card.TryGetValue("rulings", out _Token))
+                    CachedRulings[i] = _Token.DataList;
+                else
+                    CachedRulings[i] = new DataList();
+            }
+
+        }
+        // Udon events for VRCImageDownloader
+        public override void OnImageLoadSuccess(IVRCImageDownload _Image)
+        {
+            this.Log("OnImageLoadSuccess called");
+            int _AtlasIndex;
+            if (!IsAtlasImageResponse(_Image, out _AtlasIndex)) return;
+            ProcessAtlasImage(_Image, _AtlasIndex);
+        }
+        public override void OnImageLoadError(IVRCImageDownload _Image)
+        {
+            this.Log("OnImageLoadError called");
+            this.Log($"Error loading image from URL: {_Image.Url}");
+            this.Log($"Error message: {_Image.Error}");
         }
 
+        // verifie si l'image est une reponse d'atlas
+        private bool IsAtlasImageResponse(IVRCImageDownload _Image, out int _AtlasIndex)
+        {
+            this.Log("IsAtlasImageResponse called");
+            _AtlasIndex = -1;
+            if (_Image == null || _Image.Url == null) return false;
+            for (int i = 0; i < TempURLs.Length; i++)
+            {
+                if (TempURLs[i] == _Image.Url)
+                {
+                    _AtlasIndex = i;
+                    return true;
+                }
+            }
+            return false;
+        }
+        // met a jour l'image de l'atlas
+        private void ProcessAtlasImage(IVRCImageDownload _Image, int _AtlasIndex)
+        {
+            this.Log("ProcessAtlasImage called");
+            if (_Image == null || _Image.Result == null) return;
+            if (_AtlasIndex < 0 || _AtlasIndex >= AtlasImages.Length) return;
+            AtlasImages[_AtlasIndex] = _Image.Result;
+            AtlasLoaded[_AtlasIndex] = true;
+            AtlasLoading[_AtlasIndex] = false;
+        }
 
         // methodes for atlas management
         // met a jour les infos des atlas
@@ -336,6 +490,36 @@ namespace MTG
         {
             this.Log("GetInstanceID called");
             return InstanceID;
+        }
+
+
+        // utilitaires
+        // base36 methodes
+        private String ToBase36(int value)
+        {
+            const String chars = "0123456789abcdefghijklmnopqrstuvwxyz";
+            if (value == 0) return "0";
+            String result = "";
+            while (value > 0)
+            {
+                result = chars[value % chars.Length] + result;
+                value /= chars.Length;
+            }
+            return result;
+        }
+
+        private int FromBase36(string base36)
+        {
+            const string chars = "0123456789abcdefghijklmnopqrstuvwxyz";
+            if (string.IsNullOrEmpty(base36)) return 0;
+            int result = 0;
+            for (int i = 0; i < base36.Length; i++)
+            {
+                char c = char.ToLower(base36[i]);
+                int val = chars.IndexOf(c);
+                result = result * chars.Length + val;
+            }
+            return result;
         }
     }
 }

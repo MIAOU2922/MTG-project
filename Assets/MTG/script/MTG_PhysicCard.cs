@@ -14,13 +14,14 @@ namespace MTG
     {
     
         [Header("=== PHYSIC CARD DATA ===")]
+        public RawImage PlaceholderImage;
         public VRC_Pickup Pickup;
-
         public bool IsHeld;
 
         [Header("=== ZOOM SETTINGS ===")]
         private float ZoomScale = 2.0f;
         private Vector3 OriginalScale;
+        public bool AllowZoom = true;
         private bool IsZoomed = false;
 
         // methodes
@@ -53,7 +54,7 @@ namespace MTG
         // pickup metodes
         public override void OnPickupUseDown()
         {
-            if (!IsHeld) return;
+            if (!IsHeld || !AllowZoom) return;
             ZoomIn();
         }
         public override void OnPickupUseUp()

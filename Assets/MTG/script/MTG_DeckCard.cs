@@ -14,7 +14,7 @@ namespace MTG
     {
     
         [Header("=== DECK CARD DATA ===")]
-        public MTG_Deckinterface DeckInterface;
+        public  MTG_DeckInterface DeckInterface;
         public int cardCount = 1;
         public TextMeshProUGUI countText;
 
@@ -25,7 +25,7 @@ namespace MTG
             this.Log($"TryFindDeckInterface called for cardKey: {CardKey}");
             GameObject _DeckInterfaceObj = GameObject.Find("Deck Interface");
             if (_DeckInterfaceObj == null) return;
-            DeckInterface = _DeckInterfaceObj.GetComponent<MTG_Deckinterface>();
+            DeckInterface = _DeckInterfaceObj.GetComponent< MTG_DeckInterface>();
             if (DeckInterface == null) return;
         }
 

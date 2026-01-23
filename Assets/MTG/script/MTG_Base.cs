@@ -45,6 +45,14 @@ namespace MTG
             if (Manager == null) TryFindManager();
             SetDebugFlags();
         }
+        protected virtual void Update()
+        {
+            if (Manager == null) TryFindManager();
+            if (DEBUG != Manager.DEBUG || VERBOSE_DEBUG != Manager.VERBOSE_DEBUG)
+            {
+                SetDebugFlags();
+            }
+        }
 
         private void SetDebugFlags()
         {

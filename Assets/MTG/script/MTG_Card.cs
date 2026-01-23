@@ -35,7 +35,7 @@ namespace MTG
         [SerializeField] private bool IsDoubleFaced = false;
         
         //methodes
-        protected virtual void Update()
+        protected override void Update()
         {
             if (!ImageFrontLoaded || (IsDoubleFaced && !ImageBackLoaded))
             {

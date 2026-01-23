@@ -13,7 +13,7 @@ namespace MTG
     {
     
         [Header("=== SEARCH CARD DATA ===")]
-        public MTG_Searchinterface SearchInterface;
+        public  MTG_SearchInterface SearchInterface;
 
         // methodes
         // recherche le search interface dans la scene
@@ -21,7 +21,7 @@ namespace MTG
         {
             GameObject _SearchInterfaceObj = GameObject.Find("Search Interface");
             if (_SearchInterfaceObj == null) return;
-            SearchInterface = _SearchInterfaceObj.GetComponent<MTG_Searchinterface>();
+            SearchInterface = _SearchInterfaceObj.GetComponent< MTG_SearchInterface>();
             if (SearchInterface == null) return;
         }
 

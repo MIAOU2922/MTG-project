@@ -1,0 +1,856 @@
+{
+    "link_type": "t",
+    "link_id": "3",
+    "iid": 56,
+    "uid": -1645995041,
+    "time": 1768915023191,
+    "data": {
+        "total_cards": 12,
+        "cards": [
+            {
+                "oracle_id": "8485cfaa-1dbf-432b-b5d0-92a6aa6a329b",
+                "ids": [
+                    "14dc88ee-bba9-4625-af0d-89f3762a0ead",
+                    "529451ef-2c7e-4566-8627-a1f25e010829",
+                    "66904768-09d0-4836-a6a0-c474678f19c1",
+                    "9ff4efdf-c0bb-443a-a100-2f3850571e91"
+                ],
+                "legalities": {
+                    "duel": "legal",
+                    "brawl": "legal",
+                    "penny": "legal",
+                    "predh": "not_legal",
+                    "future": "not_legal",
+                    "legacy": "legal",
+                    "modern": "legal",
+                    "pauper": "not_legal",
+                    "alchemy": "not_legal",
+                    "pioneer": "legal",
+                    "vintage": "legal",
+                    "historic": "legal",
+                    "standard": "not_legal",
+                    "timeless": "legal",
+                    "commander": "legal",
+                    "gladiator": "legal",
+                    "oldschool": "not_legal",
+                    "premodern": "not_legal",
+                    "oathbreaker": "legal",
+                    "standardbrawl": "not_legal",
+                    "paupercommander": "not_legal"
+                },
+                "rulings": [
+                    {
+                        "id": "8485cfaa-1dbf-432b-b5d0-92a6aa6a329b_2021-02-05_15865c95",
+                        "published_at": "2021-02-05T00:00:00.000Z",
+                        "comment": "If an opponent sacrifices a nontoken permanent or discards a permanent card as part of paying the cost of a spell or ability, Tergrid's ability will trigger and goes on the stack on top of that spell or ability. Tergrid's ability will resolve before that spell or ability."
+                    },
+                    {
+                        "id": "8485cfaa-1dbf-432b-b5d0-92a6aa6a329b_2021-02-05_95f3bcf5",
+                        "published_at": "2021-02-05T00:00:00.000Z",
+                        "comment": "A permanent card is an artifact, creature, enchantment, land, or planeswalker card."
+                    },
+                    {
+                        "id": "8485cfaa-1dbf-432b-b5d0-92a6aa6a329b_2021-02-05_5161e1eb",
+                        "published_at": "2021-02-05T00:00:00.000Z",
+                        "comment": "If an effect puts a double-faced card onto the battlefield, it enters with its front face up. If that front face can't be put onto the battlefield, it doesn't enter the battlefield."
+                    },
+                    {
+                        "id": "8485cfaa-1dbf-432b-b5d0-92a6aa6a329b_2021-02-05_84197ee4",
+                        "published_at": "2021-02-05T00:00:00.000Z",
+                        "comment": "To determine whether it is legal to play a modal double-faced card, consider only the characteristics of the face you're playing and ignore the other face's characteristics."
+                    },
+                    {
+                        "id": "8485cfaa-1dbf-432b-b5d0-92a6aa6a329b_2021-02-05_608b63df",
+                        "published_at": "2021-02-05T00:00:00.000Z",
+                        "comment": "If the card leaves the graveyard before Tergrid's ability resolves, you can't put it onto the battlefield, even if it returns to the graveyard before the ability resolves."
+                    },
+                    {
+                        "id": "8485cfaa-1dbf-432b-b5d0-92a6aa6a329b_2021-02-05_f9f1cdc6",
+                        "published_at": "2021-02-05T00:00:00.000Z",
+                        "comment": "If an effect allows you to play a specific modal double-faced card, you may cast it as a spell or play it as a land, as determined by which face you choose to play. If an effect allows you to cast (rather than \"play\") a specific modal double-faced card, you can't play it as a land."
+                    },
+                    {
+                        "id": "8485cfaa-1dbf-432b-b5d0-92a6aa6a329b_2021-02-05_0d7c5c98",
+                        "published_at": "2021-02-05T00:00:00.000Z",
+                        "comment": "There is a single triangle icon in the top left corner of the front face. There is a double triangle icon in the top left corner of the back face."
+                    },
+                    {
+                        "id": "8485cfaa-1dbf-432b-b5d0-92a6aa6a329b_2021-02-05_3276f149",
+                        "published_at": "2021-02-05T00:00:00.000Z",
+                        "comment": "If an effect allows you to play a land or cast a spell from among a group of cards, you may play or cast a modal double-faced card with any face that fits the criteria of that effect."
+                    },
+                    {
+                        "id": "8485cfaa-1dbf-432b-b5d0-92a6aa6a329b_2021-02-05_a4bf697e",
+                        "published_at": "2021-02-05T00:00:00.000Z",
+                        "comment": "If an opponent sacrifices a nontoken permanent, it doesn't matter which graveyard it goes to. Tergrid's ability will trigger."
+                    },
+                    {
+                        "id": "8485cfaa-1dbf-432b-b5d0-92a6aa6a329b_2021-02-05_6419d1cc",
+                        "published_at": "2021-02-05T00:00:00.000Z",
+                        "comment": "If you put an Aura onto the battlefield using Tergrid's ability, you choose what the Aura will enchant just before it enters the battlefield. An Aura put onto the battlefield this way doesn't target the player or permanent it will enchant, so permanents or players with hexproof may be chosen; however, the chosen recipient must be able to legally be enchanted by the Aura, so a player or permanent with protection from one of the Aura's qualities can't be chosen this way. If there's nothing legal for the Aura to enchant, it stays in the graveyard."
+                    },
+                    {
+                        "id": "8485cfaa-1dbf-432b-b5d0-92a6aa6a329b_2021-02-05_fe5ccb47",
+                        "published_at": "2021-02-05T00:00:00.000Z",
+                        "comment": "The player targeted by the first ability of Tergrid's Lantern can choose to lose 3 life even if they have nonland permanents to sacrifice or cards to discard. They can't choose to sacrifice a nonland permanent if they don't control any, nor can they choose to discard a card if they have none in hand."
+                    },
+                    {
+                        "id": "8485cfaa-1dbf-432b-b5d0-92a6aa6a329b-2021-02-05",
+                        "published_at": "2021-02-05T00:00:00.000Z",
+                        "comment": "If you put an Aura onto the battlefield using Tergrid's ability, you choose what the Aura will enchant just before it enters the battlefield. An Aura put onto the battlefield this way doesn't target the player or permanent it will enchant, so permanents or players with hexproof may be chosen; however, the chosen recipient must be able to legally be enchanted by the Aura, so a player or permanent with protection from one of the Aura's qualities can't be chosen this way. If there's nothing legal for the Aura to enchant, it stays in the graveyard."
+                    },
+                    {
+                        "id": "8485cfaa-1dbf-432b-b5d0-92a6aa6a329b_2021-02-05_02a90bc2",
+                        "published_at": "2021-02-05T00:00:00.000Z",
+                        "comment": "In the Commander variant, a double-faced card's color identity is determined by the mana costs and mana symbols in the rules text of both faces combined. If either face has a color indicator or basic land type, those are also considered."
+                    },
+                    {
+                        "id": "8485cfaa-1dbf-432b-b5d0-92a6aa6a329b_2021-02-05_d2392258",
+                        "published_at": "2021-02-05T00:00:00.000Z",
+                        "comment": "If an effect instructs a player to choose a card name, the name of either face may be chosen. If that effect or a linked ability refers to a spell with the chosen name being cast and/or a land with the chosen name being played, it considers only the chosen name, not the other face's name."
+                    },
+                    {
+                        "id": "8485cfaa-1dbf-432b-b5d0-92a6aa6a329b_2021-02-05_4241978a",
+                        "published_at": "2021-02-05T00:00:00.000Z",
+                        "comment": "The mana value of a modal double-faced card is based on the characteristics of the face that's being considered. On the stack and battlefield, consider whichever face is up. In all other zones, consider only the front face. This is different than how the mana value of a transforming double-faced card is determined."
+                    },
+                    {
+                        "id": "8485cfaa-1dbf-432b-b5d0-92a6aa6a329b_2021-02-05_4ed6f4bd",
+                        "published_at": "2021-02-05T00:00:00.000Z",
+                        "comment": "A modal double-faced card can't be transformed or be put onto the battlefield transformed. Ignore any instruction to transform a modal double-faced card or to put one onto the battlefield transformed."
+                    }
+                ]
+            },
+            {
+                "oracle_id": "692260bb-e01c-4550-832a-9611856a6ff0",
+                "ids": [
+                    "417f71d2-d7da-4279-8847-d27c67e9ea9d"
+                ],
+                "legalities": {
+                    "duel": "legal",
+                    "brawl": "legal",
+                    "penny": "not_legal",
+                    "predh": "not_legal",
+                    "future": "not_legal",
+                    "legacy": "legal",
+                    "modern": "legal",
+                    "pauper": "not_legal",
+                    "alchemy": "not_legal",
+                    "pioneer": "legal",
+                    "vintage": "legal",
+                    "historic": "legal",
+                    "standard": "not_legal",
+                    "timeless": "legal",
+                    "commander": "legal",
+                    "gladiator": "legal",
+                    "oldschool": "not_legal",
+                    "premodern": "not_legal",
+                    "oathbreaker": "legal",
+                    "standardbrawl": "not_legal",
+                    "paupercommander": "not_legal"
+                },
+                "rulings": [
+                    {
+                        "id": "692260bb-e01c-4550-832a-9611856a6ff0_2021-02-05_631fb2cd",
+                        "published_at": "2021-02-05T00:00:00.000Z",
+                        "comment": "Casting a foretold card from exile follows the timing rules for that card. If you foretell an instant card, you can cast it as soon as the next player's turn. In most cases, if you foretell a card that isn't an instant (or doesn't have flash), you'll have to wait until your next turn to cast it."
+                    },
+                    {
+                        "id": "692260bb-e01c-4550-832a-9611856a6ff0_2021-02-05_ddb213e7",
+                        "published_at": "2021-02-05T00:00:00.000Z",
+                        "comment": "If you're casting a foretold card from exile for its foretell cost, you can't choose to cast it for any other alternative costs. You can, however, pay additional costs, such as kicker costs. If the card has any mandatory additional costs, those must be paid to cast the spell."
+                    },
+                    {
+                        "id": "692260bb-e01c-4550-832a-9611856a6ff0_2021-02-05_66465f15",
+                        "published_at": "2021-02-05T00:00:00.000Z",
+                        "comment": "As Tergrid's Shadow resolves, first the player whose turn it is chooses two creatures they control, then each other player in turn order does the same, knowing the choices made before them. Then all the chosen creatures are sacrificed at the same time."
+                    },
+                    {
+                        "id": "692260bb-e01c-4550-832a-9611856a6ff0_2021-02-05_bed3deee",
+                        "published_at": "2021-02-05T00:00:00.000Z",
+                        "comment": "Because exiling a card with foretell from your hand is a special action, you can do so any time you have priority during your turn, including in response to spells and abilities. Once you announce you're taking the action, no other player can respond by trying to remove the card from your hand."
+                    },
+                    {
+                        "id": "692260bb-e01c-4550-832a-9611856a6ff0_2021-02-05_ae829318",
+                        "published_at": "2021-02-05T00:00:00.000Z",
+                        "comment": "If a player controls two or fewer creatures, that player sacrifices each creature they control."
+                    },
+                    {
+                        "id": "692260bb-e01c-4550-832a-9611856a6ff0-2021-02-05",
+                        "published_at": "2021-02-05T00:00:00.000Z",
+                        "comment": "If a player controls two or fewer creatures, that player sacrifices each creature they control."
+                    }
+                ]
+            },
+            {
+                "oracle_id": "bc84036b-0410-4dab-8091-41a96086b5b1",
+                "ids": [
+                    "e0f2848d-bedc-4d19-8dff-f0049036b086"
+                ],
+                "legalities": {
+                    "duel": "not_legal",
+                    "brawl": "not_legal",
+                    "penny": "not_legal",
+                    "predh": "not_legal",
+                    "future": "not_legal",
+                    "legacy": "not_legal",
+                    "modern": "not_legal",
+                    "pauper": "not_legal",
+                    "alchemy": "not_legal",
+                    "pioneer": "not_legal",
+                    "vintage": "not_legal",
+                    "historic": "not_legal",
+                    "standard": "not_legal",
+                    "timeless": "not_legal",
+                    "commander": "not_legal",
+                    "gladiator": "not_legal",
+                    "oldschool": "not_legal",
+                    "premodern": "not_legal",
+                    "oathbreaker": "not_legal",
+                    "standardbrawl": "not_legal",
+                    "paupercommander": "not_legal"
+                },
+                "rulings": []
+            },
+            {
+                "oracle_id": "b34bb2dc-c1af-4d77-b0b3-a0fb342a5fc6",
+                "ids": [
+                    "0000419b-0bba-4488-8f7a-6194544ce91e",
+                    "0031d026-9e9a-46f6-8204-1acfee8b8809",
+                    "006e0990-0596-4537-aced-51ac499938af",
+                    "00bbaefd-e7dc-4870-ad9c-e94e27de3860",
+                    "00feb2af-b363-4377-98b1-6a07df7f1acd",
+                    "0120879f-df13-4583-b260-0fc298518f16",
+                    "01838859-51ef-474a-9653-23dd37eed1d6",
+                    "0301f00e-481d-4dbc-8fda-528d9d4ba848",
+                    "03be40e3-b7d7-43ee-a526-5d56fa429ffa",
+                    "049528b8-f922-4671-931d-9b37640d5a07",
+                    "04c4a529-2345-412d-a2c6-7cd9499f031c",
+                    "04db1116-3819-4a57-a001-dfa7578f0f12",
+                    "04dcdbcd-2c5e-4733-a4c4-c5a345e9206a",
+                    "04eb20ea-1784-475e-a612-48057e5578c1",
+                    "053f294b-7acb-4c1a-8d7c-e8f891df9a46",
+                    "0560b5ed-821a-479f-91fb-98ade4a8d470",
+                    "05683891-cdd4-4401-b7d5-0ef17e79c699",
+                    "060fa791-ccae-42df-b01c-2d4446d78422",
+                    "07264de1-4322-4adb-8f08-c0aa236747c7",
+                    "07531062-8a83-4716-8416-11565908143f",
+                    "076c5ceb-4236-46ef-ba8e-336088fcedd9",
+                    "07eb0e22-1e19-46e0-913e-94ccbf858bb9",
+                    "081c1f03-3251-42dc-b356-3454ebdabc2e",
+                    "08d533b8-4841-42f9-9f4b-bce14663a35a",
+                    "097f0f7a-0a2d-47bc-8c9c-aaad0a9d8f19",
+                    "099a3b5a-8de2-4475-8743-f54af5a38f64",
+                    "09b123bf-9e10-493a-818d-df5f2393159f",
+                    "09bf63e1-fe77-4d5e-b557-13eecfbc42b4",
+                    "0a45560e-ce25-45a5-aa43-aa33d1964cd8",
+                    "0a854256-e8f3-4715-aec2-3af3b8e8fd28",
+                    "0ae275b5-fdf8-4590-8848-432a06ce19bf",
+                    "0b353ecc-7791-4bfe-861f-d9a74d2150ea",
+                    "0b43815e-8b8a-4745-bdf3-f72c8d60c48c",
+                    "0b741c86-a563-4180-a857-7850de6ee366",
+                    "0c60309b-158a-47a1-8769-767a73adf828",
+                    "0c615315-f140-4a6b-b2ea-7c0adda1bab9",
+                    "0cb7637e-785d-4716-ad06-9e786e037537",
+                    "0cdbb450-4b80-4f81-9992-ee8fbeeb1857",
+                    "0d5bd3e1-45ef-43b7-8796-6085842278df",
+                    "0d6250d3-728b-4412-8efc-911bb6f5e910",
+                    "0da5fbc2-24ad-4520-a60a-436d3a485fec",
+                    "0db1a70b-bca9-4a4d-90a0-72527d4f8838",
+                    "0ec326ea-771a-4cb4-8d4e-b3b189e8cd78",
+                    "0f341b39-ac40-436b-967c-568265354886",
+                    "0f3f309f-60bd-45e2-b226-27e634fe62d6",
+                    "10122865-e379-49c6-b305-476a9383afc0",
+                    "102c2350-4929-4c81-8823-4b3e62e22dd4",
+                    "1069841a-0642-4fb6-b831-d45ff7fda3af",
+                    "1098eb4e-eea7-4f07-bcb8-6ac59282d7c1",
+                    "10b3dce8-9c28-41f6-823f-a7d64dd9e33a",
+                    "10e2588b-7781-418c-abc8-08601fbb2336",
+                    "117ab60a-b888-4585-b0c6-769d387069f7",
+                    "119c4d73-5b71-446a-a739-25d494591aa1",
+                    "11c7c34c-eb81-412e-9030-f048435cbfbc",
+                    "11d5ee25-43d7-4930-90a2-ba74b9cc69c9",
+                    "12180141-f817-420f-a7cf-cd82a5ef9786",
+                    "12223487-326c-4a34-983e-b3b8f5317724",
+                    "122b5548-5ff5-43e4-b799-75c709b1c32d",
+                    "12495cfa-ab19-4e9e-a49e-a94499f664a2",
+                    "12591b4d-176e-438f-9228-bb75b95798cd",
+                    "12a035fe-8847-4678-84f7-01bac77ae011",
+                    "1345293f-e71e-4754-bf88-b3c8b9824ab3",
+                    "13635ba7-0635-4c16-9e14-444470e06287",
+                    "1428575c-f18e-41a0-b58a-259d2feafd06",
+                    "146b803f-0455-497b-8362-03da2547070d",
+                    "14c94463-31e8-4a2e-b879-d096a27cc60e",
+                    "150d0710-9ecb-4187-a0f8-a70b330c8879",
+                    "151fc328-0951-47fb-be07-dc4187a5c0be",
+                    "158aaaad-a217-490a-8a90-31ce592ad742",
+                    "15b3f35e-451e-4de6-a4f7-249287566964",
+                    "1676702c-523a-4e57-9cb3-171405cab782",
+                    "16f52885-1f01-4f06-90a8-1a0ecf291ab5",
+                    "172e55c6-b797-4b49-94f1-cc93e4f5b939",
+                    "17393110-c57e-487b-b07e-dc21a164efa7",
+                    "174cb9a0-afa3-4f45-b317-238fa9d4f55f",
+                    "17cb5dfa-34f5-4614-aa46-57b081bb615d",
+                    "17d36674-2598-4df2-b9f3-0224ae08d37d",
+                    "17e5f194-5148-4991-9f75-750cb3e41c62",
+                    "1813119b-8604-4cd2-b731-957b5f1bb4ea",
+                    "1814fc7a-0f2a-407c-9d71-e7a7339ce82c",
+                    "1841ca54-d7d5-4c02-9c8b-5f59dce33a6b",
+                    "184a9654-ce17-4378-b52b-fb6efbbf042f",
+                    "18a854ab-41eb-4688-9e55-67047d93970f",
+                    "18c918f7-c05f-43f6-8342-dd26d5c99b87",
+                    "18f4e594-01e5-40ae-903c-f55aad740de0",
+                    "1908f8d2-95df-44e3-8943-568c596cd8aa",
+                    "19141b89-49d4-48d7-a74f-2e73618a54ce",
+                    "192ac805-deb4-4275-8473-01b5abb7b385",
+                    "19aee1cd-4314-44f4-8357-fc300a6fc046",
+                    "19e71532-3f79-4fec-974f-b0e85c7fe701",
+                    "1a13a86b-c4c5-4a7a-9e01-8669e9ed6557",
+                    "1a181800-f5ef-4019-b93d-35d8f1dbf953",
+                    "1a1b6004-6dda-4495-85f7-eb8fa29873e9",
+                    "1a1b7277-0c09-42ab-aa6b-542a1e402580",
+                    "1a26154f-dfe5-481d-acdd-237ea08f069a",
+                    "1a51949e-9031-4700-8366-a307e8f012fe",
+                    "1abe7f25-71c5-4fd2-8696-0a4ce8c4b0b6",
+                    "1afffb9b-3fae-4c90-9108-91713bef7daf",
+                    "1b20aa40-2b88-4cac-ad15-f730fde60643",
+                    "1bd51a22-3e0d-4826-aab7-0adbfce4478a",
+                    "1c01e4ce-5d77-4bbb-9df8-39cd3a2f9e6e",
+                    "1c9a8804-d0ed-44e7-8856-b0c9eb10f973",
+                    "1ce914d7-6a13-4f00-b8b4-05cdd410f32b",
+                    "1d416790-fca9-42ab-b211-bae68858a614",
+                    "1d463301-7f73-4e3d-bd5b-1c03fd014281",
+                    "1d91255d-e3d1-412b-8031-994779372496",
+                    "1db496f2-6b64-4d9c-baac-b3788c632629",
+                    "1def1ac1-652c-4160-9092-46549e577570",
+                    "1fd19809-f675-4fc8-afb2-12e5e636d26b",
+                    "2036f825-ef57-4a40-b45f-0668d9c8ec6a",
+                    "207879b4-f92a-4331-88f3-05f532a8a8e8",
+                    "208014f4-eed8-4856-a9d9-dbac10c4aa6a",
+                    "21a19869-85a8-4334-af5e-8d38d08955da",
+                    "21df2042-64b1-45bf-a14f-574f6ae5a4e5",
+                    "23b6b5a9-b564-4b18-a3e0-b9d5aec7f680",
+                    "23c9425a-2093-40c1-b3a9-a882d80cf198",
+                    "23e1c12f-6c6b-4e44-8fbc-e6703ffe2843",
+                    "23e57c9e-2cdd-4fe1-a7b3-89cc9dbc7339",
+                    "244bcd8e-02ff-4caf-a41e-6c4da8b2dc13",
+                    "24788990-42ff-4b2b-8d01-fa2d0ec66a03",
+                    "249104ba-65fc-42d6-ad8b-d97640545d89",
+                    "2491fc97-f938-4d06-969b-3e8baa4dd96a",
+                    "24e71c1f-5ca9-450a-8a0f-39a03a275e97",
+                    "253f6297-e76c-4003-8ddf-3fb5f2072384",
+                    "2581a074-00ab-4a2d-8699-25dcd8c76393",
+                    "276fa731-45b3-4418-b9c9-8543e238d55d",
+                    "279ebd05-229a-4a4a-a1c0-c5f24d16dee3",
+                    "283d6124-1678-46b1-a12a-69644c689e29",
+                    "2950dace-a653-47e4-a80a-a3de5db8d491",
+                    "2968cde0-300e-4f59-859f-a7fc189f8943",
+                    "2a0bc8e3-b106-43bb-acf6-885328d24a65",
+                    "2a10ed4f-2c9a-424d-bcca-730af7727854",
+                    "2a4c27b7-9695-479f-a5b6-bae63a76629e",
+                    "2a7aba60-d300-4c33-9e1e-846d6167dc50",
+                    "2a9e6cdc-f92f-497c-8cd9-b69586098512",
+                    "2b101184-71b2-4400-a5dc-4113df5a4f12",
+                    "2b176d24-a4d6-489e-af69-4547693e7de1",
+                    "2b86b3a4-981e-497a-b78b-30b2dbc5ea7a",
+                    "2b90e88b-60a3-4d1d-bb8c-14633e5005a5",
+                    "2bbc9c84-348b-40f5-ab3d-bbe8c27529a4",
+                    "2c2fc9f7-21af-4416-abf5-6fcb4f543680",
+                    "2c64992b-6b0f-4f7a-a934-484b7be5d717",
+                    "2c8c30af-055a-4921-99a8-f99c472c7315",
+                    "2ccc7cf2-c9ed-4505-9341-7b8dcf10590f",
+                    "2d3a6ecf-323d-4650-aabf-92995e3c72c6",
+                    "2dbc8240-d0a1-439c-a909-95b937d70494",
+                    "2e3019bf-c69e-4c61-b3d1-a8c4967031bb",
+                    "2f51f2eb-bfbf-4103-ba82-f98f87e7babc",
+                    "2f5b488e-d725-4ef7-90f4-71091325c0b6",
+                    "2f60db2d-7594-43af-8554-ba54e9023306",
+                    "2fafd821-5bb3-4083-bf3b-ecc4cf6c7468",
+                    "2fb2b4a1-e744-4d55-abf9-d96b5533ecae",
+                    "2fd47e30-2ab0-452d-ac51-fa182c2b00fc",
+                    "2fdf7380-56cb-4d34-ad05-43029341a57a",
+                    "30a4d3de-e004-4a15-9f45-4d50813de533",
+                    "30c96a89-32e3-4412-9e79-51411362b9d5",
+                    "310e7edb-4ca6-485a-8e54-a548ca39cbf9",
+                    "314b835b-b03e-43fe-b924-67139e2f266a",
+                    "3156ba12-cf21-48a5-aa08-74b447cafc2c",
+                    "318b15ea-80b9-48df-b010-aa1aabcf51ea",
+                    "31d44ab0-ca04-4b92-bbfd-587640db5552",
+                    "32411c3a-da2b-4316-9848-971e90951303",
+                    "32636e80-9455-43c8-b55f-dfa2d7b7465b",
+                    "3278a3c9-ae69-40f1-9b64-6a8a67ee204f",
+                    "3279314f-d639-4489-b2ab-3621bb3ca64b",
+                    "329ae876-a7ed-43e4-9ed9-ac71191ba8d2",
+                    "32af9f41-89e2-4e7a-9fec-fffe79cae077",
+                    "32b0f121-0f5d-4f64-9025-d5d2454c2930",
+                    "32df22d3-9b65-4b43-80d9-e4c43575ec74",
+                    "3394d804-c0e5-4901-a8ff-c1a765cc1e21",
+                    "33bf5c9d-3b64-4625-b8ab-b690df0eeeff",
+                    "340238b7-60ce-48d1-bb73-2925df7853a3",
+                    "341b05e6-93bb-4071-b8c6-1644f56e026d",
+                    "34cc6a36-b551-40c7-b081-53beffbca235",
+                    "34f9571c-b61c-4bc7-ac98-f6c80c47ea7d",
+                    "34fa98a0-5dce-4914-a827-964c4a596ed5",
+                    "356547d1-f97e-4ef6-ab32-43e4673393ff",
+                    "35724a5c-e91a-4ff8-b404-057976a858c8",
+                    "35e8b186-ea04-4895-b5b2-f02e9c848c97",
+                    "36105ded-e343-4dca-84b5-afb1fd34e2da",
+                    "36454f7f-0b60-451e-9b4f-2cb4c8ccc9c2",
+                    "366105ea-c720-4524-8fc3-dbe82291e255",
+                    "368be73f-24d2-44db-a55e-d04176db3142",
+                    "36b3ffbd-3f3e-4fca-80c2-94f9fdc198a5",
+                    "374f7c5e-d788-4c8a-8be7-3448e33f7009",
+                    "3758e2e6-3147-4b4f-82a7-491c963c0fa8",
+                    "37a8d9ff-291a-4862-b2e8-3db520cc9ae4",
+                    "37d580df-2340-45e4-afee-c1f0313b9965",
+                    "37f8d695-a3e4-4707-9db9-886849ce4c42",
+                    "3812e162-3511-4988-b2a1-3bc6945ac45b",
+                    "384cbc4a-c955-45df-98fd-d448e574c130",
+                    "393d66f7-7dbf-4a92-912f-377f99c8f164",
+                    "398ee871-7b30-4e8c-b0d0-b85e0a37d3b1",
+                    "3a11f9c9-267a-4913-97f7-78c372fe211e",
+                    "3a1e5ef3-790d-4f45-a264-157448bab2e8",
+                    "3a7a2a54-47e1-4694-b4f6-b7d659bb2b1f",
+                    "3a9ea6ee-0150-40f1-baa3-fe637128be2f",
+                    "3af807cd-f640-4b13-9751-f74107b34f2b",
+                    "3b1153ac-e4de-43a4-ae39-ca22a4f571da",
+                    "3c5c5d09-6f93-44f5-894d-4c7be40bb006",
+                    "3ca33d91-3c1a-4351-9d9d-d46a6e3de084",
+                    "3cf23791-1b15-43ee-b81a-5fe068709bc1",
+                    "3cfbcefd-8b2d-4b9e-a11a-18274c3a8dd2",
+                    "3d08f6a6-316d-45d8-aabe-1760a20903ac",
+                    "3d09a0c7-3934-4bf3-a56a-5b670b168eee",
+                    "3d365b22-2304-4f20-86f9-9560f59546f1",
+                    "3dc61690-30c6-4374-8777-e1802e9e164c",
+                    "3dfd7930-6ea4-4f9a-900e-38295398fd41",
+                    "3e5342f9-3f91-48e4-bfd1-49fbf9ca89cf",
+                    "3e574ee5-d33d-4054-9884-fdb5fe9d73bd",
+                    "3ee0a9b2-5570-44f0-bc66-6ed7677ce2e2",
+                    "3efeaa30-9db9-4e68-a658-9064d6e67516",
+                    "3f0218be-4a5e-40d2-ad76-b4bf12392fc6"
+                ],
+                "legalities": {
+                    "duel": "legal",
+                    "brawl": "legal",
+                    "penny": "legal",
+                    "predh": "legal",
+                    "future": "legal",
+                    "legacy": "legal",
+                    "modern": "legal",
+                    "pauper": "legal",
+                    "alchemy": "legal",
+                    "pioneer": "legal",
+                    "vintage": "legal",
+                    "historic": "legal",
+                    "standard": "legal",
+                    "timeless": "legal",
+                    "commander": "legal",
+                    "gladiator": "legal",
+                    "oldschool": "not_legal",
+                    "premodern": "legal",
+                    "oathbreaker": "legal",
+                    "standardbrawl": "legal",
+                    "paupercommander": "legal"
+                },
+                "rulings": []
+            },
+            {
+                "oracle_id": "8c56bb41-a8d8-4b0f-bbb7-be8466dc9ed1",
+                "ids": [
+                    "04075c37-1c1c-439c-9c54-770185fc0af1",
+                    "16b49b6d-863c-4db9-aa4f-bb270588ee8a"
+                ],
+                "legalities": {
+                    "duel": "not_legal",
+                    "brawl": "not_legal",
+                    "penny": "not_legal",
+                    "predh": "not_legal",
+                    "future": "not_legal",
+                    "legacy": "not_legal",
+                    "modern": "not_legal",
+                    "pauper": "not_legal",
+                    "alchemy": "not_legal",
+                    "pioneer": "not_legal",
+                    "vintage": "not_legal",
+                    "historic": "not_legal",
+                    "standard": "not_legal",
+                    "timeless": "not_legal",
+                    "commander": "not_legal",
+                    "gladiator": "not_legal",
+                    "oldschool": "not_legal",
+                    "premodern": "not_legal",
+                    "oathbreaker": "not_legal",
+                    "standardbrawl": "not_legal",
+                    "paupercommander": "not_legal"
+                },
+                "rulings": [
+                    {
+                        "id": "8c56bb41-a8d8-4b0f-bbb7-be8466dc9ed1_2009-10-01_4f9d7979",
+                        "published_at": "2009-10-01T00:00:00.000Z",
+                        "comment": "The controller of a face-up plane card is the player designated as the \"planar controller.\" Normally, the planar controller is whoever the active player is. However, if the current planar controller would leave the game, instead the next player in turn order that wouldn't leave the game becomes the planar controller, then the old planar controller leaves the game. The new planar controller retains that designation until they leave the game or a different player becomes the active player, whichever comes first."
+                    },
+                    {
+                        "id": "8c56bb41-a8d8-4b0f-bbb7-be8466dc9ed1_2009-10-01_446e01bd",
+                        "published_at": "2009-10-01T00:00:00.000Z",
+                        "comment": "A plane card is treated as if its text box included \"When you roll {PW}, put this card on the bottom of its owner's planar deck face down, then move the top card of your planar deck off that planar deck and turn it face up.\" This is called the \"planeswalking ability.\""
+                    },
+                    {
+                        "id": "8c56bb41-a8d8-4b0f-bbb7-be8466dc9ed1_2009-10-01_b6cc7999",
+                        "published_at": "2009-10-01T00:00:00.000Z",
+                        "comment": "The Great Forest's first ability doesn't actually change creatures' power; it changes only the value of the combat damage they assign. All other rules and effects that check power or toughness use the real values."
+                    },
+                    {
+                        "id": "8c56bb41-a8d8-4b0f-bbb7-be8466dc9ed1_2009-10-01_f7db4964",
+                        "published_at": "2009-10-01T00:00:00.000Z",
+                        "comment": "The Great Forest's first ability means, for example, that a 2/3 creature will assign 3 damage in combat instead of 2."
+                    },
+                    {
+                        "id": "8c56bb41-a8d8-4b0f-bbb7-be8466dc9ed1-2009-10-01",
+                        "published_at": "2009-10-01T00:00:00.000Z",
+                        "comment": "If an ability of a plane refers to \"you,\" it's referring to whoever the plane's controller is at the time, not to the player that started the game with that plane card in their deck. Many abilities of plane cards affect all players, while many others affect only the planar controller, so read each ability carefully."
+                    },
+                    {
+                        "id": "8c56bb41-a8d8-4b0f-bbb7-be8466dc9ed1_2009-10-01_961cb882",
+                        "published_at": "2009-10-01T00:00:00.000Z",
+                        "comment": "If an ability of a plane refers to \"you,\" it's referring to whoever the plane's controller is at the time, not to the player that started the game with that plane card in their deck. Many abilities of plane cards affect all players, while many others affect only the planar controller, so read each ability carefully."
+                    },
+                    {
+                        "id": "8c56bb41-a8d8-4b0f-bbb7-be8466dc9ed1_2009-10-01_5ee04ad4",
+                        "published_at": "2009-10-01T00:00:00.000Z",
+                        "comment": "A face-up plane card that's turned face down becomes a new object with no relation to its previous existence. In particular, it loses all counters it may have had."
+                    }
+                ]
+            },
+            {
+                "oracle_id": "bd912666-f37f-4767-af6f-9e6d0fcccacf",
+                "ids": [
+                    "0b84d68b-72b5-4fd3-a6f9-80ac26f16583",
+                    "17dcc79a-ca76-463a-a9ac-3b5ea60aaaca",
+                    "2a83eca4-b6ad-4ec4-91f2-b2a62b32b056",
+                    "2b45e8e8-4484-4c62-b507-5edb98d77f54",
+                    "35a3131e-07ce-470b-b785-dd79511a8b6a",
+                    "363dee3f-48d0-454d-81d3-9def5476a029",
+                    "38d59e6e-0154-4c89-a58f-521e3424581b",
+                    "3b31582c-ffa5-43e4-866a-30dc1e6012d7",
+                    "3c7740b9-f2a9-40fc-b865-ce040f947212"
+                ],
+                "legalities": {
+                    "duel": "legal",
+                    "brawl": "legal",
+                    "penny": "legal",
+                    "predh": "legal",
+                    "future": "not_legal",
+                    "legacy": "legal",
+                    "modern": "legal",
+                    "pauper": "not_legal",
+                    "alchemy": "not_legal",
+                    "pioneer": "legal",
+                    "vintage": "legal",
+                    "historic": "legal",
+                    "standard": "not_legal",
+                    "timeless": "legal",
+                    "commander": "legal",
+                    "gladiator": "legal",
+                    "oldschool": "not_legal",
+                    "premodern": "legal",
+                    "oathbreaker": "legal",
+                    "standardbrawl": "not_legal",
+                    "paupercommander": "not_legal"
+                },
+                "rulings": []
+            },
+            {
+                "oracle_id": "5da15fc5-9cc0-4432-b8d7-cd88b74d4ea5",
+                "ids": [
+                    "107be8ee-ee22-4d37-94f1-2a5b438fbe05"
+                ],
+                "legalities": {
+                    "duel": "not_legal",
+                    "brawl": "not_legal",
+                    "penny": "not_legal",
+                    "predh": "not_legal",
+                    "future": "not_legal",
+                    "legacy": "not_legal",
+                    "modern": "not_legal",
+                    "pauper": "not_legal",
+                    "alchemy": "not_legal",
+                    "pioneer": "not_legal",
+                    "vintage": "not_legal",
+                    "historic": "not_legal",
+                    "standard": "not_legal",
+                    "timeless": "not_legal",
+                    "commander": "not_legal",
+                    "gladiator": "not_legal",
+                    "oldschool": "not_legal",
+                    "premodern": "not_legal",
+                    "oathbreaker": "not_legal",
+                    "standardbrawl": "not_legal",
+                    "paupercommander": "not_legal"
+                },
+                "rulings": []
+            },
+            {
+                "oracle_id": "d568aab7-0f05-4473-acc7-6a0bb515f1c0",
+                "ids": [
+                    "199204f4-a365-42f9-a6fd-fd5ee9722b26",
+                    "26dd7020-8e0d-4e12-8a81-3d03e3f154f7",
+                    "2d129661-7636-46c6-a3d8-ae4aaa8700de",
+                    "2e00beec-4982-4faa-99c2-ed2a243422bd",
+                    "3526c4d3-bdf5-4700-804d-4829988e3bda",
+                    "3e3f37d4-5ac9-4547-95cd-a88e5bc738b9"
+                ],
+                "legalities": {
+                    "duel": "not_legal",
+                    "brawl": "not_legal",
+                    "penny": "not_legal",
+                    "predh": "not_legal",
+                    "future": "not_legal",
+                    "legacy": "not_legal",
+                    "modern": "not_legal",
+                    "pauper": "not_legal",
+                    "alchemy": "not_legal",
+                    "pioneer": "not_legal",
+                    "vintage": "not_legal",
+                    "historic": "not_legal",
+                    "standard": "not_legal",
+                    "timeless": "not_legal",
+                    "commander": "not_legal",
+                    "gladiator": "not_legal",
+                    "oldschool": "not_legal",
+                    "premodern": "not_legal",
+                    "oathbreaker": "not_legal",
+                    "standardbrawl": "not_legal",
+                    "paupercommander": "not_legal"
+                },
+                "rulings": []
+            },
+            {
+                "oracle_id": "5f0d3be8-e63e-4ade-ae58-6b0c14f2ce6d",
+                "ids": [
+                    "1c59fc48-704b-4187-b9d3-2a2cff6dd54b",
+                    "2e9a891d-a2c6-418d-a6bd-be2353b3e980",
+                    "3995734f-5fa2-4039-af64-0bca88741089"
+                ],
+                "legalities": {
+                    "duel": "legal",
+                    "brawl": "legal",
+                    "penny": "not_legal",
+                    "predh": "legal",
+                    "future": "not_legal",
+                    "legacy": "legal",
+                    "modern": "legal",
+                    "pauper": "legal",
+                    "alchemy": "not_legal",
+                    "pioneer": "legal",
+                    "vintage": "legal",
+                    "historic": "legal",
+                    "standard": "not_legal",
+                    "timeless": "legal",
+                    "commander": "legal",
+                    "gladiator": "legal",
+                    "oldschool": "not_legal",
+                    "premodern": "legal",
+                    "oathbreaker": "legal",
+                    "standardbrawl": "not_legal",
+                    "paupercommander": "legal"
+                },
+                "rulings": [
+                    {
+                        "id": "5f0d3be8-e63e-4ade-ae58-6b0c14f2ce6d_2021-02-05_49dc470a",
+                        "published_at": "2021-02-05T00:00:00.000Z",
+                        "comment": "Some cards have additional effects for each {S} spent to cast them. You can cast these spells even if you don't spend any snow mana to cast them; their additional effects simply won't do anything."
+                    },
+                    {
+                        "id": "5f0d3be8-e63e-4ade-ae58-6b0c14f2ce6d_2021-02-05_c886b3fe",
+                        "published_at": "2021-02-05T00:00:00.000Z",
+                        "comment": "In a Limited event (usually Booster Draft or Sealed Deck), you can't add basic snow lands to your card pool as you would other basic lands. You can play with basic snow lands only if you open them in your sealed deck or draft them."
+                    },
+                    {
+                        "id": "5f0d3be8-e63e-4ade-ae58-6b0c14f2ce6d_2021-02-05_daa9faa8",
+                        "published_at": "2021-02-05T00:00:00.000Z",
+                        "comment": "Snow is a supertype, not a card type. It has no rules meaning or function by itself, but spells and abilities may refer to it."
+                    },
+                    {
+                        "id": "5f0d3be8-e63e-4ade-ae58-6b0c14f2ce6d_2021-02-05_db8407de",
+                        "published_at": "2021-02-05T00:00:00.000Z",
+                        "comment": "The {S} symbol is a generic mana symbol. It represents a cost that can be paid by one mana that was produced by a snow source. That mana can be any color or colorless."
+                    },
+                    {
+                        "id": "5f0d3be8-e63e-4ade-ae58-6b0c14f2ce6d_2021-02-05_ed75c60b",
+                        "published_at": "2021-02-05T00:00:00.000Z",
+                        "comment": "The Kaldheim set doesn't have any cards with mana costs that include {S}, but some previous sets do. If an effect says such a spell costs {1} less to cast, that reduction doesn't apply to any {S} costs. This is also true for activated abilities that include {S} in their activation costs and effects that reduce those costs."
+                    },
+                    {
+                        "id": "5f0d3be8-e63e-4ade-ae58-6b0c14f2ce6d_2021-02-05_1b544163",
+                        "published_at": "2021-02-05T00:00:00.000Z",
+                        "comment": "Snow isn't a type of mana. If an effect says you may spend mana as though it were any type, you can't pay for {S} using mana that wasn't produced by a snow source."
+                    },
+                    {
+                        "id": "5f0d3be8-e63e-4ade-ae58-6b0c14f2ce6d-2021-02-05",
+                        "published_at": "2021-02-05T00:00:00.000Z",
+                        "comment": "In a Limited event (usually Booster Draft or Sealed Deck), you can't add basic snow lands to your card pool as you would other basic lands. You can play with basic snow lands only if you open them in your sealed deck or draft them."
+                    }
+                ]
+            },
+            {
+                "oracle_id": "09dd85aa-47bc-4713-a9b9-8b52ff2285ed",
+                "ids": [
+                    "1f47bd65-b37c-4b7e-a271-8d67e0c90deb",
+                    "23d8e67a-5150-4782-98d1-da2ca79607ad",
+                    "24a5cc2c-0fbf-4a5f-b175-6e0ffd0d0787",
+                    "25eb3f16-d2af-4d06-aae4-474a3005e42f"
+                ],
+                "legalities": {
+                    "duel": "legal",
+                    "brawl": "legal",
+                    "penny": "not_legal",
+                    "predh": "legal",
+                    "future": "not_legal",
+                    "legacy": "legal",
+                    "modern": "legal",
+                    "pauper": "not_legal",
+                    "alchemy": "not_legal",
+                    "pioneer": "not_legal",
+                    "vintage": "legal",
+                    "historic": "banned",
+                    "standard": "not_legal",
+                    "timeless": "legal",
+                    "commander": "legal",
+                    "gladiator": "legal",
+                    "oldschool": "not_legal",
+                    "premodern": "not_legal",
+                    "oathbreaker": "legal",
+                    "standardbrawl": "not_legal",
+                    "paupercommander": "not_legal"
+                },
+                "rulings": []
+            },
+            {
+                "oracle_id": "0aeeb0d7-15a3-4722-ad67-8fc7fe89220d",
+                "ids": [
+                    "27186d29-7b24-40f9-909f-456e0e3d8847"
+                ],
+                "legalities": {
+                    "duel": "legal",
+                    "brawl": "not_legal",
+                    "penny": "not_legal",
+                    "predh": "not_legal",
+                    "future": "not_legal",
+                    "legacy": "legal",
+                    "modern": "not_legal",
+                    "pauper": "not_legal",
+                    "alchemy": "not_legal",
+                    "pioneer": "not_legal",
+                    "vintage": "legal",
+                    "historic": "not_legal",
+                    "standard": "not_legal",
+                    "timeless": "not_legal",
+                    "commander": "legal",
+                    "gladiator": "not_legal",
+                    "oldschool": "not_legal",
+                    "premodern": "not_legal",
+                    "oathbreaker": "legal",
+                    "standardbrawl": "not_legal",
+                    "paupercommander": "not_legal"
+                },
+                "rulings": [
+                    {
+                        "id": "0aeeb0d7-15a3-4722-ad67-8fc7fe89220d_2022-06-10_bb1b6d63",
+                        "published_at": "2022-06-10T00:00:00.000Z",
+                        "comment": "Once the game begins, your two commanders are tracked separately. If you cast one, you won’t have to pay an additional {2} the first time you cast the other. A player loses the game after having been dealt 21 combat damage from any one of them, not from both of them combined (although your Background won’t usually be a creature anyway)."
+                    },
+                    {
+                        "id": "0aeeb0d7-15a3-4722-ad67-8fc7fe89220d-2022-06-10",
+                        "published_at": "2022-06-10T00:00:00.000Z",
+                        "comment": "You won't be able to activate the mana abilities of creature tokens you control on the turn they're created unless they have haste. Conversely, you will be able to activate the mana abilities of noncreature tokens you control on the turn they're created (provided they're untapped)."
+                    },
+                    {
+                        "id": "0aeeb0d7-15a3-4722-ad67-8fc7fe89220d_2022-06-10_c203a46a",
+                        "published_at": "2022-06-10T00:00:00.000Z",
+                        "comment": "You won't be able to activate the mana abilities of creature tokens you control on the turn they're created unless they have haste. Conversely, you will be able to activate the mana abilities of noncreature tokens you control on the turn they're created (provided they're untapped)."
+                    },
+                    {
+                        "id": "0aeeb0d7-15a3-4722-ad67-8fc7fe89220d_2022-06-10_5dfd0008",
+                        "published_at": "2022-06-10T00:00:00.000Z",
+                        "comment": "If you control a Background that grants an ability to commander creatures you own, and you own more than one commander creature, each of them will have that ability."
+                    },
+                    {
+                        "id": "0aeeb0d7-15a3-4722-ad67-8fc7fe89220d_2022-06-10_6b3e56ce",
+                        "published_at": "2022-06-10T00:00:00.000Z",
+                        "comment": "An effect that checks whether you control your commander is satisfied if you control one or both of your two commanders."
+                    },
+                    {
+                        "id": "0aeeb0d7-15a3-4722-ad67-8fc7fe89220d_2022-06-10_38fd22e4",
+                        "published_at": "2022-06-10T00:00:00.000Z",
+                        "comment": "You can choose two commanders that are the same color or colors."
+                    },
+                    {
+                        "id": "0aeeb0d7-15a3-4722-ad67-8fc7fe89220d_2022-06-10_a01de9f3",
+                        "published_at": "2022-06-10T00:00:00.000Z",
+                        "comment": "If your Commander deck has two commanders, you can include only cards whose own color identities are also found in your commanders’ combined color identities."
+                    },
+                    {
+                        "id": "0aeeb0d7-15a3-4722-ad67-8fc7fe89220d_2022-06-10_5dc17973",
+                        "published_at": "2022-06-10T00:00:00.000Z",
+                        "comment": "Both commanders start in the command zone, and the remaining 98 cards (or 58 cards in a Commander Draft game) of your deck are shuffled to become your library."
+                    },
+                    {
+                        "id": "0aeeb0d7-15a3-4722-ad67-8fc7fe89220d_2022-06-10_3e9f2593",
+                        "published_at": "2022-06-10T00:00:00.000Z",
+                        "comment": "Choose a Background is a variant of the partner ability. You may have two commanders if one of them is a legendary creature with the choose a background ability and the other is a legendary Background enchantment. Backgrounds and cards with choose a Background do not interact with cards which have any other partner ability."
+                    },
+                    {
+                        "id": "0aeeb0d7-15a3-4722-ad67-8fc7fe89220d_2022-06-10_3c8fbf31",
+                        "published_at": "2022-06-10T00:00:00.000Z",
+                        "comment": "If a card refers to a commander creature you own, a Background won't usually be counted or included for that effect. If another spell or ability causes your Background to become a creature, however, it will be included. Any effect that refers to your commander or a commander you own or control without specifying creature will apply to a Background that is your commander, as appropriate."
+                    },
+                    {
+                        "id": "0aeeb0d7-15a3-4722-ad67-8fc7fe89220d_2022-06-10_e0498118",
+                        "published_at": "2022-06-10T00:00:00.000Z",
+                        "comment": "If something refers to your commander while you have two commanders, it refers to one of them of your choice. If you are instructed to perform an action on your commander (e.g. put it from the command zone into your hand due to Command Beacon), you choose one of your commanders at the time the effect happens."
+                    },
+                    {
+                        "id": "0aeeb0d7-15a3-4722-ad67-8fc7fe89220d_2022-06-10_736fcd24",
+                        "published_at": "2022-06-10T00:00:00.000Z",
+                        "comment": "If your commander loses the choose a Background ability or stops being a Background during the game, as appropriate, it is still your commander."
+                    },
+                    {
+                        "id": "0aeeb0d7-15a3-4722-ad67-8fc7fe89220d_2022-06-10_8ed639e4",
+                        "published_at": "2022-06-10T00:00:00.000Z",
+                        "comment": "Jaheira's ability gives the mana ability to all tokens you control, not just creature tokens."
+                    }
+                ]
+            },
+            {
+                "oracle_id": "80e9a42e-f4f4-4bfc-91a2-ad124737dca2",
+                "ids": [
+                    "3287775f-7bec-4e8f-bb8d-daf5ce92e4a8"
+                ],
+                "legalities": {
+                    "duel": "legal",
+                    "brawl": "not_legal",
+                    "penny": "legal",
+                    "predh": "not_legal",
+                    "future": "not_legal",
+                    "legacy": "legal",
+                    "modern": "legal",
+                    "pauper": "not_legal",
+                    "alchemy": "not_legal",
+                    "pioneer": "not_legal",
+                    "vintage": "legal",
+                    "historic": "not_legal",
+                    "standard": "not_legal",
+                    "timeless": "not_legal",
+                    "commander": "legal",
+                    "gladiator": "not_legal",
+                    "oldschool": "not_legal",
+                    "premodern": "not_legal",
+                    "oathbreaker": "legal",
+                    "standardbrawl": "not_legal",
+                    "paupercommander": "not_legal"
+                },
+                "rulings": []
+            }
+        ]
+    }
+}
