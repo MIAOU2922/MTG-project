@@ -87,11 +87,22 @@ namespace MTG
         protected override void GenerateSearchUrl()
         {
             this.Log("GenerateSearchUrl called");
+            if (Manager == null)        return;
+            if (Manager.SearchURL == null) return;
+            string        _Name        = TrimInput(CardNameInput);
+            string        _Text        = TrimInput(CardTextInput);
+            string        _Type        = TrimInput(TypeLineInput);
+            string        _Cmc         = TrimInput(CmcInput);
+            string        _Set         = GetDropdownCode(SetDropdown, SetDropdownCodes);
+            string        _Lang        = GetDropdownCode(LangDropdown, LangDropdownCodes);
+            string        _BaseUrl     = Manager.SearchURL.ToString();
+            StringBuilder _Query       = new StringBuilder();
+            StringBuilder _Colors      = new StringBuilder();
+            int           _RarityCount = 0;
+            bool          _First       = true;
+            string        _FullUrl;
 
-            StringBuilder _Query = new StringBuilder();
-
-            // n: nom de la carte
-            string _Name = TrimInput(CardNameInput);
+            // n:
             if (_Name != "")
             {
                 _Query.Append("n:\"");
@@ -99,8 +110,7 @@ namespace MTG
                 _Query.Append("\"");
             }
 
-            // o: texte d'oracle
-            string _Text = TrimInput(CardTextInput);
+            // o:
             if (_Text != "")
             {
                 if (_Query.Length > 0) _Query.Append(" ");
@@ -109,8 +119,7 @@ namespace MTG
                 _Query.Append("\"");
             }
 
-            // t: type line
-            string _Type = TrimInput(TypeLineInput);
+            // t:
             if (_Type != "")
             {
                 if (_Query.Length > 0) _Query.Append(" ");
@@ -119,8 +128,7 @@ namespace MTG
                 _Query.Append("\"");
             }
 
-            // cmc: coût de mana (supporte opérateurs >=, <=, >, <, =)
-            string _Cmc = TrimInput(CmcInput);
+            // cmc:
             if (_Cmc != "")
             {
                 if (_Query.Length > 0) _Query.Append(" ");
@@ -128,8 +136,7 @@ namespace MTG
                 _Query.Append(_Cmc);
             }
 
-            // s: code set depuis le dropdown
-            string _Set = GetDropdownCode(SetDropdown, SetDropdownCodes);
+            // s:
             if (_Set != "")
             {
                 if (_Query.Length > 0) _Query.Append(" ");
@@ -137,8 +144,7 @@ namespace MTG
                 _Query.Append(_Set);
             }
 
-            // l: langue depuis le dropdown
-            string _Lang = GetDropdownCode(LangDropdown, LangDropdownCodes);
+            // l:
             if (_Lang != "")
             {
                 if (_Query.Length > 0) _Query.Append(" ");
@@ -146,7 +152,7 @@ namespace MTG
                 _Query.Append(_Lang);
             }
 
-            // c: couleurs (c mutually exclusive avec WUBRG)
+            // c:
             if (ColorC_Selected)
             {
                 if (_Query.Length > 0) _Query.Append(" ");
@@ -154,7 +160,6 @@ namespace MTG
             }
             else
             {
-                StringBuilder _Colors = new StringBuilder();
                 if (ColorW_Selected) _Colors.Append("w");
                 if (ColorU_Selected) _Colors.Append("u");
                 if (ColorB_Selected) _Colors.Append("b");
@@ -168,8 +173,7 @@ namespace MTG
                 }
             }
 
-            // r: rareté (or si plusieurs)
-            int _RarityCount = 0;
+            // r:
             if (RarityCommon_Selected)   _RarityCount++;
             if (RarityUncommon_Selected) _RarityCount++;
             if (RarityRare_Selected)     _RarityCount++;
@@ -187,20 +191,15 @@ namespace MTG
             {
                 if (_Query.Length > 0) _Query.Append(" ");
                 _Query.Append("(");
-                bool _First = true;
-                if (RarityCommon_Selected)   { _Query.Append("r:common");   _First = false; }
+                _First = true;
+                if (RarityCommon_Selected)   { _Query.Append("r:common");                              _First = false; }
                 if (RarityUncommon_Selected) { if (!_First) _Query.Append(" or "); _Query.Append("r:uncommon"); _First = false; }
                 if (RarityRare_Selected)     { if (!_First) _Query.Append(" or "); _Query.Append("r:rare");     _First = false; }
                 if (RarityMythic_Selected)   { if (!_First) _Query.Append(" or "); _Query.Append("r:mythic"); }
                 _Query.Append(")");
             }
 
-            // Construire l'URL complète depuis Manager.SearchURL
-            string _BaseUrl = "https://mtg.vrchive.eu/as?q=";
-            if (Manager != null && Manager.SearchURL != null)
-                _BaseUrl = Manager.SearchURL.ToString();
-
-            string _FullUrl = _BaseUrl + _Query.ToString();
+            _FullUrl = _BaseUrl + _Query.ToString();
 
             if (DisplayUrlField != null)
                 DisplayUrlField.text = _FullUrl;
