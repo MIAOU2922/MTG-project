@@ -12,8 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: MTG_PhysicCard
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: e32b08f82b71ca4448a7c30600d238ca,
-    type: 2}
+  serializedUdonProgramAsset: {fileID: 11400000, guid: 901bc82248dcbab4c8af66ac67e2b504, type: 2}
   udonAssembly: 
   assemblyError: 
   sourceCsScript: {fileID: 11500000, guid: 8a3ee07c4c033bf4a8f793f470b3076a, type: 3}
