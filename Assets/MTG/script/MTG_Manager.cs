@@ -141,7 +141,9 @@ namespace MTG
             {
                 case "c":
                     {
-                        IsCreateResponse(_Json, out InstanceID);
+                        int _TempInstanceID;
+                        IsCreateResponse(_Json, out _TempInstanceID);
+                        if (_TempInstanceID != -1) InstanceID = _TempInstanceID;
                         break;
                     }
                 case "d":
@@ -180,9 +182,10 @@ namespace MTG
         public override void OnStringLoadError(IVRCStringDownload _Json)
         {
             this.Log("OnStringLoadError called");
-            this.Log($"Error loading URL: {_Json.Url}");
-            this.Log($"Error message: {_Json.Error}");
+            this.Error($"Error loading URL: {_Json.Url}");
+            this.Error($"Error message: {_Json.Error}");
             IsSyncing = false;
+            if (!Agree) SyncInterface.Show();
         }
         // methodes for response processing
         // obtient le type de reponse
@@ -209,10 +212,26 @@ namespace MTG
             if (_Json == null || _Json.Url == null) return;
             if (_Json.Url != CreateURL) return;
             _JsonData = _Json.Result;
-            if (!VRCJson.TryDeserializeFromJson(_JsonData, out DataToken result)) return;
+            if (!VRCJson.TryDeserializeFromJson(_JsonData, out DataToken result))
+            {
+                this.Error("Error parsing create response");
+                IsSyncing = false;
+                if (!Agree) SyncInterface.Show();
+                return;
+            }
             _Dict = result.DataDictionary;
-            if (!_Dict.TryGetValue("iid", out DataToken instanceIdToken)) return;
-            _InstanceID = instanceIdToken.Int;
+            if (!_Dict.TryGetValue("iid", out DataToken instanceIdToken))
+            {
+                this.Error("Error: 'iid' not found in create response");
+                IsSyncing = false;
+                if (!Agree) SyncInterface.Show();
+                return;
+            }
+            _InstanceID = (int)instanceIdToken.Double;
+            this.Log($"Created game {_InstanceID}");
+            Agree = true;
+            IsSyncing = false;
+            SyncInterface.Hide();
         }
         // verifie la reponse de deck
         private void IsDeckResponse(IVRCStringDownload _Json)
@@ -240,11 +259,33 @@ namespace MTG
             }
             if (!urlFound) return;
             _JsonData = _Json.Result;
-            if (!VRCJson.TryDeserializeFromJson(_JsonData, out DataToken result)) return;
+            if (!VRCJson.TryDeserializeFromJson(_JsonData, out DataToken result))
+            {
+                this.Error("Error parsing join response");
+                IsSyncing = false;
+                if (!Agree) SyncInterface.Show();
+                return;
+            }
             _Dict = result.DataDictionary;
-            if (!_Dict.TryGetValue("iid", out DataToken instanceIdToken)) return;
-            if (InstanceID != instanceIdToken.Int) return;
+            if (!_Dict.TryGetValue("iid", out DataToken instanceIdToken))
+            {
+                this.Error("Error: 'iid' not found in join response");
+                IsSyncing = false;
+                if (!Agree) SyncInterface.Show();
+                return;
+            }
+            if (InstanceID != (int)instanceIdToken.Double)
+            {
+                this.Error("Error: Instance ID mismatch");
+                IsSyncing = false;
+                if (!Agree) SyncInterface.Show();
+                return;
+            }
             _IsValid = true;
+            this.Log($"Joined game {InstanceID}");
+            Agree = true;
+            IsSyncing = false;
+            SyncInterface.Hide();
         }
         // verifie la reponse de recherche
         private void IsSearchResponse(IVRCStringDownload _Json)
