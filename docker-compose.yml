@@ -1,5 +1,4 @@
-version: "3.8"
-
+name: mtgvrc
 services:
   database:
     image: postgres:15
@@ -38,6 +37,6 @@ volumes:
 networks:
   nginx:
     name: nginx
-    driver: bridge
+    external: true
   default:
-    driver: bridge
+    name: mtgvrc

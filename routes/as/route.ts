@@ -746,13 +746,8 @@ function parseQuery(query: string): Record<string, any> {
             // Regular expression
             filters.regex = token.slice(1, -1);
         } else {
-            // Si le token n'est pas un filtre connu, on le traite comme un sous-type potentiel
-            // (ex: "rat" tout seul => filtre sur le sous-type)
-            if (!filters.name && !filters.subtype) {
-                filters.subtype = token;
-            } else {
-                nameParts.push(token);
-            }
+            // Si le token n'est pas un filtre connu, on le traite comme une partie du nom
+            nameParts.push(token);
         }
     }
     
