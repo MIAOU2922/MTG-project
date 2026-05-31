@@ -18,6 +18,7 @@ services:
     image: node:latest
     working_dir: /app
     container_name: mtgvrc_server
+    restart: always
     volumes:
       - .:/app
     # ports:
