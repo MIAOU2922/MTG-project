@@ -35,7 +35,7 @@ namespace MTG
             base.Update();
         }
 
-        protected virtual void GenerateSearchUrl()
+        protected virtual void GenerateUrl()
         {
             
         }

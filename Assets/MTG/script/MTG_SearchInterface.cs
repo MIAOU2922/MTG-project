@@ -46,12 +46,11 @@ namespace MTG
         public UnityEngine.UI.Button RarityRare_Button;
         public UnityEngine.UI.Button RarityMythic_Button;
 
-#if !COMPILER_UDONSHARP && UNITY_EDITOR
         [Header("=== OTHER BUTTONS ===")]
         public UnityEngine.UI.Button ClearSearch_Button;
         public UnityEngine.UI.Button SpawnCard_Button;
         public UnityEngine.UI.Button AddToDeck_Button;
-#endif
+
         //states
         private bool ColorW_Selected = false;
         private bool ColorU_Selected = false;
@@ -84,7 +83,7 @@ namespace MTG
             _PreviewCard.SetImageFromId();
         }
 
-        protected override void GenerateSearchUrl()
+        protected override void GenerateUrl()
         {
             this.Log("GenerateSearchUrl called");
             if (Manager == null)        return;
@@ -244,7 +243,7 @@ namespace MTG
             RarityRare_Selected = false;
             RarityMythic_Selected = false;
             this.Log("Search parameters reset");
-            GenerateSearchUrl();
+            GenerateUrl();
         }
 
         // reset le focus pour eviter les problemes d'interaction VR
@@ -300,7 +299,7 @@ namespace MTG
             if (ColorW_Selected && ColorC_Selected)
                 ColorC_Selected = false;
             UpdateColorButtons();
-            GenerateSearchUrl();
+            GenerateUrl();
         }
         public void OnColorU_ButtonClicked()
         {
@@ -309,7 +308,7 @@ namespace MTG
             if (ColorU_Selected && ColorC_Selected)
                 ColorC_Selected = false;
             UpdateColorButtons();
-            GenerateSearchUrl();
+            GenerateUrl();
         }
         public void OnColorB_ButtonClicked()
         {
@@ -318,7 +317,7 @@ namespace MTG
             if (ColorB_Selected && ColorC_Selected)
                 ColorC_Selected = false;
             UpdateColorButtons();
-            GenerateSearchUrl();
+            GenerateUrl();
         }
         public void OnColorR_ButtonClicked()
         {
@@ -327,7 +326,7 @@ namespace MTG
             if (ColorR_Selected && ColorC_Selected)
                 ColorC_Selected = false;
             UpdateColorButtons();
-            GenerateSearchUrl();
+            GenerateUrl();
         }
         public void OnColorG_ButtonClicked()
         {
@@ -336,7 +335,7 @@ namespace MTG
             if (ColorG_Selected && ColorC_Selected)
                 ColorC_Selected = false;
             UpdateColorButtons();
-            GenerateSearchUrl();
+            GenerateUrl();
         }
         public void OnColorC_ButtonClicked()
         {
@@ -351,7 +350,7 @@ namespace MTG
                 ColorG_Selected = false;
             }
             UpdateColorButtons();
-            GenerateSearchUrl();
+            GenerateUrl();
         }
         public void UpdateColorButtons()
         {
@@ -367,28 +366,28 @@ namespace MTG
             this.Log("OnRarityCommon_ButtonClicked called");
             RarityCommon_Selected = !RarityCommon_Selected;
             UpdateRarityButtons();
-            GenerateSearchUrl();
+            GenerateUrl();
         }
         public void OnRarityUncommon_ButtonClicked()
         {
             this.Log("OnRarityUncommon_ButtonClicked called");
             RarityUncommon_Selected = !RarityUncommon_Selected;
             UpdateRarityButtons();
-            GenerateSearchUrl();
+            GenerateUrl();
         }
         public void OnRarityRare_ButtonClicked()
         {
             this.Log("OnRarityRare_ButtonClicked called");
             RarityRare_Selected = !RarityRare_Selected;
             UpdateRarityButtons();
-            GenerateSearchUrl();
+            GenerateUrl();
         }
         public void OnRarityMythic_ButtonClicked()
         {
             this.Log("OnRarityMythic_ButtonClicked called");
             RarityMythic_Selected = !RarityMythic_Selected;
             UpdateRarityButtons();
-            GenerateSearchUrl();
+            GenerateUrl();
         }
         public void UpdateRarityButtons()
         {
