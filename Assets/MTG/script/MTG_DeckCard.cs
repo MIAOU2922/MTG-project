@@ -22,7 +22,7 @@ namespace MTG
         // recherche le deck interface dans la scene
         private void TryFindDeckInterface()
         {
-            this.Log($"TryFindDeckInterface called for cardKey: {CardKey}");
+            this.VerboseLog($"TryFindDeckInterface called for cardKey: {CardKey}");
             GameObject _DeckInterfaceObj = GameObject.Find("Deck Interface");
             if (_DeckInterfaceObj == null) return;
             DeckInterface = _DeckInterfaceObj.GetComponent< MTG_DeckInterface>();
@@ -49,13 +49,13 @@ namespace MTG
         
         public int GetCount()
         {
-            this.Log($"GetCount called for cardKey: {CardKey}");
+            this.VerboseLog($"GetCount called for cardKey: {CardKey}");
             return cardCount;
         }
         // met a jour l'affichage du compteur
         private void UpdateCountDisplay()
         {
-            this.Log($"UpdateCountDisplay called for cardKey: {CardKey}");
+            this.VerboseLog($"UpdateCountDisplay called for cardKey: {CardKey}");
             if (countText == null) return;
             countText.text = cardCount.ToString();
         }
@@ -63,7 +63,7 @@ namespace MTG
         //methodes for buttons
         public void AddOne()
         {
-            this.Log($"AddOne called for cardKey: {CardKey}");
+            this.VerboseLog($"AddOne called for cardKey: {CardKey}");
             cardCount++;
             UpdateCountDisplay();
             if (DeckInterface == null) return;
@@ -71,7 +71,7 @@ namespace MTG
         }
         public void RemoveOne()
         {
-            this.Log($"RemoveOne called for cardKey: {CardKey}");
+            this.VerboseLog($"RemoveOne called for cardKey: {CardKey}");
             if (cardCount > 0)
             {
                 cardCount--;
@@ -90,7 +90,7 @@ namespace MTG
         // demande l'affichage de l'aperçu de la carte
         public void OnCardButtonPressed()
         {
-            this.Log($"OnCardButtonPressed called for cardKey: {CardKey}");
+            this.VerboseLog($"OnCardButtonPressed called for cardKey: {CardKey}");
             if (DeckInterface == null) return;
             DeckInterface.OnCardPreviewRequest(CardKey);
         }

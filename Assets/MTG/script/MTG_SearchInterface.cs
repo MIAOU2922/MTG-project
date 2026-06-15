@@ -51,6 +51,10 @@ namespace MTG
         public UnityEngine.UI.Button SpawnCard_Button;
         public UnityEngine.UI.Button AddToDeck_Button;
 
+        [Header("=== PHYSIC CARD SPAWN ===")]
+        [Tooltip("Point de spawn pour les cartes physiques. Si vide, spawn devant le joueur.")]
+        public Transform PhysicCardSpawnPoint;
+
         //states
         private bool ColorW_Selected = false;
         private bool ColorU_Selected = false;
@@ -63,6 +67,25 @@ namespace MTG
         private bool RarityRare_Selected = false;
         private bool RarityMythic_Selected = false;
 
+        // Progressive card loading
+        private DataList CardsToLoad;
+        private int CurrentLoadIndex = 0;
+        private float NextLoadTime = 0f;
+        private GameObject[] InstantiatedCards = new GameObject[256];
+        private int InstantiatedCardsCount = 0;
+        private string[] CardKeys = new string[256];
+        private int CardKeysCount = 0;
+        private bool IsDeletingOldCards = false;
+        private bool ClearAllRequested = false;
+        private int DeleteIndex = 0;
+        private float NextDeleteTime = 0f;
+        private const float DELETE_INTERVAL = 0.1f;
+        private const float LOAD_INTERVAL = 0.15f;
+        private const int CARDS_PER_BATCH = 3;
+
+        // Deferred JSON parsing (evite de depasser le budget temps VM Udon)
+        private string PendingJsonData = null;
+
         //methodes
         protected override void Start()
         {
@@ -71,7 +94,200 @@ namespace MTG
         protected override void Update()
         {
             base.Update();
+
+            // Parsing JSON differe (evite depassement budget VM Udon dans le callback)
+            if (!string.IsNullOrEmpty(PendingJsonData))
+            {
+                ParseAndQueueCards();
+                return; // ne rien faire d'autre ce frame
+            }
+
+            // Suppression progressive des anciennes cartes
+            if ((IsDeletingOldCards || ClearAllRequested) && Time.time >= NextDeleteTime)
+            {
+                DeleteNextBatchOfCards();
+            }
+            // Chargement progressif des nouvelles cartes
+            else if (CardsToLoad != null && CurrentLoadIndex < CardsToLoad.Count && Time.time >= NextLoadTime)
+            {
+                LoadNextBatchOfCards();
+            }
         }
+
+        // Appele par un bouton UI pour generer et afficher l'URL de recherche
+        public void OnSearchButtonClicked()
+        {
+            this.Log("OnSearchButtonClicked called");
+            GenerateUrl();
+        }
+
+        // Envoie la requete de recherche via le Manager (centralise)
+        public void SendSearchRequest()
+        {
+            this.Log("SendSearchRequest called");
+
+            VRCUrl _UrlToSend = null;
+
+            // Essayer d'abord avec ValidatedUrlField (specifique a SearchInterface)
+            if (ValidatedUrlField != null)
+            {
+                _UrlToSend = ValidatedUrlField.GetUrl();
+            }
+            // Sinon utiliser ValidatedInput (herite de MTG_Interface)
+            if (_UrlToSend == null && ValidatedInput != null)
+            {
+                _UrlToSend = ValidatedInput.GetUrl();
+            }
+
+            if (_UrlToSend == null || string.IsNullOrEmpty(_UrlToSend.ToString()))
+            {
+                this.Error("No valid URL to send - please validate the URL first");
+                return;
+            }
+
+            string _UrlString = _UrlToSend.ToString();
+            this.Log($"Sending search request directly: {_UrlString}");
+
+            // Envoi direct vers SearchInterface (evite le probleme de liaison Manager->SearchInterface)
+            VRCStringDownloader.LoadUrl(_UrlToSend, (IUdonEventReceiver)this);
+        }
+
+        // OnStringLoadSuccess specifique a SearchInterface (recoit les reponses de recherche directement)
+        public override void OnStringLoadSuccess(IVRCStringDownload _Json)
+        {
+            this.Log("MTG_SearchInterface.OnStringLoadSuccess called");
+            if (_Json == null || _Json.Result == null)
+            {
+                this.Error("Search response is null");
+                return;
+            }
+            OnSearchResponse(_Json);
+        }
+
+        // Override de OnUrlValidated pour valider que l'URL est bien une URL de recherche
+        public override void OnUrlValidated()
+        {
+            this.Log("OnUrlValidated called in SearchInterface");
+            
+            VRCUrl _ValidatedUrl = null;
+
+            // Recuperer l'URL depuis le champ valide (ValidatedUrlField ou ValidatedInput)
+            if (ValidatedUrlField != null)
+                _ValidatedUrl = ValidatedUrlField.GetUrl();
+            if (_ValidatedUrl == null && ValidatedInput != null)
+                _ValidatedUrl = ValidatedInput.GetUrl();
+
+            if (_ValidatedUrl == null)
+            {
+                this.Error("Validated URL is null");
+                return;
+            }
+            
+            string _UrlString = _ValidatedUrl.ToString();
+            this.Log($"Validating search URL: {_UrlString}");
+            
+            // Verifier que l'URL est bien une URL de recherche
+            if (Manager == null || Manager.SearchURL == null)
+            {
+                this.Error("Manager or SearchURL is null");
+                return;
+            }
+            
+            string _SearchUrlBase = Manager.SearchURL.ToString();
+            if (!_UrlString.StartsWith(_SearchUrlBase))
+            {
+                this.Error($"Invalid search URL. Must start with: {_SearchUrlBase}");
+                this.Error($"Current URL: {_UrlString}");
+                return;
+            }
+            
+            // Verifier qu'il y a bien des parametres de recherche
+            if (!_UrlString.Contains("?"))
+            {
+                this.Error("Search URL must contain query parameters after '?'");
+                return;
+            }
+            
+            this.Log("Search URL validated, sending request directly...");
+            
+            // Envoi direct vers SearchInterface (evite le probleme de liaison Manager->SearchInterface)
+            VRCStringDownloader.LoadUrl(_ValidatedUrl, (IUdonEventReceiver)this);
+        }
+
+        // callback pour les reponses de recherche
+        public override void OnSearchResponse(IVRCStringDownload _Json)
+        {
+            this.Log("OnSearchResponse called in MTG_SearchInterface");
+            if (_Json == null || _Json.Result == null)
+            {
+                this.Error("Search response is null");
+                return;
+            }
+            // Traitement de la reponse de recherche
+            ProcessSearchResponse(_Json);
+        }
+
+        private void ProcessSearchResponse(IVRCStringDownload _Json)
+        {
+            this.Log("ProcessSearchResponse called - deferring JSON parse");
+            if (_Json == null || _Json.Result == null)
+            {
+                this.Error("Search response or result is null");
+                return;
+            }
+
+            // Stocker le JSON brut pour parsing differe dans Update()
+            // (evite depassement du budget temps VM Udon)
+            PendingJsonData = _Json.Result;
+
+            // Supprimer les anciennes cartes (operation legere, juste des flags)
+            ClearAllCards();
+        }
+
+        // Parse le JSON et met en file les cartes a charger (appele depuis Update)
+        private void ParseAndQueueCards()
+        {
+            this.Log("ParseAndQueueCards called");
+            string _JsonData = PendingJsonData;
+            PendingJsonData = null; // consommer immediatement
+
+            if (!VRCJson.TryDeserializeFromJson(_JsonData, out DataToken _Token))
+            {
+                this.Error("Error parsing search response JSON");
+                return;
+            }
+
+            if (_Token.TokenType != TokenType.DataDictionary)
+            {
+                this.Error("Search response is not a DataDictionary");
+                return;
+            }
+
+            DataDictionary _RootDict = _Token.DataDictionary;
+
+            // Naviguer: root → "data" → "results"
+            if (!_RootDict.TryGetValue("data", out _Token) || _Token.TokenType != TokenType.DataDictionary)
+            {
+                this.Error("Invalid or missing 'data' in search response");
+                return;
+            }
+
+            DataDictionary _DataDict = _Token.DataDictionary;
+            if (!_DataDict.TryGetValue("results", out _Token) || _Token.TokenType != TokenType.DataList)
+            {
+                this.Error("Invalid or missing 'results' in search response data");
+                return;
+            }
+
+            DataList _Results = _Token.DataList;
+            this.Log($"Search returned {_Results.Count} results");
+
+            // Stocker pour chargement progressif
+            CardsToLoad = _Results;
+            CurrentLoadIndex = 0;
+            NextLoadTime = Time.time;
+        }
+
         public void OnCardPreviewRequest(String _CardKey)
         {
             this.Log("OnCardPreviewRequest called: " + _CardKey);
@@ -83,9 +299,75 @@ namespace MTG
             _PreviewCard.SetImageFromId();
         }
 
+        // Spawn une carte physique depuis la preview
+        public void SpawnPhysicCardFromPreview()
+        {
+            this.Log("SpawnPhysicCardFromPreview called");
+
+            if (CardsPreview == null)
+            {
+                this.Error("CardsPreview is null");
+                return;
+            }
+
+            MTG_SearchCard _PreviewCard = CardsPreview.GetComponent<MTG_SearchCard>();
+            if (_PreviewCard == null || string.IsNullOrEmpty(_PreviewCard.CardKey))
+            {
+                this.Error("Preview card has no CardKey");
+                return;
+            }
+
+            string _CardKey = _PreviewCard.CardKey;
+
+            // Déterminer la position de spawn
+            Vector3 _SpawnPos;
+            Quaternion _SpawnRot;
+
+            if (PhysicCardSpawnPoint != null)
+            {
+                _SpawnPos = PhysicCardSpawnPoint.position;
+                _SpawnRot = PhysicCardSpawnPoint.rotation;
+            }
+            else
+            {
+                // Spawn devant le joueur local
+                VRCPlayerApi _Player = Networking.LocalPlayer;
+                if (_Player != null)
+                {
+                    Vector3 _PlayerPos = _Player.GetPosition();
+                    Vector3 _Forward = _Player.GetRotation() * Vector3.forward;
+                    _SpawnPos = _PlayerPos + _Forward * 1.5f + Vector3.up * 1.0f;
+                    _SpawnRot = Quaternion.LookRotation(_Forward);
+                }
+                else
+                {
+                    _SpawnPos = Vector3.zero;
+                    _SpawnRot = Quaternion.identity;
+                }
+            }
+
+            // Spawn via le Manager → PhysicCardPool
+            if (Manager == null)
+            {
+                this.Error("Manager is null, cannot spawn");
+                return;
+            }
+
+            MTG_PhysicCard _Card = Manager.SpawnPhysicCard(_CardKey, _SpawnPos, _SpawnRot);
+            if (_Card == null)
+            {
+                this.Error($"Failed to spawn physic card: {_CardKey}");
+                if (Manager.PhysicCardPool != null)
+                    this.Error(Manager.PhysicCardPool.GetPoolStatus());
+                return;
+            }
+
+            this.Log($"Physic card spawned: {_CardKey}");
+        }
+
         protected override void GenerateUrl()
         {
-            this.Log("GenerateSearchUrl called");
+            this.Log("GenerateUrl called");
             if (Manager == null)        return;
             if (Manager.SearchURL == null) return;
             string        _Name        = TrimInput(CardNameInput);
@@ -200,10 +482,24 @@ namespace MTG
 
             _FullUrl = _BaseUrl + _Query.ToString();
 
+            // Afficher l'URL dans les champs de display
             if (DisplayUrlField != null)
                 DisplayUrlField.text = _FullUrl;
+            if (UrlDisplayText != null)
+                UrlDisplayText.text = _FullUrl;
 
-            this.Log("GenerateSearchUrl result: " + _FullUrl);
+            // Configurer le VRCUrlInputField UNIQUEMENT si pas de query (reset)
+            // Limitation VRChat: on ne peut pas creer de VRCUrl dynamiquement.
+            // L'utilisateur doit copier l'URL affichee et la coller dans le VRCUrlInputField.
+            if (string.IsNullOrEmpty(_Query.ToString()))
+            {
+                if (ValidatedInput != null && Manager != null && Manager.SearchURL != null)
+                    ValidatedInput.SetUrl(Manager.SearchURL);
+                if (ValidatedUrlField != null && Manager != null && Manager.SearchURL != null)
+                    ValidatedUrlField.SetUrl(Manager.SearchURL);
+            }
+
+            this.Log("GenerateUrl result: " + _FullUrl);
             ResetFocus();
         }
 
@@ -221,6 +517,169 @@ namespace MTG
             string _Code = _Codes[_Dropdown.value];
             if (_Code == null) return "";
             return _Code.Trim();
+        }
+
+        // Supprime toutes les cartes existantes (lance la suppression progressive)
+        public void ClearAllCards()
+        {
+            this.Log("ClearAllCards called");
+            if (CardsParent == null)
+            {
+                this.Log("CardsParent is null, resetting arrays only");
+                for (int i = 0; i < InstantiatedCards.Length; i++)
+                    InstantiatedCards[i] = null;
+                InstantiatedCardsCount = 0;
+                for (int i = 0; i < CardKeys.Length; i++)
+                    CardKeys[i] = null;
+                CardKeysCount = 0;
+                return;
+            }
+
+            if (CardsParent.childCount == 0)
+            {
+                this.Log("No cards to clear");
+                for (int i = 0; i < InstantiatedCards.Length; i++)
+                    InstantiatedCards[i] = null;
+                InstantiatedCardsCount = 0;
+                for (int i = 0; i < CardKeys.Length; i++)
+                    CardKeys[i] = null;
+                CardKeysCount = 0;
+                return;
+            }
+
+            ClearAllRequested = true;
+            IsDeletingOldCards = true;
+            DeleteIndex = 0;
+            NextDeleteTime = Time.time;
+            this.Log($"Progressive clear started - {CardsParent.childCount} children to delete");
+        }
+
+        // Suppression progressive par lots
+        private void DeleteNextBatchOfCards()
+        {
+            if (!IsDeletingOldCards && !ClearAllRequested)
+                return;
+
+            if (ClearAllRequested)
+            {
+                if (CardsParent == null || CardsParent.childCount == 0)
+                {
+                    for (int i = 0; i < InstantiatedCards.Length; i++)
+                        InstantiatedCards[i] = null;
+                    InstantiatedCardsCount = 0;
+                    for (int i = 0; i < CardKeys.Length; i++)
+                        CardKeys[i] = null;
+                    CardKeysCount = 0;
+                    IsDeletingOldCards = false;
+                    ClearAllRequested = false;
+                    DeleteIndex = 0;
+                    CurrentLoadIndex = 0;
+                    this.Log("All cards cleared (progressive)");
+                    return;
+                }
+
+                int _ChildrenToDelete = Mathf.Min(6, CardsParent.childCount);
+                for (int i = 0; i < _ChildrenToDelete; i++)
+                {
+                    if (CardsParent.childCount > 0)
+                    {
+                        GameObject _Child = CardsParent.GetChild(CardsParent.childCount - 1).gameObject;
+                        Destroy(_Child);
+                    }
+                }
+                this.Log($"Deleted {_ChildrenToDelete} cards, {CardsParent.childCount} remaining");
+                NextDeleteTime = Time.time + DELETE_INTERVAL;
+                return;
+            }
+
+            if (DeleteIndex >= InstantiatedCardsCount || InstantiatedCardsCount == 0)
+            {
+                IsDeletingOldCards = false;
+                DeleteIndex = 0;
+                CurrentLoadIndex = 0;
+                NextLoadTime = Time.time + LOAD_INTERVAL;
+                return;
+            }
+
+            int _CardsToDelete = Mathf.Min(CARDS_PER_BATCH, InstantiatedCardsCount - DeleteIndex);
+            for (int i = 0; i < _CardsToDelete; i++)
+            {
+                int _CardIndex = DeleteIndex + i;
+                if (_CardIndex >= 0 && _CardIndex < InstantiatedCards.Length && InstantiatedCards[_CardIndex] != null)
+                {
+                    Destroy(InstantiatedCards[_CardIndex]);
+                    InstantiatedCards[_CardIndex] = null;
+                }
+            }
+            DeleteIndex += _CardsToDelete;
+            NextDeleteTime = Time.time + DELETE_INTERVAL;
+        }
+
+        // Chargement progressif des cartes par lots
+        private void LoadNextBatchOfCards()
+        {
+            if (CardsToLoad == null || CurrentLoadIndex >= CardsToLoad.Count)
+                return;
+
+            if (IsDeletingOldCards)
+                return;
+
+            if (CardPrefab == null || CardsParent == null)
+            {
+                this.Error("CardPrefab or CardsParent is null");
+                return;
+            }
+
+            int _CardsInBatch = Mathf.Min(CARDS_PER_BATCH, CardsToLoad.Count - CurrentLoadIndex);
+
+            for (int i = 0; i < _CardsInBatch; i++)
+            {
+                int _CardIndex = CurrentLoadIndex + i;
+                if (_CardIndex >= CardsToLoad.Count) break;
+
+                if (CardsToLoad[_CardIndex].TokenType != TokenType.DataDictionary) continue;
+                DataDictionary _CardDict = CardsToLoad[_CardIndex].DataDictionary;
+
+                GameObject _Card = Instantiate(CardPrefab);
+                _Card.transform.SetParent(CardsParent, false);
+
+                MTG_SearchCard _CardComp = _Card.GetComponent<MTG_SearchCard>();
+                if (_CardComp != null)
+                {
+                    _CardComp.Manager = Manager;
+                    _CardComp.SearchInterface = this;
+                    _CardComp.SetData(_CardDict);
+                }
+
+                if (InstantiatedCardsCount < InstantiatedCards.Length)
+                {
+                    InstantiatedCards[InstantiatedCardsCount] = _Card;
+                    InstantiatedCardsCount++;
+                }
+                if (_CardComp != null && CardKeysCount < CardKeys.Length)
+                {
+                    CardKeys[CardKeysCount] = _CardComp.CardKey;
+                    CardKeysCount++;
+                }
+            }
+
+            CurrentLoadIndex += _CardsInBatch;
+
+            if (CurrentLoadIndex < CardsToLoad.Count)
+            {
+                NextLoadTime = Time.time + LOAD_INTERVAL;
+            }
+            else
+            {
+                this.Log($"All {CardsToLoad.Count} cards loaded");
+                CardsToLoad = null;
+
+                // Rafraichir les donnees d'atlas pour que les cartes puissent charger leurs images
+                if (Manager != null)
+                {
+                    Manager.UpdateAtlasInfo();
+                }
+            }
         }
 
         public void ClearSearch()

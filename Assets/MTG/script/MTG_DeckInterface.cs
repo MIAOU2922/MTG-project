@@ -30,6 +30,27 @@ namespace MTG
         {
             base.Update();
         }
+
+        // callback pour les reponses de deck
+        public override void OnDeckResponse(IVRCStringDownload _Json)
+        {
+            this.Log("OnDeckResponse called in MTG_DeckInterface");
+            if (_Json == null || _Json.Result == null)
+            {
+                this.Error("Deck response is null");
+                return;
+            }
+            // Traitement de la reponse de deck
+            ProcessDeckResponse(_Json);
+        }
+
+        private void ProcessDeckResponse(IVRCStringDownload _Json)
+        {
+            this.Log("ProcessDeckResponse called");
+            // TODO: implementer le traitement de la reponse de deck
+            // Parse le JSON et affiche le deck
+        }
+
         public void OnCardPreviewRequest(string _CardKey)
         {
             this.Log("OnCardPreviewRequest: " + _CardKey);

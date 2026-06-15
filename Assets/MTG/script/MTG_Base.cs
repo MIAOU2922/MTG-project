@@ -21,6 +21,10 @@ namespace MTG
 
         [Header("=== MANAGER REFERENCE ===")]
         public MTG_Manager Manager;
+
+        [Header("=== SCRIPT IDENTITY ===")]
+        [SerializeField] private string _ScriptName = "";
+        public string ScriptName => string.IsNullOrEmpty(_ScriptName) ? this.GetType().Name : _ScriptName;
         
         //methodes
         // recherche le manager dans la scene
@@ -36,6 +40,8 @@ namespace MTG
         // validation dans l'editeur
         protected virtual void OnValidate()
         {
+            if (string.IsNullOrEmpty(_ScriptName))
+                _ScriptName = this.GetType().Name;
             if (Manager == null) TryFindManager();
             SetDebugFlags();
         }
@@ -48,7 +54,7 @@ namespace MTG
         protected virtual void Update()
         {
             if (Manager == null) TryFindManager();
-            if (DEBUG != Manager.DEBUG || VERBOSE_DEBUG != Manager.VERBOSE_DEBUG)
+            if (Manager != null && (DEBUG != Manager.DEBUG || VERBOSE_DEBUG != Manager.VERBOSE_DEBUG))
             {
                 SetDebugFlags();
             }

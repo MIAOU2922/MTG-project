@@ -22,6 +22,9 @@ namespace MTG
 
         [Header("=== INTERFACES ===")]
         public MTG_SyncInterface SyncInterface;
+        public MTG_SearchInterface SearchInterface;
+        public MTG_DeckInterface DeckInterface;
+        public MTG_PhysicCardPoolManager PhysicCardPool;
 
         [Header("=== URLS ===")]
 #if !COMPILER_UDONSHARP && UNITY_EDITOR
@@ -54,7 +57,7 @@ namespace MTG
         //methodes
 #if !COMPILER_UDONSHARP && UNITY_EDITOR
 
-        private void OnValidate()
+        protected override void OnValidate()
         {
             CreateURL = new VRCUrl($"{BaseURL}c");
             SearchURL = new VRCUrl($"{BaseURL}s?q=");
@@ -134,50 +137,105 @@ namespace MTG
         public override void OnStringLoadSuccess(IVRCStringDownload _Json)
         {
             this.Log("OnStringLoadSuccess called");
-            String _Type = "";
-            bool _IsValid = false;
-            ReponseType(_Json, out _Type);
-            switch (_Type)
+            if (_Json == null || _Json.Url == null) return;
+
+            // Dispatch base sur l'URL (evite le parsing JSON couteux pour les grosses reponses)
+            if (_Json.Url == CreateURL)
             {
-                case "c":
-                    {
-                        int _TempInstanceID;
-                        IsCreateResponse(_Json, out _TempInstanceID);
-                        if (_TempInstanceID != -1) InstanceID = _TempInstanceID;
-                        break;
-                    }
-                case "d":
-                    {
-                        IsDeckResponse(_Json);
-                        break;
-                    }
-                case "j":
-                    {
-                        IsJoinResponse(_Json, out _IsValid);
-                        if (!_IsValid) JoinGame(true);
-                        break;
-                    }
-                case "s":
-                    {
-                        IsSearchResponse(_Json);
-                        break;
-                    }
-                case "t":
-                    {
-                        IsTempURLsResponse(_Json);
-                        break;
-                    }
-                case "u":
-                    {
+                int _TempInstanceID;
+                IsCreateResponse(_Json, out _TempInstanceID);
+                if (_TempInstanceID != -1) InstanceID = _TempInstanceID;
+            }
+            else if (IsDeckURL(_Json.Url))
+            {
+                if (DeckInterface != null)
+                    DeckInterface.OnDeckResponse(_Json);
+            }
+            else if (IsJoinURL(_Json.Url))
+            {
+                bool _IsValid;
+                IsJoinResponse(_Json, out _IsValid);
+                if (!_IsValid) JoinGame(true);
+            }
+            else if (IsSearchURL(_Json.Url))
+            {
+                this.Log("IsSearchURL returned TRUE, dispatching to SearchInterface...");
+                if (SearchInterface != null)
+                {
+                    this.Log("Calling SearchInterface.OnSearchResponse...");
+                    SearchInterface.OnSearchResponse(_Json);
+                }
+                else
+                {
+                    this.Error("SearchInterface is NULL! Cannot dispatch search response.");
+                }
+            }
+            else if (IsTempURL(_Json.Url))
+            {
+                IsTempURLsResponse(_Json);
+            }
+            else
+            {
+                // Fallback: utiliser ReponseType pour "u" et autres types inconnus
+                this.Log($"OnStringLoadSuccess: URL did not match any known type. Url='{_Json.Url}'");
+                String _Type = "";
+                ReponseType(_Json, out _Type);
+                switch (_Type)
+                {
+                    case "u":
                         IsUserResponse(_Json);
                         break;
-                    }
-                default:
-                    {
+                    default:
                         this.Log($"Unknown response type: {_Type}");
                         break;
-                    }
+                }
             }
+        }
+
+        private bool IsJoinURL(VRCUrl _Url)
+        {
+            if (_Url == null || JoinURLs == null) return false;
+            // Prefix guard: avoid iterating 64 URLs for non-join responses
+            string _UrlStr = _Url.ToString();
+            if (_UrlStr.IndexOf("/aj") < 0) return false;
+            for (int i = 0; i < JoinURLs.Length; i++)
+                if (_Url == JoinURLs[i]) return true;
+            return false;
+        }
+
+        private bool IsSearchURL(VRCUrl _Url)
+        {
+            if (_Url == null || SearchURL == null)
+            {
+                this.Log($"IsSearchURL: null check failed - _Url={(_Url==null)}, SearchURL={(SearchURL==null)}");
+                return false;
+            }
+            string _UrlStr = _Url.ToString();
+            string _SearchStr = SearchURL.ToString();
+            // Use IndexOf instead of StartsWith for Udon compatibility
+            bool _Match = _UrlStr.IndexOf(_SearchStr) == 0;
+            this.Log($"IsSearchURL: Url='{_UrlStr}' vs SearchURL='{_SearchStr}' = {_Match}");
+            return _Match;
+        }
+
+        private bool IsDeckURL(VRCUrl _Url)
+        {
+            if (_Url == null || DeckURL == null) return false;
+            string _UrlStr = _Url.ToString();
+            string _DeckStr = DeckURL.ToString();
+            return _UrlStr.IndexOf(_DeckStr) == 0;
+        }
+
+        private bool IsTempURL(VRCUrl _Url)
+        {
+            if (_Url == null || TempURLs == null) return false;
+            // Prefix guard: check if the URL looks like a temp URL before iterating 4096 entries
+            // TempURLs are /at[base36], so check if URL contains "/at"
+            string _UrlStr = _Url.ToString();
+            if (_UrlStr.IndexOf("/at") < 0) return false;
+            for (int i = 0; i < TempURLs.Length; i++)
+                if (_Url == TempURLs[i]) return true;
+            return false;
         }
         public override void OnStringLoadError(IVRCStringDownload _Json)
         {
@@ -233,12 +291,6 @@ namespace MTG
             IsSyncing = false;
             SyncInterface.Hide();
         }
-        // verifie la reponse de deck
-        private void IsDeckResponse(IVRCStringDownload _Json)
-        {
-            this.Log("IsDeckResponse called");
-            // rien pour l'instant
-        }
         // verifie la reponse de join d'instance
         private void IsJoinResponse(IVRCStringDownload _Json, out bool _IsValid)
         {
@@ -287,12 +339,6 @@ namespace MTG
             IsSyncing = false;
             SyncInterface.Hide();
         }
-        // verifie la reponse de recherche
-        private void IsSearchResponse(IVRCStringDownload _Json)
-        {
-            this.Log("IsSearchResponse called");
-            // rien pour l'instant
-        }
         // verifie la reponse des tempsurls si json
         private void IsTempURLsResponse(IVRCStringDownload _Json)
         {
@@ -333,6 +379,8 @@ namespace MTG
             DataList _Batches;
             DataList _Cards;
             int _CardCount = 0;
+            bool _AtlasChanged;
+            int _AtlasIndex;
 
             int _Col , _Row ;
             float _RectWidth  = 1f / 6f;
@@ -348,23 +396,92 @@ namespace MTG
             for (int i = 0; i < _Batches.Count; i++)
             {
                 _Batch = _Batches[i].DataDictionary;
-                _CardCount = _Batch["card_count"].Int;
+                _CardCount = (int)_Batch["card_count"].Double;
 
-                AtlasCardIds[i] = new String[_CardCount];
-                AtlasCardRects[i] = new Rect[_CardCount];
+                // Lire atlas_link (ex: "/ata") et convertir en index TempURLs
+                // "/ata" → "a" → FromBase36 → 10
+                // Les URLs d'images commencent a TempURLs[10] (/ata, /atb, /atc...)
+                _AtlasIndex = ConvertAtlasLinkToIndex(_Batch["atlas_link"].String);
+
+                // Verifier si les donnees de cet atlas ont change
+                _AtlasChanged = HasAtlasDataChanged(_AtlasIndex, _Batch, _CardCount);
+
+                // Toujours creer les tableaux en taille 24 (taille fixe de la grille 6x4)
+                AtlasCardIds[_AtlasIndex] = new String[24];
+                AtlasCardRects[_AtlasIndex] = new Rect[24];
 
                 _Cards = _Batch["cards"].DataList;
                 for (int j = 0; j < _Cards.Count; j++)
                 {
-                    AtlasCardIds[i][j] = _Cards[j].String;
+                    AtlasCardIds[_AtlasIndex][j] = _Cards[j].String;
                     _Col = j % 6;
                     _Row = j / 6;
                     _uvX = _Col * _RectWidth;
                     _uvY = 0.7499324840691133f - (_Row * _RectHeight);
-                    AtlasCardRects[i][j] = new Rect(_uvX, _uvY, _RectWidth, _RectHeight);
+                    AtlasCardRects[_AtlasIndex][j] = new Rect(_uvX, _uvY, _RectWidth, _RectHeight);
+                }
+
+                // Effacer les slots restants si moins de 24 cartes
+                for (int j = _Cards.Count; j < 24; j++)
+                {
+                    AtlasCardIds[_AtlasIndex][j] = null;
+                    AtlasCardRects[_AtlasIndex][j] = new Rect(0, 0, 1, 1);
+                }
+
+                // Declencher le telechargement de l'image d'atlas
+                if (_AtlasChanged)
+                {
+                    this.Log($"Atlas {_AtlasIndex} ({_Batch["atlas_link"].String}) data changed, reloading image...");
+                    AtlasLoaded[_AtlasIndex] = false;
+                    AtlasLoading[_AtlasIndex] = false;
+                    AtlasImages[_AtlasIndex] = null;
+                }
+
+                if (!AtlasLoaded[_AtlasIndex] && !AtlasLoading[_AtlasIndex])
+                {
+                    LoadAtlas(_AtlasIndex);
                 }
             }
         }
+
+        // Convertit un atlas_link (ex: "/ata") en index TempURLs
+        // "/ata" → "a" → base36 → 10 (les images commencent apres les 10 URLs JSON at0-at9)
+        private int ConvertAtlasLinkToIndex(string _AtlasLink)
+        {
+            if (string.IsNullOrEmpty(_AtlasLink) || !_AtlasLink.StartsWith("/at"))
+                return 0;
+            string _Base36 = _AtlasLink.Substring(3); // Enlever "/at"
+            if (string.IsNullOrEmpty(_Base36))
+                return 0;
+            return FromBase36(_Base36);
+        }
+
+        // Verifie si les donnees d'un atlas ont change (nombre de cartes ou IDs differents)
+        private bool HasAtlasDataChanged(int _AtlasIndex, DataDictionary _NewBatch, int _NewCount)
+        {
+            if (_AtlasIndex < 0 || _AtlasIndex >= AtlasCardIds.Length) return true;
+            if (AtlasCardIds[_AtlasIndex] == null) return true;
+
+            int _OldCount = 0;
+            for (int i = 0; i < 24; i++)
+            {
+                if (AtlasCardIds[_AtlasIndex][i] != null)
+                    _OldCount++;
+                else
+                    break;
+            }
+            if (_OldCount != _NewCount) return true;
+
+            DataList _NewCards = _NewBatch["cards"].DataList;
+            for (int i = 0; i < _NewCount; i++)
+            {
+                if (_NewCards[i].TokenType != TokenType.String) continue;
+                if (AtlasCardIds[_AtlasIndex][i] != _NewCards[i].String)
+                    return true;
+            }
+            return false;
+        }
+
         // process deck list response (at1)
         private void ProcessDeckListResponse(IVRCStringDownload _Json)
         {
@@ -475,7 +592,7 @@ namespace MTG
 
         // methodes for atlas management
         // met a jour les infos des atlas
-        private void UpdateAtlasInfo()
+        public void UpdateAtlasInfo()
         {
             this.Log("UpdateAtlasInfo called");
             if (InstanceID == -1) return;
@@ -485,7 +602,7 @@ namespace MTG
         // obtient la texture de l'atlas
         public Texture2D GetAtlasTexture(int _AtlasIndex)
         {
-            this.Log($"GetAtlasTexture called for atlasIndex: {_AtlasIndex}");
+            this.VerboseLog($"GetAtlasTexture called for atlasIndex: {_AtlasIndex}");
             if (_AtlasIndex < 0 || _AtlasIndex >= AtlasImages.Length) return null;
             if (!AtlasLoaded[_AtlasIndex] && !AtlasLoading[_AtlasIndex])
             {
@@ -506,7 +623,7 @@ namespace MTG
         // obtient les infos d'une carte dans l'atlas
         public bool GetAtlasInfoForCard(string _CardId, out int _AtlasIndex, out Rect _UvRect)
         {
-            this.Log($"GetAtlasInfoForCard called for cardId: {_CardId}");
+            this.VerboseLog($"GetAtlasInfoForCard called for cardId: {_CardId}");
             _AtlasIndex = -1;
             _UvRect = new Rect(0, 0, 1, 1);
             if (_CardId == "Debug") return true;
@@ -523,11 +640,11 @@ namespace MTG
                     }
                 }
             }
-            this.Log($"CardId: {_CardId} not found in any atlas");
+            this.VerboseLog($"CardId: {_CardId} not found in any atlas");
             return false;
         }
 
-        public int GetInstanceID()
+        public new int GetInstanceID()
         {
             this.Log("GetInstanceID called");
             return InstanceID;
@@ -561,6 +678,29 @@ namespace MTG
                 result = result * chars.Length + val;
             }
             return result;
+        }
+
+        // === PHYSIC CARD POOL ===
+        public MTG_PhysicCard SpawnPhysicCard(string _CardKey, Vector3 _Position, Quaternion _Rotation)
+        {
+            if (PhysicCardPool == null)
+            {
+                this.Error("SpawnPhysicCard: PhysicCardPool is null");
+                return null;
+            }
+            return PhysicCardPool.SpawnCard(_CardKey, _Position, _Rotation);
+        }
+
+        public void DespawnPhysicCard(MTG_PhysicCard _Card)
+        {
+            if (PhysicCardPool != null)
+                PhysicCardPool.DespawnCard(_Card);
+        }
+
+        public void DespawnAllPhysicCards()
+        {
+            if (PhysicCardPool != null)
+                PhysicCardPool.DespawnAll();
         }
     }
 }

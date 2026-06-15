@@ -28,7 +28,7 @@ namespace MTG
 
         [Header("=== OTHER DATA ===")]
         [SerializeField] private float LastRetryTime = 0f;
-        [SerializeField] private const float RETRY_INTERVAL = 10f;
+        [SerializeField] private const float RETRY_INTERVAL = 2f;
         [SerializeField] private bool ImageFrontLoaded = false;
         [SerializeField] private bool ImageBackLoaded = false;
         [SerializeField] private bool IsFlipped = false;
@@ -79,27 +79,28 @@ namespace MTG
         // charge l'image de la carte a partir de son id ( CardKey )
         public void SetImageFromId()
         {
-            this.Log($"SetImageFromId called for cardKey: {CardKey}");
+            this.VerboseLog($"SetImageFromId called for cardKey: {CardKey}");
             if (!Manager || String.IsNullOrEmpty(CardKey)) return;
             String[] _Parts;
             String _FrontFaceKey,_FackFaceKey;
-            String _BaseCardId = CardKey;
+            // Utiliser CardOracleKey pour la recherche atlas si disponible (les search cards ont CardKey=UUID)
+            String _BaseCardId = !String.IsNullOrEmpty(CardOracleKey) ? CardOracleKey : CardKey;
             int _FoundAtlasIndexFront,_FoundAtlasIndexBack;
             int _FaceIndex = 0;
             Rect _FoundRectFront,_FoundRectBack;
             Texture2D _AtlasTextureFront ,_AtlasTextureBack;
-            if (CardKey.Contains(":"))
+            if (_BaseCardId.Contains(":"))
             {
-                _Parts = CardKey.Split(':');
+                _Parts = _BaseCardId.Split(':');
                 if (_Parts.Length == 2)
                 {
                     _BaseCardId = _Parts[0];
                     int.TryParse(_Parts[1], out _FaceIndex);
                 }
             }
-            // try load front face (face 0)
+            // try load front face (face 0) - seulement si pas deja chargee
             _FrontFaceKey = _BaseCardId + ":0";
-            if (Manager.GetAtlasInfoForCard(_FrontFaceKey, out _FoundAtlasIndexFront, out _FoundRectFront))
+            if (!ImageFrontLoaded && Manager.GetAtlasInfoForCard(_FrontFaceKey, out _FoundAtlasIndexFront, out _FoundRectFront))
             {
                 AtlasIndexFront = _FoundAtlasIndexFront;
                 uvRectFront = _FoundRectFront;
@@ -108,28 +109,29 @@ namespace MTG
                 if (_AtlasTextureFront == null) return;
                 ApplyAtlasTexture(_AtlasTextureFront, false);
             }
-            // try load back face (face 1)
+            // try load back face (face 1) - seulement si pas deja chargee
             _FackFaceKey = _BaseCardId + ":1";
-            if (Manager.GetAtlasInfoForCard(_FackFaceKey, out _FoundAtlasIndexBack, out _FoundRectBack))
+            if (!ImageBackLoaded && Manager.GetAtlasInfoForCard(_FackFaceKey, out _FoundAtlasIndexBack, out _FoundRectBack))
             {
                 AtlasIndexBack = _FoundAtlasIndexBack;
                 uvRectBack = _FoundRectBack;
-                IsDoubleFaced = true;
                 
                 _AtlasTextureBack = Manager.GetAtlasTexture(AtlasIndexBack);
-                if (_AtlasTextureBack == null) return;
-                ApplyAtlasTexture(_AtlasTextureBack, true);
+                if (_AtlasTextureBack != null)
+                {
+                    IsDoubleFaced = true;
+                    ApplyAtlasTexture(_AtlasTextureBack, true);
+                }
             }
-            else
+            else if (!ImageBackLoaded)
             {
                 IsDoubleFaced = false;
             }
-            UpdateFlipVisibility();
         }
         // applique la texture de l'atlas a l'image de la carte
         private void ApplyAtlasTexture(Texture2D _atlasTexture, bool _isBackFace)
         {
-            this.Log($"ApplyAtlasTexture called for cardKey: {CardKey}");
+            this.VerboseLog($"ApplyAtlasTexture called for cardKey: {CardKey}");
             if (_isBackFace)
             {
                 if (CardImageBack == null) return;
@@ -150,11 +152,12 @@ namespace MTG
             {
                 Loading.SetActive(false);
             }
+            UpdateFlipVisibility();
         }
         // met a jour la visibilite des images et du bouton flip
         public void UpdateFlipVisibility()
         {
-            this.Log($"UpdateFlipVisibility called for cardKey: {CardKey}");
+            this.VerboseLog($"UpdateFlipVisibility called for cardKey: {CardKey}");
             if (CardImageFront != null)
                 CardImageFront.gameObject.SetActive(!IsFlipped);
 

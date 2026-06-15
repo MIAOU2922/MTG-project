@@ -2440,7 +2440,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   serializationData:
-    SerializedFormat: 2
+    SerializedFormat: 0
     SerializedBytes: 
     ReferencedUnityObjects: []
     SerializedBytesString: 
@@ -2452,6 +2452,7 @@ MonoBehaviour:
   DEBUG: 1
   VERBOSE_DEBUG: 0
   Manager: {fileID: 0}
+  _ScriptName: MTG_SyncInterface
   Panel: {fileID: 1175848834661273756}
   Create: {fileID: 449814423307654998}
   Join: {fileID: 6614266014133979425}

@@ -7591,7 +7591,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   serializationData:
-    SerializedFormat: 2
+    SerializedFormat: 0
     SerializedBytes: 
     ReferencedUnityObjects: []
     SerializedBytesString: 
@@ -7603,6 +7603,7 @@ MonoBehaviour:
   DEBUG: 1
   VERBOSE_DEBUG: 0
   Manager: {fileID: 0}
+  _ScriptName: MTG_DeckInterface
   ValidatedInput: {fileID: 7888198382738878430}
   UrlDisplayText: {fileID: 3307339680021873776}
   CardPrefab: {fileID: 6588703018279975428, guid: bfa0832650a4e7044b5b252b1bb72c26,
@@ -10556,7 +10557,7 @@ PrefabInstance:
     - target: {fileID: 3689236527109153461, guid: bfa0832650a4e7044b5b252b1bb72c26,
         type: 3}
       propertyPath: m_SizeDelta.y
-      value: 85
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3689236527109153461, guid: bfa0832650a4e7044b5b252b1bb72c26,
         type: 3}
@@ -10650,10 +10651,19 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6326017995217307430, guid: bfa0832650a4e7044b5b252b1bb72c26,
         type: 3}
+      propertyPath: Manager
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 6326017995217307430, guid: bfa0832650a4e7044b5b252b1bb72c26,
+        type: 3}
+      propertyPath: DeckInterface
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 6326017995217307430, guid: bfa0832650a4e7044b5b252b1bb72c26,
+        type: 3}
       propertyPath: serializationData.Prefab
       value: 
-      objectReference: {fileID: 6326017995217307430, guid: bfa0832650a4e7044b5b252b1bb72c26,
-        type: 3}
+      objectReference: {fileID: 0}
     - target: {fileID: 6588703018279975428, guid: bfa0832650a4e7044b5b252b1bb72c26,
         type: 3}
       propertyPath: m_Name

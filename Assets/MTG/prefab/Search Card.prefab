@@ -391,7 +391,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 3312897141848936709}
         m_TargetAssemblyTypeName: 
         m_MethodName: SendCustomEvent
         m_Mode: 5
@@ -520,7 +520,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 3312897141848936709}
         m_TargetAssemblyTypeName: 
         m_MethodName: SendCustomEvent
         m_Mode: 5
@@ -915,6 +915,7 @@ MonoBehaviour:
   DEBUG: 1
   VERBOSE_DEBUG: 0
   Manager: {fileID: 0}
+  _ScriptName: MTG_SearchCard
   CardImageFront: {fileID: 1390902743463539671}
   CardImageBack: {fileID: 6042717330344361188}
   Loading: {fileID: 1565889139291972350}

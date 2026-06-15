@@ -41,9 +41,28 @@ namespace MTG
         // demande l'affichage de l'aperçu de la carte
         public void OnCardButtonPressed()
         {
-            this.Log($"OnCardButtonPressed called for cardKey: {CardKey}");
+            this.VerboseLog($"OnCardButtonPressed called for cardKey: {CardKey}");
             if (SearchInterface == null) return;
             SearchInterface.OnCardPreviewRequest(CardKey);
+        }
+
+        // Configure la carte a partir des donnees JSON de recherche
+        public void SetData(DataDictionary _CardDict)
+        {
+            this.VerboseLog("SetData called");
+            if (_CardDict == null) return;
+
+            // Extraire l'ID de la carte (champ "id" dans le JSON de recherche)
+            if (_CardDict.TryGetValue("id", out DataToken _IdToken))
+            {
+                SetCardKey(_IdToken.String);
+            }
+
+            // Extraire l'oracle_id si present
+            if (_CardDict.TryGetValue("oracle_id", out DataToken _OracleToken))
+            {
+                SetCardOracleKey(_OracleToken.String);
+            }
         }
     }
 }
