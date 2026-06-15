@@ -243,6 +243,7 @@ Génère et retourne un atlas PNG contenant 24 cartes maximum.
   - Structure: `images/atlas/instance_{id}/batch_{index}_n{count}.png`
   - Un sous-dossier par instance pour une meilleure organisation
   - Invalidation automatique si le nombre de cartes change
+  - Pré-génération automatique en arrière-plan lors d'ajout de cartes à une instance
   - Header `X-Cache: HIT|MISS` pour monitoring
   - Suppression automatique du dossier lors de la destruction de l'instance
 

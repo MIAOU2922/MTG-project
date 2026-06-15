@@ -3,6 +3,7 @@ services:
   database:
     image: postgres:15
     container_name: mtgvrc_database
+    restart: always
     environment:
       POSTGRES_USER: mtgvrc
       POSTGRES_PASSWORD: 4fhTE1P2jWpriqu3ZyGO

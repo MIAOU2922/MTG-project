@@ -4,6 +4,7 @@ import User from "@/database/User";
 import fs from "fs";
 import path from "path";
 import https from "https";
+import { createCanvas, loadImage } from "canvas";
 
 export default class Instance implements IInstance {
     public static MAX_INSTANCES = 64;
@@ -21,6 +22,11 @@ export default class Instance implements IInstance {
     // Système de déclenchement différé pour les téléchargements récents
     private static recentDownloadTimeout: NodeJS.Timeout | null = null;
     private static readonly RECENT_DOWNLOAD_DELAY = 30000; // 30 secondes de délai
+
+    // Déclenchement différé de préchauffage des atlas (évite de régénérer sur chaque addCard)
+    private static atlasWarmupTimeouts = new Map<number, NodeJS.Timeout>();
+    private static atlasWarmupInProgress = new Set<number>();
+    private static readonly ATLAS_WARMUP_DELAY = 3000; // 3 secondes
 
     // Dossiers de cache
     private static readonly CARDS_DIR = path.join(process.cwd(), 'images', 'cards');
@@ -261,6 +267,9 @@ export default class Instance implements IInstance {
 
             // Déclencher le téléchargement des images récentes après un délai
             this.scheduleRecentImagesDownload();
+
+            // Préchauffer les atlas en arrière-plan pour éviter un long premier call /at
+            this.scheduleAtlasWarmup();
         }
     }
 
@@ -382,6 +391,153 @@ export default class Instance implements IInstance {
     }
 
     /**
+     * Programme un préchauffage des atlas pour cette instance
+     */
+    private scheduleAtlasWarmup(): void {
+        Instance.scheduleAtlasWarmupForInstance(this.id);
+    }
+
+    /**
+     * Déclenche le préchauffage des atlas d'une instance avec debounce
+     */
+    private static scheduleAtlasWarmupForInstance(instanceId: number): void {
+        const existingTimeout = this.atlasWarmupTimeouts.get(instanceId);
+        if (existingTimeout) {
+            clearTimeout(existingTimeout);
+        }
+
+        const timeout = setTimeout(async () => {
+            this.atlasWarmupTimeouts.delete(instanceId);
+
+            try {
+                await this.precomputeAtlasCache(instanceId);
+            } catch (error) {
+                console.error(`❌ Atlas warmup failed for instance ${instanceId}:`, error);
+            }
+        }, this.ATLAS_WARMUP_DELAY);
+
+        this.atlasWarmupTimeouts.set(instanceId, timeout);
+    }
+
+    /**
+     * Prégénère les atlas manquants d'une instance si les images existent déjà
+     */
+    public static async precomputeAtlasCache(instanceId: number): Promise<void> {
+        if (this.atlasWarmupInProgress.has(instanceId)) {
+            return;
+        }
+
+        this.atlasWarmupInProgress.add(instanceId);
+
+        try {
+            const instance = await Database.prisma.instance.findUnique({
+                where: { id: instanceId },
+                select: { card_ids: true }
+            });
+
+            if (!instance) {
+                return;
+            }
+
+            const cardIds = (instance as any).card_ids || [];
+            if (cardIds.length === 0) {
+                return;
+            }
+
+            const batchSize = 24;
+            const batchCount = Math.ceil(cardIds.length / batchSize);
+
+            for (let batchIndex = 0; batchIndex < batchCount; batchIndex++) {
+                const startIndex = batchIndex * batchSize;
+                const batchCards = cardIds.slice(startIndex, startIndex + batchSize);
+                const currentCardCount = batchCards.length;
+
+                if (currentCardCount === 0) {
+                    continue;
+                }
+
+                if (this.hasAtlasCache(instanceId, batchIndex, currentCardCount)) {
+                    continue;
+                }
+
+                // Si des images manquent encore, on laisse le fallback /at gérer plus tard.
+                const allImagesAvailable = batchCards.every((cardId: string) => {
+                    const imagePath = path.join(this.CARDS_DIR, `${cardId}.jpg`);
+                    return fs.existsSync(imagePath);
+                });
+
+                if (!allImagesAvailable) {
+                    continue;
+                }
+
+                const atlasBuffer = await this.generateAtlasImageFromCards(cardIds, batchIndex);
+                this.saveAtlasCache(instanceId, batchIndex, currentCardCount, atlasBuffer);
+            }
+        } finally {
+            this.atlasWarmupInProgress.delete(instanceId);
+        }
+    }
+
+    /**
+     * Génère un atlas PNG pour un batch donné à partir d'une liste de card_ids
+     */
+    private static async generateAtlasImageFromCards(cardIds: string[], batchIndex: number): Promise<Buffer> {
+        const batchSize = 24;
+        const startIndex = batchIndex * batchSize;
+        const batchCards = cardIds.slice(startIndex, startIndex + batchSize);
+
+        if (batchCards.length === 0) {
+            throw new Error('No cards in batch');
+        }
+
+        const cardWidth = 488;
+        const cardHeight = 680;
+        const cols = 6;
+        const rows = 4;
+
+        const originalWidth = cardWidth * cols;
+        const originalHeight = cardHeight * rows;
+
+        const maxSize = 2048;
+        const scaleX = maxSize / originalWidth;
+        const scaleY = maxSize / originalHeight;
+        const scale = Math.min(scaleX, scaleY);
+
+        const finalWidth = Math.floor(originalWidth * scale);
+        const finalHeight = Math.floor(originalHeight * scale);
+
+        const canvas = createCanvas(finalWidth, finalHeight);
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        const tempCanvas = createCanvas(originalWidth, originalHeight);
+        const tempCtx = tempCanvas.getContext('2d');
+        tempCtx.fillStyle = 'white';
+        tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+        for (let i = 0; i < batchCards.length; i++) {
+            const cardId = batchCards[i];
+            const imagePath = path.join(this.CARDS_DIR, `${cardId}.jpg`);
+
+            if (!fs.existsSync(imagePath)) {
+                continue;
+            }
+
+            const img = await loadImage(imagePath);
+            const col = i % cols;
+            const row = Math.floor(i / cols);
+            const x = col * cardWidth;
+            const y = row * cardHeight;
+
+            tempCtx.drawImage(img, x, y, cardWidth, cardHeight);
+        }
+
+        ctx.drawImage(tempCanvas, 0, 0, originalWidth, originalHeight, 0, 0, finalWidth, finalHeight);
+        return canvas.toBuffer('image/png');
+    }
+
+    /**
      * Traite la file d'attente des téléchargements avec limitation du nombre de requêtes simultanées
      */
     private async processDownloadQueue(): Promise<void> {
@@ -447,6 +603,9 @@ export default class Instance implements IInstance {
             fs.writeFileSync(imagePath, imageBuffer);
 
             console.log(`Downloaded image for card ${cardId}`);
+
+            // Re-déclencher un warmup atlas maintenant que l'image est disponible
+            this.scheduleAtlasWarmup();
         } catch (error: any) {
             console.error(`Error downloading image for card ${cardId}:`, error.message);
         }
