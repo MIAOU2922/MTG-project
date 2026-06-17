@@ -1530,7 +1530,7 @@ MonoBehaviour:
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 4131277583872349734}
   DEBUG: 1
-  VERBOSE_DEBUG: 0
+  VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_DeckCard
   CardImageFront: {fileID: 5674019717530801091}
@@ -1554,6 +1554,8 @@ MonoBehaviour:
     height: 0
   AtlasIndexBack: -1
   LastRetryTime: 0
+  RetryCount: 0
+  AtlasLoadingRetryCount: 0
   ImageFrontLoaded: 0
   ImageBackLoaded: 0
   IsFlipped: 0

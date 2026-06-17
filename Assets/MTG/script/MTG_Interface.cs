@@ -43,7 +43,7 @@ namespace MTG
         // Envoie la requete au serveur via VRCUrlInputField (necessite validation utilisateur)
         public virtual void SendRequest()
         {
-            this.VerboseLog("SendRequest called (base implementation)");
+            this.Log("SendRequest called (base implementation)");
             if (ValidatedInput == null)
             {
                 this.Error("ValidatedInput is null - cannot send request");
@@ -58,7 +58,7 @@ namespace MTG
         // Callback appele automatiquement par VRCUrlInputField quand l'utilisateur valide l'URL
         public virtual void OnUrlValidated()
         {
-            this.VerboseLog("OnUrlValidated called (base implementation)");
+            this.Log("OnUrlValidated called (base implementation)");
             if (ValidatedInput == null)
             {
                 this.Error("ValidatedInput is null");
@@ -73,13 +73,13 @@ namespace MTG
             }
             
             string _UrlString = _ValidatedUrl.ToString();
-            this.VerboseLog($"User validated URL: {_UrlString}");
+            this.Log($"User validated URL: {_UrlString}");
             
             // Envoyer la requete au serveur via le Manager
             if (Manager != null)
             {
                 VRCStringDownloader.LoadUrl(_ValidatedUrl, (IUdonEventReceiver)Manager);
-                this.VerboseLog("Request sent to server via Manager");
+                this.Log("Request sent to server via Manager");
             }
             else
             {

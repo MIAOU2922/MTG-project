@@ -5059,7 +5059,7 @@ MonoBehaviour:
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 3336075916942691067}
   DEBUG: 1
-  VERBOSE_DEBUG: 0
+  VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchInterface
   ValidatedInput: {fileID: 3867510258519395623}
@@ -14220,6 +14220,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6570351521711485100, guid: 43d7b374a862a3147862dba75eff978c,
         type: 3}
+      propertyPath: VERBOSE_DEBUG
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6570351521711485100, guid: 43d7b374a862a3147862dba75eff978c,
+        type: 3}
       propertyPath: SearchInterface
       value: 
       objectReference: {fileID: 1349966771976624129}
@@ -14480,6 +14485,11 @@ PrefabInstance:
         type: 3}
       propertyPath: Manager
       value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 6570351521711485100, guid: 43d7b374a862a3147862dba75eff978c,
+        type: 3}
+      propertyPath: VERBOSE_DEBUG
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6570351521711485100, guid: 43d7b374a862a3147862dba75eff978c,
         type: 3}

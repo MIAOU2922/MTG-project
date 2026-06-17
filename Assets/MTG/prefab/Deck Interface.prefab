@@ -7601,7 +7601,7 @@ MonoBehaviour:
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 7593443425105987315}
   DEBUG: 1
-  VERBOSE_DEBUG: 0
+  VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_DeckInterface
   ValidatedInput: {fileID: 7888198382738878430}
@@ -10658,6 +10658,11 @@ PrefabInstance:
         type: 3}
       propertyPath: DeckInterface
       value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 6326017995217307430, guid: bfa0832650a4e7044b5b252b1bb72c26,
+        type: 3}
+      propertyPath: VERBOSE_DEBUG
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6326017995217307430, guid: bfa0832650a4e7044b5b252b1bb72c26,
         type: 3}

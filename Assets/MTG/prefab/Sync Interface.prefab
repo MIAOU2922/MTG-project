@@ -2450,7 +2450,7 @@ MonoBehaviour:
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 2464815176803022306}
   DEBUG: 1
-  VERBOSE_DEBUG: 0
+  VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SyncInterface
   Panel: {fileID: 1175848834661273756}

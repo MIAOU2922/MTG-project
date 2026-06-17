@@ -34,7 +34,7 @@ namespace MTG
         // callback pour les reponses de deck
         public override void OnDeckResponse(IVRCStringDownload _Json)
         {
-            this.VerboseLog("OnDeckResponse called in MTG_DeckInterface");
+            this.Log("OnDeckResponse called in MTG_DeckInterface");
             if (_Json == null || _Json.Result == null)
             {
                 this.Error("Deck response is null");

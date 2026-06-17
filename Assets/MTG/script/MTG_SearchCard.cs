@@ -77,15 +77,28 @@ namespace MTG
             IsFlipped = false;
             IsDoubleFaced = false;
             LastRetryTime = -RETRY_INTERVAL;
+            RetryCount = 0; // Reset retry counter
+            AtlasLoadingRetryCount = 0; // Reset atlas loading counter
 
             // Mettre a jour la visibilite initiale
             UpdateFlipVisibility();
+            
+            // IMPORTANT: Demarrer le chargement de l'image immediatement
+            if (!string.IsNullOrEmpty(CardKey) && Manager != null)
+            {
+                SetImageFromId();
+            }
         }
 
         // === OVERRIDE: charge l'image via CardKey uniquement (comportement ancien script) ===
         public override void SetImageFromId()
         {
-            if (Manager == null || string.IsNullOrEmpty(CardKey)) return;
+            this.VerboseLog($"[SearchCard] SetImageFromId called for cardKey: {CardKey}");
+            if (Manager == null || string.IsNullOrEmpty(CardKey))
+            {
+                this.VerboseLog($"[SearchCard] Manager or CardKey is null/empty");
+                return;
+            }
 
             // Extraire l'ID de base (sans suffixe :0/:1)
             string _BaseCardId = CardKey;
@@ -98,33 +111,67 @@ namespace MTG
 
             // Face avant (face 0)
             string _FrontFaceKey = _BaseCardId + ":0";
-            if (!ImageFrontLoaded && Manager.GetAtlasInfoForCard(_FrontFaceKey, out int _FoundAtlasIndexFront, out Rect _FoundRectFront))
+            if (!ImageFrontLoaded)
             {
-                AtlasIndexFront = _FoundAtlasIndexFront;
-                uvRectFront = _FoundRectFront;
+                bool _FoundFront = Manager.GetAtlasInfoForCard(_FrontFaceKey, out int _FoundAtlasIndexFront, out Rect _FoundRectFront);
+                if (_FoundFront)
+                {
+                    AtlasIndexFront = _FoundAtlasIndexFront;
+                    uvRectFront = _FoundRectFront;
 
-                Texture2D _AtlasTexture = Manager.GetAtlasTexture(AtlasIndexFront);
-                if (_AtlasTexture != null)
-                    ApplyAtlasTextureFront(_AtlasTexture);
+                    Texture2D _AtlasTexture = Manager.GetAtlasTexture(AtlasIndexFront);
+                    if (_AtlasTexture != null)
+                    {
+                        this.Log($"[SearchCard] Loaded front face for {_FrontFaceKey} from atlas {_FoundAtlasIndexFront}");
+                        ApplyAtlasTextureFront(_AtlasTexture);
+                    }
+                    else
+                    {
+                        bool _IsLoading = Manager.IsAtlasLoading(AtlasIndexFront);
+                        if (_IsLoading)
+                        {
+                            this.VerboseLog($"[SearchCard] Atlas {AtlasIndexFront} downloading... (card {_FrontFaceKey})");
+                        }
+                        else
+                        {
+                            this.VerboseLog($"[SearchCard] Atlas {AtlasIndexFront} queued for download (card {_FrontFaceKey})");
+                        }
+                    }
+                }
+                else
+                {
+                    this.Log($"[SearchCard] Card {_FrontFaceKey} not found in atlas data - requesting update");
+                    Manager.UpdateAtlasInfo();
+                }
             }
 
             // Face arriere (face 1)
             string _BackFaceKey = _BaseCardId + ":1";
-            if (!ImageBackLoaded && Manager.GetAtlasInfoForCard(_BackFaceKey, out int _FoundAtlasIndexBack, out Rect _FoundRectBack))
+            if (!ImageBackLoaded)
             {
-                AtlasIndexBack = _FoundAtlasIndexBack;
-                uvRectBack = _FoundRectBack;
-
-                Texture2D _AtlasTextureBack = Manager.GetAtlasTexture(AtlasIndexBack);
-                if (_AtlasTextureBack != null)
+                bool _FoundBack = Manager.GetAtlasInfoForCard(_BackFaceKey, out int _FoundAtlasIndexBack, out Rect _FoundRectBack);
+                if (_FoundBack)
                 {
-                    IsDoubleFaced = true;
-                    ApplyAtlasTextureBack(_AtlasTextureBack);
+                    this.Log($"[SearchCard] Found back face for {_BackFaceKey} in atlas {_FoundAtlasIndexBack}");
+                    AtlasIndexBack = _FoundAtlasIndexBack;
+                    uvRectBack = _FoundRectBack;
+
+                    Texture2D _AtlasTextureBack = Manager.GetAtlasTexture(AtlasIndexBack);
+                    if (_AtlasTextureBack != null)
+                    {
+                        IsDoubleFaced = true;
+                        ApplyAtlasTextureBack(_AtlasTextureBack);
+                    }
+                    else
+                    {
+                        this.VerboseLog($"[SearchCard] Atlas texture {AtlasIndexBack} not loaded yet for back face");
+                    }
                 }
-            }
-            else if (!ImageBackLoaded)
-            {
-                IsDoubleFaced = false;
+                else
+                {
+                    this.VerboseLog($"[SearchCard] No back face found for {_BackFaceKey} (single-faced card)");
+                    IsDoubleFaced = false;
+                }
             }
 
             UpdateFlipVisibility();

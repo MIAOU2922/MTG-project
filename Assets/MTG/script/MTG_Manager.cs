@@ -94,7 +94,8 @@ namespace MTG
             CachedLegalities = new DataDictionary[0];
             CachedRulings = new DataList[0];
             ImageDownloader = new VRCImageDownloader();
-            LastAtlasInfoUpdate = Time.time;
+            // Initialiser LastAtlasInfoUpdate pour forcer un premier chargement rapide (apres 2 secondes)
+            LastAtlasInfoUpdate = Time.time - ATLAS_INFO_UPDATE_INTERVAL + 2f;
         }
         protected override void Update()
         {
@@ -113,19 +114,19 @@ namespace MTG
         }
         public override void OnMasterTransferred(VRCPlayerApi _NewMaster)
         {
-            this.VerboseLog("OnMasterTransferred called");
+            this.Log("OnMasterTransferred called");
             if (IsSyncing || !_NewMaster.isLocal || Agree) return;
             SyncInterface.Show();
         }
         public override void OnPlayerJoined(VRCPlayerApi _Player)
         {
-            this.VerboseLog("OnPlayerJoined called");
+            this.Log("OnPlayerJoined called");
             if (IsSyncing || !_Player.isLocal || Agree) return;
             SyncInterface.Show();
         }
         internal void JoinGame(bool _Show)
         {
-            this.VerboseLog("JoinGame called");
+            this.Log("JoinGame called");
             if (IsSyncing || Agree) return;
             if (InstanceID == -1)
                 VRCStringDownloader.LoadUrl(CreateURL, (IUdonEventReceiver)this);
@@ -136,7 +137,7 @@ namespace MTG
         // Udon events for VRCStringDownloader
         public override void OnStringLoadSuccess(IVRCStringDownload _Json)
         {
-            this.VerboseLog("OnStringLoadSuccess called");
+            this.Log("OnStringLoadSuccess called");
             if (_Json == null || _Json.Url == null) return;
 
             // Dispatch base sur l'URL (evite le parsing JSON couteux pour les grosses reponses)
@@ -207,14 +208,14 @@ namespace MTG
         {
             if (_Url == null || SearchURL == null)
             {
-                this.Log($"IsSearchURL: null check failed - _Url={(_Url==null)}, SearchURL={(SearchURL==null)}");
+                this.VerboseLog($"IsSearchURL: null check failed - _Url={(_Url==null)}, SearchURL={(SearchURL==null)}");
                 return false;
             }
             string _UrlStr = _Url.ToString();
             string _SearchStr = SearchURL.ToString();
             // Use IndexOf instead of StartsWith for Udon compatibility
             bool _Match = _UrlStr.IndexOf(_SearchStr) == 0;
-            this.Log($"IsSearchURL: Url='{_UrlStr}' vs SearchURL='{_SearchStr}' = {_Match}");
+            this.VerboseLog($"IsSearchURL: Url='{_UrlStr}' vs SearchURL='{_SearchStr}' = {_Match}");
             return _Match;
         }
 
@@ -249,7 +250,7 @@ namespace MTG
         // obtient le type de reponse
         public void ReponseType(IVRCStringDownload _Json, out String _Type)
         {
-            this.Log("ReponseType called");
+            this.VerboseLog("ReponseType called");
             _Type = "";
             String _JsonData = "";
             DataDictionary _Dict;
@@ -263,7 +264,7 @@ namespace MTG
         // verifie la reponse de creation d'instance
         private void IsCreateResponse(IVRCStringDownload _Json, out int _InstanceID)
         {
-            this.Log("IsCreateResponse called");
+            this.VerboseLog("IsCreateResponse called");
             String _JsonData = "";
             DataDictionary _Dict;
             _InstanceID = -1;
@@ -294,7 +295,7 @@ namespace MTG
         // verifie la reponse de join d'instance
         private void IsJoinResponse(IVRCStringDownload _Json, out bool _IsValid)
         {
-            this.Log("IsJoinResponse called");
+            this.VerboseLog("IsJoinResponse called");
             String _JsonData = "";
             bool urlFound = false;
             DataDictionary _Dict;
@@ -342,7 +343,7 @@ namespace MTG
         // verifie la reponse des tempsurls si json
         private void IsTempURLsResponse(IVRCStringDownload _Json)
         {
-            this.Log("IsTempURLsResponse called");
+            this.VerboseLog("IsTempURLsResponse called");
             if (_Json == null || _Json.Url == null) return;
             if (_Json.Url == TempURLs[0])
             {
@@ -364,13 +365,13 @@ namespace MTG
         // verifie la reponse de user
         private void IsUserResponse(IVRCStringDownload _Json)
         {
-            this.Log("IsUserResponse called");
+            this.VerboseLog("IsUserResponse called");
             // rien pour l'instant
         }
         // process card instance response (at0)
         private void ProcessCardInstanceResponse(IVRCStringDownload _Json)
         {
-            this.Log("ProcessCardInstanceResponse called");
+            this.VerboseLog("ProcessCardInstanceResponse called");
             String _JsonData = _Json.Result;
             DataToken _Token;
             DataDictionary _RootDict;
@@ -485,20 +486,20 @@ namespace MTG
         // process deck list response (at1)
         private void ProcessDeckListResponse(IVRCStringDownload _Json)
         {
-            this.Log("ProcessDeckListResponse called");
+            this.VerboseLog("ProcessDeckListResponse called");
 
         }
         // process set liste response (at2)
         private void ProcessSetListResponse(IVRCStringDownload _Json)
         {
-            this.Log("ProcessSetListResponse called");
+            this.VerboseLog("ProcessSetListResponse called");
 
         }
         // process oracle data response (at3)
         private void ProcessOracleDataResponse(IVRCStringDownload _Json)
         {
 
-            this.Log("ProcessOracleDataResponse called");
+            this.VerboseLog("ProcessOracleDataResponse called");
             String _JsonData = _Json.Result;
             DataToken _Token;
             DataDictionary _RootDict;
@@ -582,20 +583,58 @@ namespace MTG
         // met a jour l'image de l'atlas
         private void ProcessAtlasImage(IVRCImageDownload _Image, int _AtlasIndex)
         {
-            this.Log("ProcessAtlasImage called");
+            this.VerboseLog("ProcessAtlasImage called");
             if (_Image == null || _Image.Result == null) return;
             if (_AtlasIndex < 0 || _AtlasIndex >= AtlasImages.Length) return;
+            
             AtlasImages[_AtlasIndex] = _Image.Result;
             AtlasLoaded[_AtlasIndex] = true;
             AtlasLoading[_AtlasIndex] = false;
+            
+            // Compter les cartes disponibles dans cet atlas
+            int _CardCount = 0;
+            if (AtlasCardIds[_AtlasIndex] != null)
+            {
+                for (int i = 0; i < AtlasCardIds[_AtlasIndex].Length; i++)
+                {
+                    if (!string.IsNullOrEmpty(AtlasCardIds[_AtlasIndex][i]))
+                        _CardCount++;
+                }
+            }
+            
+            // Compter le nombre total d'atlas charges
+            int _LoadedCount = 0;
+            int _TotalWithData = 0;
+            for (int i = 0; i < AtlasLoaded.Length; i++)
+            {
+                if (AtlasCardIds[i] != null && AtlasCardIds[i].Length > 0)
+                {
+                    bool _HasCards = false;
+                    for (int j = 0; j < AtlasCardIds[i].Length; j++)
+                    {
+                        if (!string.IsNullOrEmpty(AtlasCardIds[i][j]))
+                        {
+                            _HasCards = true;
+                            break;
+                        }
+                    }
+                    if (_HasCards)
+                    {
+                        _TotalWithData++;
+                        if (AtlasLoaded[i]) _LoadedCount++;
+                    }
+                }
+            }
+            
+            this.Log($"Atlas {_AtlasIndex} loaded ({_CardCount} cards) - Progress: {_LoadedCount}/{_TotalWithData} atlas loaded");
         }
 
         // methodes for atlas management
         // met a jour les infos des atlas
         public void UpdateAtlasInfo()
         {
-            this.Log("UpdateAtlasInfo called");
-            if (InstanceID == -1) return;
+            this.Log($"UpdateAtlasInfo called (InstanceID={InstanceID})");
+            // Charger les infos des atlas meme sans instance pour permettre le mode offline/test
             VRCStringDownloader.LoadUrl(TempURLs[0], (IUdonEventReceiver)this);
             VRCStringDownloader.LoadUrl(TempURLs[3], (IUdonEventReceiver)this);
         }
@@ -612,11 +651,30 @@ namespace MTG
             if (!AtlasLoaded[_AtlasIndex]) return null;
             return AtlasImages[_AtlasIndex];
         }
+        
+        // Verifie si un atlas est en cours de chargement
+        public bool IsAtlasLoading(int _AtlasIndex)
+        {
+            if (_AtlasIndex < 0 || _AtlasIndex >= AtlasLoading.Length) return false;
+            return AtlasLoading[_AtlasIndex];
+        }
         // charge l'atlas a partir de l'url
         private void LoadAtlas(int _AtlasIndex)
         {
-            this.Log($"LoadAtlas called for atlasIndex: {_AtlasIndex}");
             if (_AtlasIndex < 0 || _AtlasIndex >= TempURLs.Length || AtlasLoading[_AtlasIndex]) return;
+            
+            // Compter les cartes dans cet atlas
+            int _CardCount = 0;
+            if (AtlasCardIds[_AtlasIndex] != null)
+            {
+                for (int i = 0; i < AtlasCardIds[_AtlasIndex].Length; i++)
+                {
+                    if (!string.IsNullOrEmpty(AtlasCardIds[_AtlasIndex][i]))
+                        _CardCount++;
+                }
+            }
+            
+            this.Log($"Downloading atlas {_AtlasIndex} ({_CardCount} cards)...");
             AtlasLoading[_AtlasIndex] = true;
             ImageDownloader.DownloadImage(TempURLs[_AtlasIndex], null, (IUdonEventReceiver)this);
         }
@@ -627,20 +685,28 @@ namespace MTG
             _AtlasIndex = -1;
             _UvRect = new Rect(0, 0, 1, 1);
             if (_CardId == "Debug") return true;
+            
+            // Compter les atlas avec des donnees
+            int _AtlasWithData = 0;
             for (int i = 0; i < AtlasCardIds.Length; i++)
             {
-                for (int j = 0; j < 24; j++)
+                if (AtlasCardIds[i] != null && AtlasCardIds[i].Length > 0)
                 {
-                    if (AtlasCardIds[i][j] == null) continue;
-                    if (AtlasCardIds[i][j] == _CardId)
+                    _AtlasWithData++;
+                    for (int j = 0; j < 24; j++)
                     {
-                        _AtlasIndex = i;
-                        _UvRect = AtlasCardRects[i][j];
-                        return true;
+                        if (AtlasCardIds[i][j] == null) continue;
+                        if (AtlasCardIds[i][j] == _CardId)
+                        {
+                            _AtlasIndex = i;
+                            _UvRect = AtlasCardRects[i][j];
+                            this.VerboseLog($"Found {_CardId} in atlas {i} slot {j}");
+                            return true;
+                        }
                     }
                 }
             }
-            this.VerboseLog($"CardId: {_CardId} not found in any atlas");
+            this.Log($"CardId: {_CardId} not found in any atlas ({_AtlasWithData} atlas with data available)");
             return false;
         }
 

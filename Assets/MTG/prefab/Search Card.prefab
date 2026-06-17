@@ -913,7 +913,7 @@ MonoBehaviour:
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 3312897141848936709}
   DEBUG: 1
-  VERBOSE_DEBUG: 0
+  VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
   CardImageFront: {fileID: 1390902743463539671}
@@ -937,6 +937,8 @@ MonoBehaviour:
     height: 0
   AtlasIndexBack: -1
   LastRetryTime: 0
+  RetryCount: 0
+  AtlasLoadingRetryCount: 0
   ImageFrontLoaded: 0
   ImageBackLoaded: 0
   IsFlipped: 0

@@ -285,6 +285,7 @@ MonoBehaviour:
   currentlyHeldBy: {fileID: 0}
   pickupable: 1
   proximity: 1
+  version: 0
 --- !u!114 &2230359939945930678
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -298,6 +299,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   AllowCollisionOwnershipTransfer: 1
+  ForceKinematicOnRemote: 0
 --- !u!114 &2727941083043436372
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -321,7 +323,7 @@ MonoBehaviour:
     SerializationNodes: []
   _udonSharpBackingUdonBehaviour: {fileID: 3938523990404209535}
   DEBUG: 1
-  VERBOSE_DEBUG: 0
+  VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_PhysicCard
   CardImageFront: {fileID: 5743712851070634336}
@@ -345,6 +347,8 @@ MonoBehaviour:
     height: 0
   AtlasIndexBack: -1
   LastRetryTime: 0
+  RetryCount: 0
+  AtlasLoadingRetryCount: 0
   ImageFrontLoaded: 0
   ImageBackLoaded: 0
   IsFlipped: 0
