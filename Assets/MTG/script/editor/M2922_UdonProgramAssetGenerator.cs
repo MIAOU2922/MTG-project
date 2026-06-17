@@ -16,8 +16,8 @@ namespace M2922.Editor
     {
         private Vector2 scrollPosition;
         private bool includeSubfolders = true;
-        private string targetFolder = "Assets/_MIAOU_/Script";
-        private string outputFolder = "Assets/_MIAOU_/UdonPrograms";
+        private string targetFolder = "Assets/MTG/Script";
+        private string outputFolder = "Assets/MTG/UdonPrograms";
         
         private List<ScriptInfo> foundScripts = new List<ScriptInfo>();
         private bool hasScanned = false;

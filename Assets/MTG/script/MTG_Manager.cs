@@ -113,19 +113,19 @@ namespace MTG
         }
         public override void OnMasterTransferred(VRCPlayerApi _NewMaster)
         {
-            this.Log("OnMasterTransferred called");
+            this.VerboseLog("OnMasterTransferred called");
             if (IsSyncing || !_NewMaster.isLocal || Agree) return;
             SyncInterface.Show();
         }
         public override void OnPlayerJoined(VRCPlayerApi _Player)
         {
-            this.Log("OnPlayerJoined called");
+            this.VerboseLog("OnPlayerJoined called");
             if (IsSyncing || !_Player.isLocal || Agree) return;
             SyncInterface.Show();
         }
         internal void JoinGame(bool _Show)
         {
-            this.Log("JoinGame called");
+            this.VerboseLog("JoinGame called");
             if (IsSyncing || Agree) return;
             if (InstanceID == -1)
                 VRCStringDownloader.LoadUrl(CreateURL, (IUdonEventReceiver)this);
@@ -136,7 +136,7 @@ namespace MTG
         // Udon events for VRCStringDownloader
         public override void OnStringLoadSuccess(IVRCStringDownload _Json)
         {
-            this.Log("OnStringLoadSuccess called");
+            this.VerboseLog("OnStringLoadSuccess called");
             if (_Json == null || _Json.Url == null) return;
 
             // Dispatch base sur l'URL (evite le parsing JSON couteux pour les grosses reponses)
@@ -159,10 +159,10 @@ namespace MTG
             }
             else if (IsSearchURL(_Json.Url))
             {
-                this.Log("IsSearchURL returned TRUE, dispatching to SearchInterface...");
+                this.VerboseLog("IsSearchURL returned TRUE, dispatching to SearchInterface...");
                 if (SearchInterface != null)
                 {
-                    this.Log("Calling SearchInterface.OnSearchResponse...");
+                    this.VerboseLog("Calling SearchInterface.OnSearchResponse...");
                     SearchInterface.OnSearchResponse(_Json);
                 }
                 else
@@ -177,7 +177,7 @@ namespace MTG
             else
             {
                 // Fallback: utiliser ReponseType pour "u" et autres types inconnus
-                this.Log($"OnStringLoadSuccess: URL did not match any known type. Url='{_Json.Url}'");
+                this.VerboseLog($"OnStringLoadSuccess: URL did not match any known type. Url='{_Json.Url}'");
                 String _Type = "";
                 ReponseType(_Json, out _Type);
                 switch (_Type)

@@ -116,8 +116,8 @@ namespace MTG
                     transform.rotation = _SyncedRotation;
                 }
 
-                // Appliquer la nouvelle cle de carte
-                if (!string.IsNullOrEmpty(_SyncedCardKey))
+                // Appliquer la nouvelle cle de carte seulement si differente
+                if (!string.IsNullOrEmpty(_SyncedCardKey) && CardKey != _SyncedCardKey)
                 {
                     base.SetCardKey(_SyncedCardKey);
                 }
@@ -140,7 +140,8 @@ namespace MTG
                     transform.rotation = _SyncedRotation;
                 }
 
-                if (!string.IsNullOrEmpty(_SyncedCardKey))
+                // Appliquer la cle seulement si differente
+                if (!string.IsNullOrEmpty(_SyncedCardKey) && CardKey != _SyncedCardKey)
                 {
                     base.SetCardKey(_SyncedCardKey);
                 }

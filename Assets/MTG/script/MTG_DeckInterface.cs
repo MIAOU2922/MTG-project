@@ -34,7 +34,7 @@ namespace MTG
         // callback pour les reponses de deck
         public override void OnDeckResponse(IVRCStringDownload _Json)
         {
-            this.Log("OnDeckResponse called in MTG_DeckInterface");
+            this.VerboseLog("OnDeckResponse called in MTG_DeckInterface");
             if (_Json == null || _Json.Result == null)
             {
                 this.Error("Deck response is null");
@@ -46,28 +46,27 @@ namespace MTG
 
         private void ProcessDeckResponse(IVRCStringDownload _Json)
         {
-            this.Log("ProcessDeckResponse called");
+            this.VerboseLog("ProcessDeckResponse called");
             // TODO: implementer le traitement de la reponse de deck
             // Parse le JSON et affiche le deck
         }
 
         public void OnCardPreviewRequest(string _CardKey)
         {
-            this.Log("OnCardPreviewRequest: " + _CardKey);
+            this.VerboseLog("OnCardPreviewRequest: " + _CardKey);
             MTG_DeckCard _PreviewCard;
             if (CardsPreview == null) return;
             _PreviewCard = CardsPreview.GetComponent<MTG_DeckCard>();
             if (_PreviewCard == null) return;
-            _PreviewCard.CardKey = _CardKey;
-            _PreviewCard.SetImageFromId();
+            _PreviewCard.SetCardKey(_CardKey);
         }
         public void OnCardCountChanged(string _CardKey, int _Count)
         {
-            this.Log($"OnCardCountChanged called for cardKey: {_CardKey} with count: {_Count}");
+            this.VerboseLog($"OnCardCountChanged called for cardKey: {_CardKey} with count: {_Count}");
         }
         public void OnCardRemoved(string _CardKey)
         {
-            this.Log($"OnCardRemoved called for cardKey: {_CardKey}");
+            this.VerboseLog($"OnCardRemoved called for cardKey: {_CardKey}");
         }
     }
 }

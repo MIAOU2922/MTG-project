@@ -295,8 +295,7 @@ namespace MTG
             if (CardsPreview == null) return;
             _PreviewCard = CardsPreview.GetComponent<MTG_SearchCard>();
             if (_PreviewCard == null) return;
-            _PreviewCard.CardKey = _CardKey;
-            _PreviewCard.SetImageFromId();
+            _PreviewCard.SetCardKey(_CardKey);
         }
 
         // Spawn une carte physique depuis la preview

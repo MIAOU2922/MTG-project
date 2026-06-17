@@ -43,7 +43,7 @@ namespace MTG
         // Envoie la requete au serveur via VRCUrlInputField (necessite validation utilisateur)
         public virtual void SendRequest()
         {
-            this.Log("SendRequest called (base implementation)");
+            this.VerboseLog("SendRequest called (base implementation)");
             if (ValidatedInput == null)
             {
                 this.Error("ValidatedInput is null - cannot send request");
@@ -58,7 +58,7 @@ namespace MTG
         // Callback appele automatiquement par VRCUrlInputField quand l'utilisateur valide l'URL
         public virtual void OnUrlValidated()
         {
-            this.Log("OnUrlValidated called (base implementation)");
+            this.VerboseLog("OnUrlValidated called (base implementation)");
             if (ValidatedInput == null)
             {
                 this.Error("ValidatedInput is null");
@@ -73,13 +73,13 @@ namespace MTG
             }
             
             string _UrlString = _ValidatedUrl.ToString();
-            this.Log($"User validated URL: {_UrlString}");
+            this.VerboseLog($"User validated URL: {_UrlString}");
             
             // Envoyer la requete au serveur via le Manager
             if (Manager != null)
             {
                 VRCStringDownloader.LoadUrl(_ValidatedUrl, (IUdonEventReceiver)Manager);
-                this.Log("Request sent to server via Manager");
+                this.VerboseLog("Request sent to server via Manager");
             }
             else
             {
@@ -90,12 +90,12 @@ namespace MTG
         // Methodes virtuelles pour les callbacks de reponse
         public virtual void OnSearchResponse(IVRCStringDownload _Json)
         {
-            this.Log("OnSearchResponse called (base implementation)");
+            this.VerboseLog("OnSearchResponse called (base implementation)");
         }
 
         public virtual void OnDeckResponse(IVRCStringDownload _Json)
         {
-            this.Log("OnDeckResponse called (base implementation)");
+            this.VerboseLog("OnDeckResponse called (base implementation)");
         }
 
 
