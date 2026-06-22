@@ -6,13 +6,13 @@ using System.Linq;
 using UdonSharpEditor;
 using UdonSharp;
 
-namespace M2922.Editor
+namespace MTG.Editor
 {
     /// <summary>
     /// Générateur automatique de Udon C# Program Assets
     /// Scanne tous les scripts héritant de UdonSharpBehaviour et crée les assets correspondants
     /// </summary>
-    public class M2922_UdonProgramAssetGenerator : EditorWindow
+    public class MTG_UdonProgramAssetGenerator : EditorWindow
     {
         private Vector2 scrollPosition;
         private bool includeSubfolders = true;
@@ -31,10 +31,10 @@ namespace M2922.Editor
             public UdonSharpProgramAsset existingAsset;
         }
         
-        [MenuItem("M2922/Udon/Generate Program Assets")]
+        [MenuItem("MTG/Udon/Generate Program Assets")]
         public static void ShowWindow()
         {
-            var window = GetWindow<M2922_UdonProgramAssetGenerator>("M2922 Udon Program Generator");
+            var window = GetWindow<MTG_UdonProgramAssetGenerator>("MTG Udon Program Generator");
             window.minSize = new Vector2(500, 400);
             window.Show();
         }
@@ -160,7 +160,7 @@ namespace M2922.Editor
             string searchPattern = includeSubfolders ? $"{targetFolder}/**/*.cs" : $"{targetFolder}/*.cs";
             string[] guids = AssetDatabase.FindAssets("t:MonoScript", new[] { targetFolder });
             
-            Debug.Log($"[M2922] Scanning for UdonSharp scripts in: {targetFolder}");
+            Debug.Log($"[MTG] Scanning for UdonSharp scripts in: {targetFolder}");
             
             foreach (string guid in guids)
             {
@@ -194,7 +194,7 @@ namespace M2922.Editor
             }
             
             hasScanned = true;
-            Debug.Log($"[M2922] Found {foundScripts.Count} UdonSharp scripts");
+            Debug.Log($"[MTG] Found {foundScripts.Count} UdonSharp scripts");
         }
         
         private UdonSharpProgramAsset FindExistingAsset(System.Type scriptType)
@@ -236,7 +236,7 @@ namespace M2922.Editor
             // Vérifier si un asset existe déjà à cet emplacement
             if (File.Exists(assetPath))
             {
-                Debug.LogWarning($"[M2922] Asset already exists at: {assetPath}");
+                Debug.LogWarning($"[MTG] Asset already exists at: {assetPath}");
                 return;
             }
             
@@ -248,7 +248,7 @@ namespace M2922.Editor
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             
-            Debug.Log($"[M2922] Created Udon Program Asset: {assetPath}");
+            Debug.Log($"[MTG] Created Udon Program Asset: {assetPath}");
             
             // Mettre à jour l'info
             scriptInfo.existingAsset = newAsset;
@@ -292,7 +292,7 @@ namespace M2922.Editor
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             
-            Debug.Log($"[M2922] Recompiled: {asset.name}");
+            Debug.Log($"[MTG] Recompiled: {asset.name}");
         }
         
         private void RecompileAllAssets()

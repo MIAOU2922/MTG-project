@@ -51,6 +51,10 @@ namespace MTG
         public UnityEngine.UI.Button SpawnCard_Button;
         public UnityEngine.UI.Button AddToDeck_Button;
 
+        [Header("=== POOL SETTINGS ===")]
+        [Tooltip("Nombre maximum de cartes dans l'interface de recherche (pool reusable).")]
+        public int MaxSearchCards = 256;
+
         [Header("=== PHYSIC CARD SPAWN ===")]
         [Tooltip("Point de spawn pour les cartes physiques. Si vide, spawn devant le joueur.")]
         public Transform PhysicCardSpawnPoint;
@@ -75,22 +79,68 @@ namespace MTG
         private int InstantiatedCardsCount = 0;
         private string[] CardKeys = new string[256];
         private int CardKeysCount = 0;
-        private bool IsDeletingOldCards = false;
-        private bool ClearAllRequested = false;
-        private int DeleteIndex = 0;
-        private float NextDeleteTime = 0f;
-        private const float DELETE_INTERVAL = 0.1f;
         private const float LOAD_INTERVAL = 0.15f;
-        private const int CARDS_PER_BATCH = 3;
+        private const int CARDS_PER_BATCH = 8;
+
+        // Card pool (replaces instantiate/destroy for better performance)
+        private GameObject[] CardPool;
+        private bool PoolInitialized = false;
 
         // Deferred JSON parsing (evite de depasser le budget temps VM Udon)
         private string PendingJsonData = null;
 
         //methodes
+#if !COMPILER_UDONSHARP && UNITY_EDITOR
+
+        // validation dans l'editeur
+        protected virtual void OnValidate()
+        {
+            base.OnValidate();
+            ForceInitializeCardPool();
+        }
+#endif
         protected override void Start()
         {
             base.Start();
+            InitializeCardPool();
         }
+
+        private void ForceInitializeCardPool()
+        {
+            PoolInitialized = false; // Force la reinitialisation
+            InitializeCardPool();
+        }
+        // Initialise le pool de cartes (pre-instantie toutes les cartes une seule fois)
+        private void InitializeCardPool()
+        {
+            if (PoolInitialized) return;
+            if (CardPrefab == null || CardsParent == null)
+            {
+                this.Error("CardPrefab or CardsParent is null, cannot initialize pool");
+                return;
+            }
+
+            // Detruire les anciens enfants si presents (transition vers le pool)
+            while (CardsParent.childCount > 0)
+            {
+                GameObject _OldChild = CardsParent.GetChild(0).gameObject;
+                Destroy(_OldChild);
+            }
+
+            CardPool = new GameObject[MaxSearchCards];
+
+            for (int i = 0; i < MaxSearchCards; i++)
+            {
+                GameObject _Card = Instantiate(CardPrefab);
+                _Card.transform.SetParent(CardsParent, false);
+                _Card.SetActive(false);
+                CardPool[i] = _Card;
+            }
+
+            PoolInitialized = true;
+            this.Log($"Card pool initialized with {MaxSearchCards} cards");
+        }
+
         protected override void Update()
         {
             base.Update();
@@ -102,13 +152,8 @@ namespace MTG
                 return; // ne rien faire d'autre ce frame
             }
 
-            // Suppression progressive des anciennes cartes
-            if ((IsDeletingOldCards || ClearAllRequested) && Time.time >= NextDeleteTime)
-            {
-                DeleteNextBatchOfCards();
-            }
             // Chargement progressif des nouvelles cartes
-            else if (CardsToLoad != null && CurrentLoadIndex < CardsToLoad.Count && Time.time >= NextLoadTime)
+            if (CardsToLoad != null && CurrentLoadIndex < CardsToLoad.Count && Time.time >= NextLoadTime)
             {
                 LoadNextBatchOfCards();
             }
@@ -322,28 +367,12 @@ namespace MTG
             Vector3 _SpawnPos;
             Quaternion _SpawnRot;
 
-            if (PhysicCardSpawnPoint != null)
+            if (PhysicCardSpawnPoint == null)
             {
-                _SpawnPos = PhysicCardSpawnPoint.position;
-                _SpawnRot = PhysicCardSpawnPoint.rotation;
+                this.Error("PhysicCardSpawnPoint not set ");
             }
-            else
-            {
-                // Spawn devant le joueur local
-                VRCPlayerApi _Player = Networking.LocalPlayer;
-                if (_Player != null)
-                {
-                    Vector3 _PlayerPos = _Player.GetPosition();
-                    Vector3 _Forward = _Player.GetRotation() * Vector3.forward;
-                    _SpawnPos = _PlayerPos + _Forward * 1.5f + Vector3.up * 1.0f;
-                    _SpawnRot = Quaternion.LookRotation(_Forward);
-                }
-                else
-                {
-                    _SpawnPos = Vector3.zero;
-                    _SpawnRot = Quaternion.identity;
-                }
-            }
+            _SpawnPos = PhysicCardSpawnPoint.position;
+            _SpawnRot = PhysicCardSpawnPoint.rotation;
 
             // Spawn via le Manager → PhysicCardPool
             if (Manager == null)
@@ -518,136 +547,79 @@ namespace MTG
             return _Code.Trim();
         }
 
-        // Supprime toutes les cartes existantes (lance la suppression progressive)
+        // Supprime toutes les cartes existantes (desactive et reset le pool)
         public void ClearAllCards()
         {
             this.Log("ClearAllCards called");
-            if (CardsParent == null)
+
+            // Desactiver et reset toutes les cartes du pool
+            if (CardPool != null)
             {
-                this.Log("CardsParent is null, resetting arrays only");
-                for (int i = 0; i < InstantiatedCards.Length; i++)
-                    InstantiatedCards[i] = null;
-                InstantiatedCardsCount = 0;
-                for (int i = 0; i < CardKeys.Length; i++)
-                    CardKeys[i] = null;
-                CardKeysCount = 0;
-                return;
-            }
-
-            if (CardsParent.childCount == 0)
-            {
-                this.Log("No cards to clear");
-                for (int i = 0; i < InstantiatedCards.Length; i++)
-                    InstantiatedCards[i] = null;
-                InstantiatedCardsCount = 0;
-                for (int i = 0; i < CardKeys.Length; i++)
-                    CardKeys[i] = null;
-                CardKeysCount = 0;
-                return;
-            }
-
-            ClearAllRequested = true;
-            IsDeletingOldCards = true;
-            DeleteIndex = 0;
-            NextDeleteTime = Time.time;
-            this.Log($"Progressive clear started - {CardsParent.childCount} children to delete");
-        }
-
-        // Suppression progressive par lots
-        private void DeleteNextBatchOfCards()
-        {
-            if (!IsDeletingOldCards && !ClearAllRequested)
-                return;
-
-            if (ClearAllRequested)
-            {
-                if (CardsParent == null || CardsParent.childCount == 0)
+                for (int i = 0; i < MaxSearchCards; i++)
                 {
-                    for (int i = 0; i < InstantiatedCards.Length; i++)
-                        InstantiatedCards[i] = null;
-                    InstantiatedCardsCount = 0;
-                    for (int i = 0; i < CardKeys.Length; i++)
-                        CardKeys[i] = null;
-                    CardKeysCount = 0;
-                    IsDeletingOldCards = false;
-                    ClearAllRequested = false;
-                    DeleteIndex = 0;
-                    CurrentLoadIndex = 0;
-                    this.Log("All cards cleared (progressive)");
-                    return;
-                }
-
-                int _ChildrenToDelete = Mathf.Min(6, CardsParent.childCount);
-                for (int i = 0; i < _ChildrenToDelete; i++)
-                {
-                    if (CardsParent.childCount > 0)
+                    if (CardPool[i] != null)
                     {
-                        GameObject _Child = CardsParent.GetChild(CardsParent.childCount - 1).gameObject;
-                        Destroy(_Child);
+                        MTG_SearchCard _CardComp = CardPool[i].GetComponent<MTG_SearchCard>();
+                        if (_CardComp != null) _CardComp.ResetCardKey();
+                        CardPool[i].SetActive(false);
                     }
                 }
-                this.Log($"Deleted {_ChildrenToDelete} cards, {CardsParent.childCount} remaining");
-                NextDeleteTime = Time.time + DELETE_INTERVAL;
-                return;
             }
 
-            if (DeleteIndex >= InstantiatedCardsCount || InstantiatedCardsCount == 0)
-            {
-                IsDeletingOldCards = false;
-                DeleteIndex = 0;
-                CurrentLoadIndex = 0;
-                NextLoadTime = Time.time + LOAD_INTERVAL;
-                return;
-            }
+            // Reset les tableaux de suivi
+            for (int i = 0; i < InstantiatedCards.Length; i++)
+                InstantiatedCards[i] = null;
+            InstantiatedCardsCount = 0;
+            for (int i = 0; i < CardKeys.Length; i++)
+                CardKeys[i] = null;
+            CardKeysCount = 0;
 
-            int _CardsToDelete = Mathf.Min(CARDS_PER_BATCH, InstantiatedCardsCount - DeleteIndex);
-            for (int i = 0; i < _CardsToDelete; i++)
-            {
-                int _CardIndex = DeleteIndex + i;
-                if (_CardIndex >= 0 && _CardIndex < InstantiatedCards.Length && InstantiatedCards[_CardIndex] != null)
-                {
-                    Destroy(InstantiatedCards[_CardIndex]);
-                    InstantiatedCards[_CardIndex] = null;
-                }
-            }
-            DeleteIndex += _CardsToDelete;
-            NextDeleteTime = Time.time + DELETE_INTERVAL;
+            CurrentLoadIndex = 0;
+
+            this.Log("All cards cleared (pool reset)");
         }
 
-        // Chargement progressif des cartes par lots
+        // Chargement progressif des cartes par lots (utilise le pool reusable)
         private void LoadNextBatchOfCards()
         {
             if (CardsToLoad == null || CurrentLoadIndex >= CardsToLoad.Count)
                 return;
 
-            if (IsDeletingOldCards)
-                return;
-
-            if (CardPrefab == null || CardsParent == null)
+            if (!PoolInitialized || CardPool == null)
             {
-                this.Error("CardPrefab or CardsParent is null");
+                this.Error("Card pool not initialized");
                 return;
             }
 
-            int _CardsInBatch = Mathf.Min(CARDS_PER_BATCH, CardsToLoad.Count - CurrentLoadIndex);
+            int _MaxToLoad = Mathf.Min(CardsToLoad.Count, MaxSearchCards);
+            int _CardsInBatch = Mathf.Min(CARDS_PER_BATCH, _MaxToLoad - CurrentLoadIndex);
 
             for (int i = 0; i < _CardsInBatch; i++)
             {
                 int _CardIndex = CurrentLoadIndex + i;
-                if (_CardIndex >= CardsToLoad.Count) break;
+                if (_CardIndex >= _MaxToLoad) break;
 
                 if (CardsToLoad[_CardIndex].TokenType != TokenType.DataDictionary) continue;
                 DataDictionary _CardDict = CardsToLoad[_CardIndex].DataDictionary;
 
-                GameObject _Card = Instantiate(CardPrefab);
-                _Card.transform.SetParent(CardsParent, false);
+                // Prendre une carte du pool et l'activer
+                GameObject _Card = CardPool[_CardIndex];
+                if (_Card == null) continue;
+                _Card.SetActive(true);
 
                 MTG_SearchCard _CardComp = _Card.GetComponent<MTG_SearchCard>();
                 if (_CardComp != null)
                 {
                     _CardComp.Manager = Manager;
                     _CardComp.SearchInterface = this;
-                    _CardComp.SetData(_CardDict);
+
+                    // Extraire l'ID depuis le JSON et utiliser SetCardKey pour lancer le chargement
+                    string _CardId = "";
+                    if (_CardDict.TryGetValue("id", out DataToken _IdToken))
+                    {
+                        _CardId = _IdToken.String;
+                    }
+                    _CardComp.SetCardKey(_CardId);
                 }
 
                 if (InstantiatedCardsCount < InstantiatedCards.Length)
@@ -664,13 +636,25 @@ namespace MTG
 
             CurrentLoadIndex += _CardsInBatch;
 
-            if (CurrentLoadIndex < CardsToLoad.Count)
+            if (CurrentLoadIndex < _MaxToLoad)
             {
                 NextLoadTime = Time.time + LOAD_INTERVAL;
             }
             else
             {
-                this.Log($"All {CardsToLoad.Count} cards loaded");
+                this.Log($"{_MaxToLoad} cards loaded from pool");
+
+                // Desactiver les cartes du pool non utilisees
+                for (int i = _MaxToLoad; i < MaxSearchCards; i++)
+                {
+                    if (CardPool[i] != null)
+                    {
+                        MTG_SearchCard _CardComp = CardPool[i].GetComponent<MTG_SearchCard>();
+                        if (_CardComp != null) _CardComp.ResetCardKey();
+                        CardPool[i].SetActive(false);
+                    }
+                }
+
                 CardsToLoad = null;
 
                 // Rafraichir les donnees d'atlas pour que les cartes puissent charger leurs images

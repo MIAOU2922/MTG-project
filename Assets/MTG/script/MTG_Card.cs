@@ -15,6 +15,7 @@ namespace MTG
         [Header("=== REFERENCES ===")]
         public RawImage CardImageFront;
         public RawImage CardImageBack;
+        public Texture2D CardImagePlaceholder;
         public GameObject Loading;
         public GameObject FlipButton;
         public String CardKey = "";
@@ -92,6 +93,34 @@ namespace MTG
                 this.VerboseLog($"SetCardKey: already loaded {_CardKey}, skipping");
                 return;
             }
+            
+            // Si la cle est vide ou DEBUG, afficher le placeholder
+            if (string.IsNullOrEmpty(_CardKey) || _CardKey == "DEBUG")
+            {
+                CardKey = _CardKey;
+                CardOracleKey = "";
+                ImageFrontLoaded = true;  // Marque comme charge pour eviter les retry
+                ImageBackLoaded = false;
+                IsFlipped = false;
+                IsDoubleFaced = false;
+                LastRetryTime = -RETRY_INTERVAL;
+                RetryCount = 0;
+                AtlasLoadingRetryCount = 0;
+                UpdateFlipVisibility();
+
+                // Appliquer le placeholder
+                if (CardImageFront != null)
+                {
+                    if (CardImagePlaceholder != null)
+                    {
+                        CardImageFront.texture = CardImagePlaceholder;
+                    }
+                    CardImageFront.uvRect = new Rect(0, 0, 1, 1);
+                }
+                if (Loading != null) Loading.SetActive(false);
+                return;
+            }
+            
             CardKey = _CardKey;
             CardOracleKey = "";
             if (Loading != null)
@@ -117,6 +146,12 @@ namespace MTG
             this.VerboseLog($"GetCardKey called for cardKey: {CardKey}");
             return CardKey;
         }
+        public void ResetCardKey()
+        {
+            SetCardKey("");
+        }
+
+
         // definie l'oracle_id de la carte ( CardOracleKey )
         public void SetCardOracleKey(String _CardOracleKey)
         {

@@ -44,10 +44,13 @@ namespace MTG
                 _ScriptName = this.GetType().Name;
             if (Manager == null) TryFindManager();
             SetDebugFlags();
+            this.Warning("OnValidate called");
         }
 #endif
         protected virtual void Start()
         {
+            if (string.IsNullOrEmpty(_ScriptName))
+            _ScriptName = this.GetType().Name;
             if (Manager == null) TryFindManager();
             SetDebugFlags();
         }

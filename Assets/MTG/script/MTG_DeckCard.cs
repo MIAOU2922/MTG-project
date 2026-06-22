@@ -22,7 +22,6 @@ namespace MTG
         // recherche le deck interface dans la scene
         private void TryFindDeckInterface()
         {
-            this.VerboseLog($"TryFindDeckInterface called for cardKey: {CardKey}");
             GameObject _DeckInterfaceObj = GameObject.Find("Deck Interface");
             if (_DeckInterfaceObj == null) return;
             DeckInterface = _DeckInterfaceObj.GetComponent< MTG_DeckInterface>();

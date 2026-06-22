@@ -19,7 +19,7 @@ namespace MTG
         [Tooltip("Parent des cartes instanciees")]
         public Transform CardsParent;
         [Tooltip("Taille max de la pool")]
-        public int PoolSize = 50;
+        public int PoolSize = 8096;
         [Tooltip("Cartes pre-instanciées dans la scène (optionnel). Si vide, le prefab sera instancié au runtime.")]
         public GameObject[] PreInstantiatedCards;
 
