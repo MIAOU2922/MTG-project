@@ -31,7 +31,7 @@ namespace MTG.Editor
             public UdonSharpProgramAsset existingAsset;
         }
         
-        [MenuItem("MTG/Udon/Generate Program Assets")]
+        [MenuItem("M2922/Udon/Generate Program Assets")]
         public static void ShowWindow()
         {
             var window = GetWindow<MTG_UdonProgramAssetGenerator>("MTG Udon Program Generator");
