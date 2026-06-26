@@ -44,7 +44,7 @@ namespace MTG
                 _ScriptName = this.GetType().Name;
             if (Manager == null) TryFindManager();
             SetDebugFlags();
-            this.Warning("OnValidate called");
+            //this.Warning("OnValidate called");
         }
 #endif
         protected virtual void Start()

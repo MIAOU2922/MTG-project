@@ -54,10 +54,6 @@ namespace MTG
                     {
                         // Atlas en cours de telechargement - ne pas compter comme retry
                         AtlasLoadingRetryCount++;
-                        if (AtlasLoadingRetryCount % 3 == 0) // Log tous les 30 secondes
-                        {
-                            this.Log($"Waiting for atlas download... ({AtlasLoadingRetryCount * RETRY_INTERVAL}s) - {CardKey}");
-                        }
                     }
                     else
                     {
@@ -69,7 +65,8 @@ namespace MTG
                             if (Loading != null) Loading.SetActive(false);
                             return;
                         }
-                        this.Log($"Retry {RetryCount}/{MAX_RETRY_COUNT} loading card {CardKey}");
+                        if (RetryCount <= 2 || RetryCount % 5 == 0)
+                            this.Log($"Retry {RetryCount}/{MAX_RETRY_COUNT} loading card {CardKey}");
                     }
                     
                     SetImageFromId();
@@ -130,16 +127,12 @@ namespace MTG
             ImageBackLoaded = false;
             IsFlipped = false;
             IsDoubleFaced = false;
-            LastRetryTime = -RETRY_INTERVAL;
+            LastRetryTime = Time.time + 2f; // attendre 2s avant premier retry (temps que l'atlas charge)
             RetryCount = 0; // Reset retry counter
             AtlasLoadingRetryCount = 0; // Reset atlas loading counter
             UpdateFlipVisibility();
             
-            // IMPORTANT: Demarrer le chargement de l'image immediatement
-            if (!string.IsNullOrEmpty(CardKey) && Manager != null)
-            {
-                SetImageFromId();
-            }
+            // Le chargement de l'image sera declenche par Update() apres le delai
         }
         public String GetCardKey()
         {

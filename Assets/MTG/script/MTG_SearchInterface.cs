@@ -81,13 +81,25 @@ namespace MTG
         private int CardKeysCount = 0;
         private const float LOAD_INTERVAL = 0.15f;
         private const int CARDS_PER_BATCH = 8;
-
-        // Card pool (replaces instantiate/destroy for better performance)
         private GameObject[] CardPool;
         private bool PoolInitialized = false;
-
-        // Deferred JSON parsing (evite de depasser le budget temps VM Udon)
         private string PendingJsonData = null;
+
+        // Progressive pool initialization (evite crash VM Udon)
+        private bool PoolInitInProgress = false;
+        private int PoolInitPhase = 0;      // 0=cleanup, 1=instantiate
+        private int PoolInitIndex = 0;
+        private float PoolInitNextTime = 0f;
+        private const float POOL_INIT_INTERVAL = 0.1f;
+        private const int POOL_INIT_BATCH = 32;
+
+        // Progressive set loading for dropdown
+        private DataList SetsToLoad;
+        private int CurrentSetLoadIndex = 0;
+        private float NextSetLoadTime = 0f;
+        private bool IsLoadingSets = false;
+        private const float SET_LOAD_INTERVAL = 0.05f;
+        private const int SETS_PER_BATCH = 50;
 
         //methodes
 #if !COMPILER_UDONSHARP && UNITY_EDITOR
@@ -96,56 +108,104 @@ namespace MTG
         protected virtual void OnValidate()
         {
             base.OnValidate();
-            ForceInitializeCardPool();
+            //ForceInitializeCardPool();
         }
 #endif
         protected override void Start()
         {
             base.Start();
-            InitializeCardPool();
+            VRCStringDownloader.LoadUrl(Manager.TempURLs[2], (IUdonEventReceiver)this);
         }
 
+        [ContextMenu("Force Initialize Card Pool")]
         private void ForceInitializeCardPool()
         {
-            PoolInitialized = false; // Force la reinitialisation
-            InitializeCardPool();
-        }
-        // Initialise le pool de cartes (pre-instantie toutes les cartes une seule fois)
-        private void InitializeCardPool()
-        {
             if (PoolInitialized) return;
-            if (CardPrefab == null || CardsParent == null)
+            PoolInitInProgress = true;
+            PoolInitPhase = 0;
+            PoolInitIndex = 0;
+            PoolInitNextTime = Time.time;
+        }
+
+        // Initialisation progressive du pool (appelee depuis Update)
+        private void ProcessPoolInit()
+        {
+            if (!PoolInitInProgress || Time.time < PoolInitNextTime) return;
+
+            // Phase 0: detruire les anciens enfants par lots
+            if (PoolInitPhase == 0)
             {
-                this.Error("CardPrefab or CardsParent is null, cannot initialize pool");
+                if (CardsParent == null)
+                {
+                    this.Error("CardsParent is null, cannot init pool");
+                    PoolInitInProgress = false;
+                    return;
+                }
+                if (CardsParent.childCount == 0)
+                {
+                    PoolInitPhase = 1;
+                    PoolInitIndex = 0;
+                    PoolInitNextTime = Time.time;
+                    return;
+                }
+                GameObject _OldChild = CardsParent.GetChild(0).gameObject;
+                Destroy(_OldChild);
+                PoolInitNextTime = Time.time + 0.02f;
                 return;
             }
 
-            // Detruire les anciens enfants si presents (transition vers le pool)
-            while (CardsParent.childCount > 0)
+            // Phase 1: instancier les cartes du pool par lots
+            if (PoolInitPhase == 1)
             {
-                GameObject _OldChild = CardsParent.GetChild(0).gameObject;
-                Destroy(_OldChild);
+                if (CardPrefab == null)
+                {
+                    this.Error("CardPrefab is null, cannot init pool");
+                    PoolInitInProgress = false;
+                    return;
+                }
+                if (PoolInitIndex == 0)
+                {
+                    CardPool = new GameObject[MaxSearchCards];
+                    if (CardPrefab.activeSelf)
+                        CardPrefab.SetActive(false);
+                }
+                int _End = Mathf.Min(PoolInitIndex + POOL_INIT_BATCH, MaxSearchCards);
+                for (int i = PoolInitIndex; i < _End; i++)
+                {
+                    CardPool[i] = Instantiate(CardPrefab, CardsParent, false);
+                }
+                PoolInitIndex = _End;
+                if (PoolInitIndex >= MaxSearchCards)
+                {
+                    CardPrefab.SetActive(true);
+                    PoolInitInProgress = false;
+                    PoolInitialized = true;
+                    this.Log($"Card pool initialized with {MaxSearchCards} cards (progressive)");
+                }
+                else
+                {
+                    PoolInitNextTime = Time.time + POOL_INIT_INTERVAL;
+                }
             }
-
-            CardPool = new GameObject[MaxSearchCards];
-
-            for (int i = 0; i < MaxSearchCards; i++)
-            {
-                GameObject _Card = Instantiate(CardPrefab);
-                _Card.transform.SetParent(CardsParent, false);
-                _Card.SetActive(false);
-                CardPool[i] = _Card;
-            }
-
-            PoolInitialized = true;
-            this.Log($"Card pool initialized with {MaxSearchCards} cards");
         }
 
         protected override void Update()
         {
             base.Update();
 
-            // Parsing JSON differe (evite depassement budget VM Udon dans le callback)
+            // Initialisation progressive du pool de cartes
+            if (PoolInitInProgress)
+            {
+                ProcessPoolInit();
+                return; // ne rien faire d'autre tant que le pool n'est pas pret
+            }
+
+            // Chargement progressif des sets dans le dropdown
+            if (IsLoadingSets && Time.time >= NextSetLoadTime)
+            {
+                LoadNextBatchOfSets();
+            }
+
             if (!string.IsNullOrEmpty(PendingJsonData))
             {
                 ParseAndQueueCards();
@@ -158,11 +218,10 @@ namespace MTG
                 LoadNextBatchOfCards();
             }
         }
-
-        // Appele par un bouton UI pour generer et afficher l'URL de recherche
-        public void OnSearchButtonClicked()
+        //placeholder pour GenerateUrl pour les element UI
+        public void OnEndEdit()
         {
-            this.Log("OnSearchButtonClicked called");
+            this.Log("OnEndEdit called");
             GenerateUrl();
         }
 
@@ -197,16 +256,27 @@ namespace MTG
             VRCStringDownloader.LoadUrl(_UrlToSend, (IUdonEventReceiver)this);
         }
 
-        // OnStringLoadSuccess specifique a SearchInterface (recoit les reponses de recherche directement)
+        // OnStringLoadSuccess specifique a SearchInterface (recoit les reponses de recherche ET set list)
         public override void OnStringLoadSuccess(IVRCStringDownload _Json)
         {
             this.Log("MTG_SearchInterface.OnStringLoadSuccess called");
-            if (_Json == null || _Json.Result == null)
+            if (_Json == null || _Json.Url == null || _Json.Result == null)
             {
-                this.Error("Search response is null");
+                this.Error("Response or URL is null");
                 return;
             }
-            OnSearchResponse(_Json);
+
+            // Dispatch: TempURLs[2] = set list, sinon = search response
+            if (Manager != null && Manager.TempURLs != null && _Json.Url == Manager.TempURLs[2])
+            {
+                this.Log("Dispatching to ProcessSetListResponse");
+                ProcessSetListResponse(_Json);
+            }
+            else
+            {
+                this.Log("Dispatching to OnSearchResponse");
+                OnSearchResponse(_Json);
+            }
         }
 
         // Override de OnUrlValidated pour valider que l'URL est bien une URL de recherche
@@ -287,6 +357,153 @@ namespace MTG
 
             // Supprimer les anciennes cartes (operation legere, juste des flags)
             ClearAllCards();
+        }
+
+        // Traite la reponse de la liste des sets (TempURLs[2]) et remplit le SetDropdown
+        // Format JSON: { "count": N, "sets": ["Nom du set (code)", ...] }
+        private void ProcessSetListResponse(IVRCStringDownload _Json)
+        {
+            this.Log("ProcessSetListResponse called");
+            if (_Json == null || _Json.Result == null)
+            {
+                this.Error("Set list response is null");
+                return;
+            }
+            string _JsonData = _Json.Result;
+            if (!VRCJson.TryDeserializeFromJson(_JsonData, out DataToken _Token))
+            {
+                this.Error("Error parsing set list JSON");
+                return;
+            }
+            if (_Token.TokenType != TokenType.DataDictionary)
+            {
+                this.Error("Set list response is not a DataDictionary");
+                return;
+            }
+            DataDictionary _RootDict = _Token.DataDictionary;
+
+            // Naviguer: root → "data"
+            if (!_RootDict.TryGetValue("data", out _Token) || _Token.TokenType != TokenType.DataDictionary)
+            {
+                this.Error("Invalid or missing 'data' in set list response");
+                return;
+            }
+            DataDictionary _DataDict = _Token.DataDictionary;
+
+            // Lire count et sets dans "data"
+            int _TotalCount = 0;
+            if (_DataDict.TryGetValue("count", out DataToken _CountToken))
+                _TotalCount = (int)_CountToken.Double;
+
+            if (!_DataDict.TryGetValue("sets", out _Token) || _Token.TokenType != TokenType.DataList)
+            {
+                this.Error("Invalid or missing 'sets' in set list response");
+                return;
+            }
+            DataList _SetsList = _Token.DataList;
+            this.Log($"Set list: {_SetsList.Count} entries (total: {_TotalCount})");
+
+            if (SetDropdown == null)
+            {
+                this.Error("SetDropdown is null, cannot populate");
+                return;
+            }
+
+            // Compter les entrees valides et preparer SetDropdownCodes
+            int _ValidCount = 1; // +1 pour "(no filter)"
+            for (int i = 0; i < _SetsList.Count; i++)
+            {
+                if (_SetsList[i].TokenType == TokenType.String)
+                    _ValidCount++;
+            }
+
+            string[] _NewCodes = new string[_ValidCount];
+            _NewCodes[0] = ""; // index 0 = pas de filtre
+
+            // Extraire les codes pour SetDropdownCodes
+            int _CodeIdx = 1;
+            for (int i = 0; i < _SetsList.Count; i++)
+            {
+                if (_SetsList[i].TokenType != TokenType.String) continue;
+                string _Entry = _SetsList[i].String;
+
+                // Parser "Nom du set (code)"
+                string _SetCode = "";
+                int _ParenOpen = _Entry.LastIndexOf('(');
+                int _ParenClose = _Entry.LastIndexOf(')');
+                if (_ParenOpen >= 0 && _ParenClose > _ParenOpen)
+                {
+                    _SetCode = _Entry.Substring(_ParenOpen + 1, _ParenClose - _ParenOpen - 1);
+                }
+                _NewCodes[_CodeIdx] = _SetCode;
+                _CodeIdx++;
+            }
+            SetDropdownCodes = _NewCodes;
+
+            // Initialiser le dropdown avec juste "(no filter)"
+            SetDropdown.ClearOptions();
+            string[] _InitialOptions = new string[1];
+            _InitialOptions[0] = "(no filter)";
+            SetDropdown.AddOptions(_InitialOptions);
+
+            // Demarrer le chargement progressif
+            SetsToLoad = _SetsList;
+            CurrentSetLoadIndex = 0;
+            IsLoadingSets = true;
+            NextSetLoadTime = Time.time + SET_LOAD_INTERVAL;
+
+            this.Log($"Set dropdown init with {_ValidCount} total sets, loading progressively");
+        }
+
+        // Chargement progressif des sets dans le dropdown par batches
+        private void LoadNextBatchOfSets()
+        {
+            if (SetsToLoad == null || CurrentSetLoadIndex >= SetsToLoad.Count)
+            {
+                IsLoadingSets = false;
+                this.Log($"Set dropdown fully loaded with {SetDropdownCodes.Length} options");
+                return;
+            }
+
+            int _SetsInBatch = Mathf.Min(SETS_PER_BATCH, SetsToLoad.Count - CurrentSetLoadIndex);
+
+            // Compter les strings valides dans ce batch
+            int _ValidInBatch = 0;
+            for (int i = 0; i < _SetsInBatch; i++)
+            {
+                int _Idx = CurrentSetLoadIndex + i;
+                if (_Idx < SetsToLoad.Count && SetsToLoad[_Idx].TokenType == TokenType.String)
+                    _ValidInBatch++;
+            }
+
+            if (_ValidInBatch > 0)
+            {
+                string[] _BatchOptions = new string[_ValidInBatch];
+                int _BatchIdx = 0;
+                for (int i = 0; i < _SetsInBatch; i++)
+                {
+                    int _Idx = CurrentSetLoadIndex + i;
+                    if (_Idx >= SetsToLoad.Count) break;
+                    if (SetsToLoad[_Idx].TokenType != TokenType.String) continue;
+                    _BatchOptions[_BatchIdx] = SetsToLoad[_Idx].String;
+                    _BatchIdx++;
+                }
+
+                SetDropdown.AddOptions(_BatchOptions);
+                this.Log($"Added {_BatchIdx} sets (progress: {CurrentSetLoadIndex + _SetsInBatch}/{SetsToLoad.Count})");
+            }
+
+            CurrentSetLoadIndex += _SetsInBatch;
+
+            if (CurrentSetLoadIndex < SetsToLoad.Count)
+            {
+                NextSetLoadTime = Time.time + SET_LOAD_INTERVAL;
+            }
+            else
+            {
+                IsLoadingSets = false;
+                this.Log($"Set dropdown fully loaded with {SetDropdownCodes.Length} options");
+            }
         }
 
         // Parse le JSON et met en file les cartes a charger (appele depuis Update)
@@ -587,8 +804,12 @@ namespace MTG
 
             if (!PoolInitialized || CardPool == null)
             {
-                this.Error("Card pool not initialized");
-                return;
+                if (!PoolInitInProgress)
+                {
+                    this.Log("Card pool not ready, starting progressive init...");
+                    ForceInitializeCardPool();
+                }
+                return; // reessayera au prochain Update
             }
 
             int _MaxToLoad = Mathf.Min(CardsToLoad.Count, MaxSearchCards);

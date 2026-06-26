@@ -100,6 +100,7 @@ namespace MTG
         protected override void Update()
         {
             base.Update();
+            if (IsSyncing || !Agree) return;
             if (Time.time - LastAtlasInfoUpdate >= ATLAS_INFO_UPDATE_INTERVAL)
             {
                 LastAtlasInfoUpdate = Time.time;
@@ -633,8 +634,8 @@ namespace MTG
         // met a jour les infos des atlas
         public void UpdateAtlasInfo()
         {
+            if (InstanceID == -1) return;
             this.Log($"UpdateAtlasInfo called (InstanceID={InstanceID})");
-            // Charger les infos des atlas meme sans instance pour permettre le mode offline/test
             VRCStringDownloader.LoadUrl(TempURLs[0], (IUdonEventReceiver)this);
             VRCStringDownloader.LoadUrl(TempURLs[3], (IUdonEventReceiver)this);
         }
@@ -686,27 +687,36 @@ namespace MTG
             _UvRect = new Rect(0, 0, 1, 1);
             if (_CardId == "Debug") return true;
             
-            // Compter les atlas avec des donnees
+            // Compter les atlas reellement peuples (avec au moins une carte)
             int _AtlasWithData = 0;
             for (int i = 0; i < AtlasCardIds.Length; i++)
             {
-                if (AtlasCardIds[i] != null && AtlasCardIds[i].Length > 0)
+                if (AtlasCardIds[i] == null) continue;
+                for (int j = 0; j < AtlasCardIds[i].Length; j++)
                 {
-                    _AtlasWithData++;
-                    for (int j = 0; j < 24; j++)
+                    if (!string.IsNullOrEmpty(AtlasCardIds[i][j]))
                     {
-                        if (AtlasCardIds[i][j] == null) continue;
-                        if (AtlasCardIds[i][j] == _CardId)
-                        {
-                            _AtlasIndex = i;
-                            _UvRect = AtlasCardRects[i][j];
-                            this.VerboseLog($"Found {_CardId} in atlas {i} slot {j}");
-                            return true;
-                        }
+                        _AtlasWithData++;
+                        break; // cet atlas compte, passer au suivant
                     }
                 }
             }
-            this.Log($"CardId: {_CardId} not found in any atlas ({_AtlasWithData} atlas with data available)");
+            int _TotalAtlas = AtlasCardIds.Length;
+            for (int i = 0; i < AtlasCardIds.Length; i++)
+            {
+                if (AtlasCardIds[i] == null) continue;
+                for (int j = 0; j < AtlasCardIds[i].Length; j++)
+                {
+                    if (AtlasCardIds[i][j] == _CardId)
+                    {
+                        _AtlasIndex = i;
+                        _UvRect = AtlasCardRects[i][j];
+                        this.VerboseLog($"Found {_CardId} in atlas {i} slot {j}");
+                        return true;
+                    }
+                }
+            }
+            this.VerboseLog($"CardId: {_CardId} not found in any atlas ({_AtlasWithData}/{_TotalAtlas} populated)");
             return false;
         }
 
