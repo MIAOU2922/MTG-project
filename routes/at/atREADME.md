@@ -9,7 +9,7 @@ La route `/at` fournit un système de liens statiques encodés en base36 qui ret
 **Paramètres :**
 - `linkId` : ID du lien en base36 (caractères alphanumériques minuscules)
 
-**Authentification :** Basée sur l'UID utilisateur (cookie/session)
+**Authentification :** Résolution via le hash SHA-256 de l'IP (compte le plus récemment actif). Non enregistré → `401 { error: 'unknown_user' }` (faire `GET /aur` d'abord). L'`uid` est la clé 12 hex.
 
 ## 🎯 Fonctionnement
 
@@ -18,7 +18,7 @@ La route `/at` fournit un système de liens statiques encodés en base36 qui ret
 - Conversion de l'ID base36 vers un index numérique
 
 ### 2. **Gestion de l'utilisateur**
-- Récupération/création automatique de l'utilisateur via UID
+- Résolution automatique de l'utilisateur (clé 12 hex) via le hash de l'IP
 - Mise à jour automatique du `last_seen_at`
 
 ### 3. **Gestion de l'instance**
@@ -37,7 +37,7 @@ Toutes les réponses JSON suivent cette structure :
   "link_type": "t",        // Type de route (t=texture/atlas)
   "link_id": "0",          // ID du lien en base 10
   "iid": 42,               // Instance ID
-  "uid": 12345,            // User ID
+  "uid": "330ea1cc96e9", // User ID = clé 12 hex
   "time": 1728499200000,   // Timestamp de la réponse
   "data": {                // Données spécifiques au lien
     ...
@@ -52,7 +52,7 @@ Toutes les réponses JSON suivent cette structure :
 | `link_type` | string | Type de route : `"t"` pour texture/atlas |
 | `link_id` | string | ID du lien en base 10 (ex: "0", "1", "10") |
 | `iid` | number | ID de l'instance active |
-| `uid` | number | ID de l'utilisateur |
+| `uid` | string | ID de l'utilisateur = clé 12 hex |
 | `time` | number | Timestamp Unix en millisecondes |
 | `data` | object | Données spécifiques selon le type de lien |
 
@@ -67,7 +67,7 @@ Retourne toujours des données JSON avec les informations de l'instance.
   "link_type": "t",
   "link_id": "0",
   "iid": 42,
-  "uid": 12345,
+  "uid": "330ea1cc96e9",
   "time": 1728499200000,
   "data": {
     "cards_loaded_count": 150,
@@ -104,7 +104,7 @@ Retourne uniquement l'ID et le nom des decks créés par l'utilisateur.
   "link_type": "t",
   "link_id": "1",
   "iid": 42,
-  "uid": 12345,
+  "uid": "330ea1cc96e9",
   "time": 1728499200000,
   "data": {
     "total_decks": 3,
@@ -141,7 +141,7 @@ Retourne la liste complète des sets MTG disponibles dans la base de données.
   "link_type": "t",
   "link_id": "2",
   "iid": 42,
-  "uid": 12345,
+  "uid": "330ea1cc96e9",
   "time": 1728499200000,
   "data": {
     "count": 542,
@@ -177,7 +177,7 @@ Retourne la liste des cartes de l'instance avec leurs légalités et rulings, gr
   "link_type": "t",
   "link_id": "3",
   "iid": 42,
-  "uid": 12345,
+  "uid": "330ea1cc96e9",
   "time": 1728499200000,
   "data": {
     "total_cards": 6,
@@ -258,7 +258,7 @@ Tous les liens JSON utilisent les mêmes en-têtes :
 | `link_type` | string | Type de route : `"t"` pour texture/atlas |
 | `link_id` | string | ID du lien en base 10 (ex: "0", "1", "2") |
 | `iid` | number | ID de l'instance active (0-63) |
-| `uid` | number | ID de l'utilisateur |
+| `uid` | string | ID de l'utilisateur = clé 12 hex |
 | `time` | number | Timestamp Unix en millisecondes |
 | `data` | object | Données spécifiques selon le type de lien |
 
@@ -314,7 +314,7 @@ Chaque batch représente un atlas de 24 cartes :
 - **Immédiat :** Lors de l'ajout de cartes via `/as`
 - **Au démarrage :** Téléchargement des images des instances récentes
 - **Différé :** 30 secondes après ajout de nouvelles cartes
-- **Planifié :** Nettoyage horaire des images inutilisées (> 24h)
+- **Planifié :** Nettoyage horaire des images inutilisées (> 48h)
 
 ### **Optimisations**
 - **File d'attente :** Maximum 3 téléchargements simultanés
@@ -327,6 +327,14 @@ Chaque batch représente un atlas de 24 cartes :
 ```json
 {
   "error": "Invalid link ID format. Must be base36 characters."
+}
+```
+
+### **401 Unauthorized**
+```json
+{
+  "error": "unknown_user",
+  "hint": "Register via /aur first"
 }
 ```
 
@@ -350,7 +358,7 @@ Chaque batch représente un atlas de 24 cartes :
 ```
 🔄 Triggered download of recent instance images (background)
 ✅ Downloaded image for card abc123
-🧹 Running periodic cleanup of old instance images (> 24h)
+🧹 Running periodic cleanup of old instance images (> 48h)
 📊 Summary: 15 downloaded, 5 skipped, 0 errors
 ```
 
@@ -364,7 +372,7 @@ Chaque batch représente un atlas de 24 cartes :
 - **`/ac`** : Création d'instance
 - **`/aj`** : Rejoindre une instance
 - **`/as`** : Recherche et ajout de cartes
-- **`/au`** : Upload d'images utilisateur
+- **`/au`** : Identité utilisateur (enregistrement `/aur`, login `/aul…`)
 
 ## 🎯 Cas d'usage
 

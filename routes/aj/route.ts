@@ -1,7 +1,7 @@
 import { Request, Response, Router } from "express";
 import Instance from "@/database/Instance";
 import User from "@/database/User";
-import { uid } from "@/utils";
+import { getUserId } from "@/utils";
 
 export const apiJoinRouter = Router();
 apiJoinRouter.get('/aj:instanceCode', ajHandler);
@@ -16,8 +16,14 @@ async function ajHandler(req: Request, res: Response) {
                 error: `Invalid instance ID (must be between 0 and ${Instance.MAX_INSTANCES - 1})`
             });
 
-        const userId = uid(req);
-        const user = await User.findOrCreate(userId);
+        const userId = await getUserId(req);
+        if (userId === null) {
+            return res.status(401).json({ error: 'unknown_user', hint: 'Register via /aur first' });
+        }
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(401).json({ error: 'unknown_user' });
+        }
         await user.updateLastSeen();
 
         const instance = await Instance.findById(instanceId);

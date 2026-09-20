@@ -2,7 +2,7 @@ import { Request, Response, Router } from "express";
 import User from "@/database/User";
 import Deck, { DeckCardData } from "@/database/Deck";
 import Instance from "@/database/Instance";
-import { uid } from "@/utils";
+import { getUserId } from "@/utils";
 import Database from "@/database/Database";
 import https from "https";
 
@@ -111,8 +111,14 @@ function parseAdQuery(queryParam: string): ParsedQuery {
 
 async function adHandler(req: Request, res: Response) {
     try {
-        const userId = uid(req);
-        const user = await User.findOrCreate(userId);
+        const userId = await getUserId(req);
+        if (userId === null) {
+            return res.status(401).json({ error: 'unknown_user', hint: 'Register via /aur first' });
+        }
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(401).json({ error: 'unknown_user' });
+        }
         await user.updateLastSeen();
 
         // Get the current instance for this user

@@ -12,7 +12,8 @@ datasource db {
 }
 
 model User {
-  id           Int      @id
+  id           String   @id // clé 12 hex, utilisée directement comme identifiant
+  ip_hash      String? // hash SHA-256 de la dernière IP connue — jamais d'IP en clair (non unique : plusieurs users par IP)
   created_at   DateTime @default(now())
   last_seen_at DateTime @default(now()) @updatedAt
   @@map("users")
@@ -23,7 +24,7 @@ model Instance {
   created_at   DateTime @default(now())
   last_seen_at DateTime @default(now()) @updatedAt
   card_ids     String[] @default([])
-  user_ids     Int[]    @default([])
+  user_ids     String[] @default([])
 
   @@map("instances")
 }
@@ -117,23 +118,25 @@ model Set {
 }
 
 model Ruling {
-  id           String   @id
   oracle_id    String
   published_at DateTime
-  comment      String?
+  comment      String
 
   created_at DateTime @default(now())
   updated_at DateTime @default(now()) @updatedAt
 
   oracle Oracle @relation(fields: [oracle_id], references: [id], onDelete: Cascade)
 
+  // Un oracle peut avoir plusieurs rulings publiés le même jour,
+  // donc la clé primaire inclut le texte du ruling
+  @@id([oracle_id, published_at, comment])
   @@map("rulings")
 }
 
 
 model Deck {
   id           String   @id @default(uuid())
-  user_id      Int
+  user_id      String
   name         String
   description  String?
   commander    String?

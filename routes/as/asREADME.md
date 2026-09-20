@@ -1,6 +1,6 @@
 # API Recherche de Cartes Magic: The Gathering
 
-Une API REST complète pour rechercher des cartes Magic: The Gathering avec une syntaxe inspirée de Scryfall.
+API REST pour rechercher des cartes MTG avec une **syntaxe identique à Scryfall** (https://scryfall.com/docs/syntax).
 
 ## Endpoint
 
@@ -16,256 +16,97 @@ Lorsqu'une carte avec plusieurs faces est trouvée (transform, modal_dfc, etc.),
 - Face 0 : `abc123:0` (recto)
 - Face 1 : `abc123:1` (verso)
 
-**Exemple:** Une recherche pour "Tergrid" trouvera "Tergrid, God of Fright // Tergrid's Lantern" et ajoutera:
-- `{card_id}:0` → Tergrid, God of Fright
-- `{card_id}:1` → Tergrid's Lantern
-
 Chaque face aura sa propre image téléchargée et sera incluse dans les atlas générés.
 
-## Syntaxe de Recherche
+## Syntaxe de Recherche (Scryfall)
 
-### Recherche Simple et Sous-type
+### Recherche basique (mots libres)
 
-Les recherches sans filtres spécifiques cherchent uniquement dans :
-- Nom anglais (`name`)
-- Nom traduit (`printed_name`)
+Un mot libre cherche dans : **nom** (`name` + `printed_name`), **type line** et **texte Oracle** (comportement Scryfall).
 
-**Important :** Les champs oracle, printed_text et flavor_text ne sont utilisés que via filtres avancés (oracle:, o:, etc.)
-
-**Exemples :**
 ```
 /as?q=Lightning Bolt
-/as?q=Cycle alimentaire aérien
-/as?q=vol
+/as?q=draws a card
+/as?q=dragon
 ```
 
-### Recherche avec Filtres
-
-Utilisez la syntaxe `clé:valeur` pour filtrer précisément.
-
-#### Filtres de Base
+### Filtres de texte
 
 | Filtre | Alias | Description | Exemple |
 |--------|-------|-------------|---------|
 | `name:` | `n:` | Nom de la carte | `name:Lightning` |
-| `set:` | `s:`, `e:` | Code du set | `set:m21` |
-| `lang:` | `l:` | Langue (toutes les langues si non spécifié) | `lang:en` |
-| `rarity:` | `r:` | Rareté | `rarity:rare` |
-| `collector_number:` | `cn:`, `number:` | Numéro de collectionneur | `cn:1` |
-
-
-#### Types, Sous-types et Texte
-
-| Filtre | Alias | Description | Exemple |
-|--------|-------|-------------|---------|
-| `type:` | `t:` | Type de carte | `type:Creature` |
-| `subtype:` | `st:` | Sous-type de carte (ex: rat, goblin, angel...) | `subtype:rat` |
-| *(mot seul)* |  | Si un mot n'est pas un filtre connu, il est traité comme un sous-type | `rat` |
 | `oracle:` | `o:` | Texte d'oracle | `oracle:Flying` |
 | `fulloracle:` | `fo:` | Texte d'oracle complet | `fulloracle:draw` |
-| `keyword:` | `kw:` | Mot-clé | `keyword:Flying` |
+| `keyword:` | `kw:` | Mot-clé | `keyword:flying` |
 | `flavor:` | `ft:` | Texte de saveur | `flavor:designed` |
+| `type:` | `t:` | Type line | `t:creature` |
+| `mana:` | `m:` | Coût de mana | `mana:{2}{U}` |
+| `!nom` | | Nom exact (carte **ou face**) | `!fire` |
 
-#### Statistiques (avec opérateurs)
-
-Utilisez `>`, `<`, `>=`, `<=`, `=` pour les comparaisons.
-
-| Filtre | Alias | Description | Exemple |
-|--------|-------|-------------|---------|
-| `cmc:` | `mv:`, `manavalue:` | Coût de mana converti | `cmc:>=3`, `cmc:<5` |
-| `power:` | `pow:` | Force | `power:>=4` |
-| `toughness:` | `tou:` | Endurance | `toughness:<=2` |
-| `loyalty:` | `loy:` | Loyauté | `loyalty:3` |
-| `powtou:` | `pt:` | Puissance + Endurance | `pt:>=6` |
-
-#### Couleurs
+### Statistiques (syntaxe opérateurs `=`, `>=`, `<=`, `>`, `<`, `!=`)
 
 | Filtre | Alias | Description | Exemple |
 |--------|-------|-------------|---------|
-| `color:` | `c:` | Couleurs de la carte | `c:wu`, `c:>=wub`, `c:<=rg` |
-| `identity:` | `id:` | Identité colorielle | `id:esper` |
-| `commander:` | - | Couleurs du commandant | `commander:wub` |
+| `mv:` | `cmc:`, `manavalue:` | Valeur de mana | `mv=5`, `mv>=6` |
+| `pow:` | `power:` | Force | `pow>=8` |
+| `tou:` | `toughness:` | Endurance | `tou<=2` |
+| `loy:` | `loyalty:` | Loyauté | `loy=3` |
+| `cn:` | `number:` | Numéro de collectionneur | `cn:12` |
 
-#### Mana et Coûts
-
-| Filtre | Alias | Description | Exemple |
-|--------|-------|-------------|---------|
-| `mana:` | `m:` | Coût de mana exact | `mana:{2}{U}` |
-| `devotion:` | - | Dévotion | `devotion:{u/b}` |
-| `produces:` | - | Mana produit | `produces:{G}` |
-
-#### Layout et Types Spéciaux
-
-| Filtre | Description | Exemple |
-|--------|-------------|---------|
-| `layout:` | Disposition | `layout:transform` |
-| `is:` | Filtres spéciaux | `is:spell`, `is:permanent`, `is:vanilla` |
-| `not:` | Négation | `not:reprint` |
-
-#### Métadonnées
+### Couleurs
 
 | Filtre | Alias | Description | Exemple |
 |--------|-------|-------------|---------|
-| `artist:` | `a:` | Artiste | `artist:"proce"` |
-| `watermark:` | `wm:` | Filigrane | `watermark:orzhov` |
-| `border:` | - | Bordure | `border:black` |
-| `frame:` | - | Cadre | `frame:2015` |
-| `stamp:` | - | Tampon | `stamp:oval` |
-| `game:` | - | Jeu | `game:arena` |
+| `c:` | `color:`, `colors:` | Couleurs de la carte | `c:uw`, `c>=wu`, `c<=rg`, `c:azorius` |
+| `id:` | `identity:` | Identité colorielle | `id:esper` |
 
-#### Formats et Légalité
+### Sets, rareté, langue, formats
 
 | Filtre | Alias | Description | Exemple |
 |--------|-------|-------------|---------|
-| `format:` | `f:` | Format | `f:standard`, `f:modern` |
-| `banned:` | - | Bannies | `banned:legacy` |
-| `restricted:` | - | Restreintes | `restricted:vintage` |
+| `set:` | `s:`, `e:`, `edition:` | Code du set | `set:m21` |
+| `settype:` | `st:` | Type de set | `settype:expansion` |
+| `rarity:` | `r:` | Rareté (codes `c/u/r/m/s/b`, comparaisons `r>=r`) | `r:rare`, `r>=r` |
+| `lang:` | `l:`, `language:` | Langue (`lang:any` pour toutes) | `lang:fr` |
+| `format:` | `f:` | Format légal | `f:pauper` |
+| `banned:` | - | Bannies dans un format | `banned:legacy` |
+| `restricted:` | - | Restreintes dans un format | `restricted:vintage` |
+| `year:` | - | Année de sortie | `year<=1994` |
+| `date:` | - | Date de sortie | `date>=2023-01-01` |
+| `layout:` | - | Disposition | `layout:transform` |
 
-#### Sets et Organisation
+### Filtres spéciaux
 
-| Filtre | Alias | Description | Exemple |
-|--------|-------|-------------|---------|
-| `block:` | `b:` | Bloc | `block:wwk` |
-| `settype:` | - | Type de set (⚠️ exclut "alchemy" par défaut) | `settype:expansion`, `settype:alchemy` |
-| `cube:` | - | Cube | `cube:vintage` |
+| Filtre | Description |
+|--------|-------------|
+| `is:` | `spell`, `permanent`, `vanilla`, `dfc`, `mdfc`, `split`, `flip`, `transform`/`tdfc`, `meld`, `leveler`, `adventure`, `saga`, `class`, `mutate`, `battle`, `funny`, `alchemy`, `promo`, `hires`, `historic`, `party`, `commander`, `partner`, `companion` |
+| `not:` | Inverse de `is:` (`not:spell`, `not:permanent`) |
+| `include:extras` | Révèle les cartes exclues par défaut (alchemy/alchenemy/funny/A-/memorabilia/scheme/vanguard/phenomenon/plane) |
 
-#### Dates et Historique
+### Syntaxe avancée
 
-| Filtre | Description | Exemple |
-|--------|-------------|---------|
-| `year:` | Année | `year:>=2020` |
-| `date:` | Date exacte | `date:>=2023-01-01` |
-| `prints:` | Nombre d'impressions | `prints:>=5` |
-| `sets:` | Nombre de sets | `sets:1` |
+- **Négation** : `-` devant un terme ou filtre (`-t:creature`, `-word`)
+- **OU** : `or` entre les termes (`t:fish or t:bird`)
+- **Parenthèses** : `t:land (c:uw or c:ub)`
+- **Guillemets** : termes avec espaces (`ft:"well done"`)
 
-#### Tags (Tagger)
+## Comportement par Défaut
 
-| Filtre | Alias | Description | Exemple |
-|--------|-------|-------------|---------|
-| `art:` | `atag:`, `arttag:` | Tags d'art | `art:squirrel` |
-| `function:` | `otag:`, `oracletag:` | Tags de fonction | `function:removal` |
-
-## Syntaxe Avancée
-
-### Noms Exacts
-Préfixez avec `!` pour une recherche exacte :
-```
-/as?q=!"Lightning Bolt"
-```
-
-### Négation
-Préfixez avec `-` pour exclure :
-```
-/as?q=fire -t:creature
-/as?q=-c:red
-```
-
-### Logique OU
-Utilisez `or` entre les termes :
-```
-/as?q=t:fish or t:bird
-```
-
-### Expressions Régulières
-Utilisez `//` pour les regex :
-```
-/as?q=name:/\bbolt\b/
-/as?q=t:creature o:/^{T}:/
-```
-
-### Guillemets
-Utilisez des guillemets pour les termes avec espaces :
-```
-/as?q=artist:"Vincent Proce"
-```
-
-## Exemples Complets
-
-
-### Recherche Simple et Sous-type
-
-Les recherches sans filtres spécifiques cherchent dans tous les champs de texte :
-- Nom anglais (`name`)
-- Nom traduit (`printed_name`)
-- Texte d'oracle anglais (`oracle_text`)
-- Texte d'oracle traduit (`printed_text`)
-- Texte de saveur (`flavor_text`)
-
-
-Si le terme n'est pas un filtre connu, il est aussi interprété comme un sous-type (ex: `rat` retournera toutes les créatures de sous-type rat).
-
-**Note importante :** Par défaut, les cartes des sets de type "alchemy" sont exclues de tous les résultats. Pour les inclure, utilisez `settype:alchemy`.
-
-**Exemples :**
-```
-/as?q=Lightning Bolt
-/as?q=rat
-/as?q=subtype:angel
-/as?q=t:creature st:rat
-```
-
-### Comportement par Défaut
-
-- **Langue :** Si aucune langue n'est spécifiée, seules les cartes en anglais (`lang:en`) sont retournées
-- **Sets Alchemy :** Les cartes de type "alchemy" sont automatiquement exclues (utiliser `settype:alchemy` pour les inclure)
-- **Recherche simple :** Cherche uniquement dans les noms (anglais et traduit)
-
-### Recherche avec Filtres
-```
-
-### Combinaisons Complexes
-```
-/as?q=(t:goblin or t:elf) power:>=2
-/as?q=mana:{2}{U} type:Instant not:reprint
-/as?q=color:>=wub -c:red type:creature
-```
+- **Langue** : anglais (`lang:en`) sauf `lang:<code>` ou `lang:any`
+- **Exclusions automatiques** (comme Scryfall) : sets `alchemy`/`alchenemy`/`funny` + cartes `A-`, sets `memorabilia`, types `scheme`/`vanguard`/`phenomenon`/`plane`. Utiliser `include:extras`, `settype:X`, `include:X` ou `set:<code>` ciblé pour les révéler.
+- **Résultats** : maximum 240 cartes par recherche.
 
 ## Format de Réponse JSON
-
-### **Structure JSON standardisée**
-
-Toutes les réponses suivent la structure standardisée suivante :
-
-```json
-{
-  "link_type": "s",        // Type de route (s=search)
-  "link_id": "lightning",  // Requête de recherche
-  "iid": 28,               // Instance ID (ou null)
-  "uid": -1645995041,      // User ID
-  "time": 1728345600000,   // Timestamp de la réponse
-  "data": {                // Données de recherche
-    "query": "lightning",
-    "count": 2,
-    "results": [...]
-  }
-}
-```
-
-### **Champs de réponse**
-
-| Champ | Type | Description |
-|-------|------|-------------|
-| `link_type` | string | Type de route : `"s"` pour search |
-| `link_id` | string | Requête de recherche originale |
-| `iid` | number\|null | ID de l'instance active (null si aucune) |
-| `uid` | number | ID de l'utilisateur |
-| `time` | number | Timestamp Unix en millisecondes |
-| `data` | object | Données de la recherche |
-| `data.query` | string | Requête de recherche |
-| `data.count` | number | Nombre total de résultats |
-| `data.results` | array | Liste des cartes trouvées |
-
-### **Exemple complet**
 
 ```json
 {
   "link_type": "s",
-  "link_id": "name:\"tergrid\" l:fr",
-  "iid": 28,
-  "uid": -1645995041,
-  "time": 1728345600000,
+  "link_id": "tergrid",
+  "iid": 42,
+  "uid": "330ea1cc96e9",
+  "time": 1728499200000,
   "data": {
-    "query": "name:\"tergrid\" l:fr",
+    "query": "tergrid",
     "count": 2,
     "results": [
       {
@@ -273,54 +114,50 @@ Toutes les réponses suivent la structure standardisée suivante :
         "name": "Tergrid, God of Fright // Tergrid's Lantern",
         "set": "khm",
         "collector_number": "112",
-        "lang": "fr",
+        "lang": "en",
         "oracle_id": "8485cfaa-1dbf-432b-b5d0-92a6aa6a329b",
         "faces": 2
-      },
-      {
-        "id": "074f1a78-3ddc-4e93-821c-d16cd41437b9",
-        "name": "Tergrid's Shadow",
-        "set": "khm",
-        "collector_number": "113",
-        "lang": "fr",
-        "oracle_id": "6f348cb3-5c84-4a1b-8e1c-8c8e8c8e8c8e",
-        "faces": 1
       }
     ]
   }
 }
 ```
 
-### Champs par Carte
+### Champs d'en-tête
 
 | Champ | Type | Description |
 |-------|------|-------------|
-| `id` | string | ID unique de la carte (UUID) |
-| `name` | string | Nom de la carte (anglais ou traduit) |
+| `link_type` | string | Type de route : `"s"` pour search |
+| `link_id` | string | Requête de recherche originale |
+| `iid` | number\|null | ID de l'instance active (null si aucune) |
+| `uid` | string | ID utilisateur = clé 12 hex |
+| `time` | number | Timestamp Unix en millisecondes |
+| `data` | object | Données de la recherche |
+
+### Champs de `data`
+
+| Champ | Type | Description |
+|-------|------|-------------|
+| `data.query` | string | Requête de recherche |
+| `data.count` | number | Nombre de résultats (après remplacement des images manquantes) |
+| `data.results` | array | Liste des cartes trouvées (max 240) |
+
+### Champs par carte (`results[]`)
+
+| Champ | Type | Description |
+|-------|------|-------------|
+| `id` | string | ID unique de la carte |
+| `name` | string | Nom de la carte |
 | `set` | string | Code du set (ex: `khm`, `m21`) |
 | `collector_number` | string | Numéro de collectionneur |
-| `lang` | string | Code langue (ex: `en`, `fr`, `es`) |
-| `oracle_id` | string | ID Oracle unique (partagé entre impressions) |
-| `faces` | number | Nombre de faces (1 pour cartes normales, 2+ pour double face) |
+| `lang` | string | Code langue (`en`, `fr`, …) |
+| `oracle_id` | string\|null | ID Oracle (première face avec `oracle_id`) |
+| `faces` | number | Nombre de faces (1 pour cartes normales) |
 
-## Limites
+### Codes d'Erreur
 
-- Maximum 240 résultats par requête
-- Par défaut, seuls les résultats en anglais sont retournés (sauf si `lang:` spécifié)
-- Les cartes de sets de type "alchemy" sont automatiquement exclues (sauf si `settype:alchemy` est spécifié)
-- Certains filtres avancés peuvent ne pas être implémentés
-
-## Codes d'Erreur
-
-| Code | Description |
-|------|-------------|
-| 400 | Paramètre `q` manquant |
-| 500 | Erreur interne du serveur |
-
-## Notes
-
-- La recherche est insensible à la casse
-- Les langues non-anglaises incluent les champs `printed_*` quand disponibles
-- La syntaxe est largement compatible avec Scryfall
-- Les filtres non reconnus sont traités comme recherche de sous-type
-- **Différence avec Scryfall :** Cette API filtre par défaut sur l'anglais et exclut les sets "alchemy"
+| Code | Réponse |
+|------|---------|
+| 400 | `{"error": "Search query parameter \"q\" is required"}` |
+| 401 | `{"error": "unknown_user", "hint": "Register via /aur first"}` |
+| 500 | `{"error": "Error performing search"}` |

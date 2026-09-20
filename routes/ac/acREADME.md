@@ -6,14 +6,14 @@ La route `/ac` permet de créer une nouvelle instance utilisateur avec un systè
 
 **Endpoint :** `GET /ac`
 
-**Authentification :** Basée sur l'UID utilisateur (cookie/session)
+**Authentification :** Résolution via le hash SHA-256 de l'IP (compte le plus récemment actif). Non enregistré → `401 { error: 'unknown_user' }` (faire `GET /aur` d'abord). L'`uid` est la clé 12 hex.
 
 **Méthode :** GET (pour faciliter l'intégration dans les URLs)
 
 ## 🎯 Fonctionnement
 
 ### 1. **Gestion de l'utilisateur**
-- Récupération/création automatique de l'utilisateur via UID
+- Résolution automatique de l'utilisateur (clé 12 hex) via le hash de l'IP
 - Mise à jour automatique du `last_seen_at`
 
 ### 2. **Création d'instance avec rotation**
@@ -32,7 +32,7 @@ Toutes les réponses suivent la structure standardisée suivante :
   "link_type": "c",      // Type de route (c=create)
   "link_id": "",          // ID du lien (vide pour ac)
   "iid": 42,             // Instance ID créée
-  "uid": 12345,          // User ID
+  "uid": "330ea1cc96e9", // User ID = clé 12 hex
   "time": 1728499200000  // Timestamp de la réponse
 }
 ```
@@ -44,7 +44,7 @@ Toutes les réponses suivent la structure standardisée suivante :
 | `link_type` | string | Type de route : `"c"` pour create |
 | `link_id` | string | ID du lien (toujours vide pour ac) |
 | `iid` | number | ID de l'instance créée (0-63) |
-| `uid` | number | ID de l'utilisateur |
+| `uid` | string | ID de l'utilisateur = clé 12 hex |
 | `time` | number | Timestamp Unix en millisecondes |
 
 ### **Succès (200)**
@@ -53,8 +53,16 @@ Toutes les réponses suivent la structure standardisée suivante :
   "link_type": "c",
   "link_id": "",
   "iid": 42,
-  "uid": 12345,
+  "uid": "330ea1cc96e9",
   "time": 1728499200000
+}
+```
+
+### **Erreur (401)**
+```json
+{
+  "error": "unknown_user",
+  "hint": "Register via /aur first"
 }
 ```
 
@@ -95,7 +103,7 @@ Toutes les réponses suivent la structure standardisée suivante :
 
 ### **Logs automatiques**
 ```
-✅ Instance 42 created for user 12345
+✅ Instance 42 created for user 330ea1cc96e9
 🔄 Instance rotation: reusing instance 5 (oldest)
 ```
 

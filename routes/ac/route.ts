@@ -1,15 +1,21 @@
 import { Request, Response, Router } from "express";
 import Instance from "@/database/Instance";
 import User from "@/database/User";
-import { uid } from "@/utils";
+import { getUserId } from "@/utils";
 
 export const apiCreateRouter = Router();
 apiCreateRouter.use('/ac', acHandler);
 
 async function acHandler(req: Request, res: Response) {
     try {
-        const userId = uid(req);
-        const user = await User.findOrCreate(userId);
+        const userId = await getUserId(req);
+        if (userId === null) {
+            return res.status(401).json({ error: 'unknown_user', hint: 'Register via /aur first' });
+        }
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(401).json({ error: 'unknown_user' });
+        }
         await user.updateLastSeen();
 
         // Create new instance with rotation

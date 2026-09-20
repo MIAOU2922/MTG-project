@@ -16,8 +16,6 @@ export default class ScryFallSync {
     }
 
     public async start(options: SyncOptions = { syncCards: true, syncRulings: false }) {
-        console.log("🃏 MTG Scryfall Sync Starting...");
-        
         if (options.concurrency) {
             this.concurrency = options.concurrency;
         }
@@ -59,7 +57,8 @@ export default class ScryFallSync {
                 console.log(`Processing batch ${batchIndex + 1} with ${cards.length} cards...`);
 
                 try {
-                    await this.upsertCardsBatch(cards);
+                    const failedCards = await this.upsertCardsBatch(cards);
+                    totalErrors += failedCards;
                     totalProcessed += cards.length;
                     const batchTime = Date.now() - batchStartTime;
                     const totalTime = Date.now() - startTime;
@@ -132,7 +131,7 @@ export default class ScryFallSync {
         }
     }
 
-    private async upsertCardsBatch(cards: CoreCard[]): Promise<void> {
+    private async upsertCardsBatch(cards: CoreCard[]): Promise<number> {
         let batchSuccesses = 0;
         let batchErrors = 0;
         
@@ -171,6 +170,7 @@ export default class ScryFallSync {
         }
         
         console.log(`Batch completed: ${batchSuccesses} successes, ${batchErrors} errors`);
+        return batchErrors;
     }
 
     private async syncRulings() {
@@ -290,17 +290,23 @@ export default class ScryFallSync {
     }
 
     private async upsertSingleRuling(ruling: Ruling): Promise<void> {
+        const publishedAt = new Date(ruling.published_at);
         await Database.prisma.ruling.upsert({
-            where: { 
-                id: `${ruling.oracle_id}-${ruling.published_at}`
+            // Un oracle peut avoir plusieurs rulings publiés le même jour,
+            // donc l'unicité inclut le commentaire (clé composite)
+            where: {
+                oracle_id_published_at_comment: {
+                    oracle_id: ruling.oracle_id,
+                    published_at: publishedAt,
+                    comment: ruling.comment,
+                },
             },
             update: {
                 comment: ruling.comment,
             },
             create: {
-                id: `${ruling.oracle_id}-${ruling.published_at}`,
                 oracle_id: ruling.oracle_id,
-                published_at: new Date(ruling.published_at),
+                published_at: publishedAt,
                 comment: ruling.comment,
             },
         });
@@ -314,11 +320,13 @@ export default class ScryFallSync {
                 await tx.set.upsert({
                     where: { id: card.set_id },
                     update: {
+                        set: card.set || null, // code du set (ex: 'unf')
                         name: card.set_name,
                         type: card.set_type,
                     },
                     create: {
                         id: card.set_id,
+                        set: card.set || null, // code du set (ex: 'unf')
                         name: card.set_name,
                         type: card.set_type,
                     },
@@ -398,11 +406,23 @@ export default class ScryFallSync {
             // Multi-faced card
             for (let i = 0; i < card.card_faces.length; i++) {
                 const face = card.card_faces[i];
+                const faceOracleId = face.oracle_id || card.oracle_id;
+
+                // Chaque face peut avoir son propre oracle (cartes réversibles) :
+                // s'assurer qu'il existe pour la FK faces_oracle_id_fkey
+                if (faceOracleId) {
+                    await tx.oracle.upsert({
+                        where: { id: faceOracleId },
+                        update: { text: face.oracle_text || card.oracle_text || "" },
+                        create: { id: faceOracleId, text: face.oracle_text || card.oracle_text || "" },
+                    });
+                }
+
                 await tx.face.create({
                     data: {
                         index: i,
                         name: face.name,
-                        oracle_id: face.oracle_id || card.oracle_id,
+                        oracle_id: faceOracleId,
                         layout: face.layout || card.layout,
                         card_id: card.id,
                         cmc: face.cmc || card.cmc,

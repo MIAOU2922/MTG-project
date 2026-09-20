@@ -9,7 +9,7 @@ La route `/aj` permet à un utilisateur de rejoindre une instance existante en u
 **Paramètres :**
 - `instanceCode` : ID de l'instance en base36 (caractères alphanumériques minuscules)
 
-**Authentification :** Basée sur l'UID utilisateur (cookie/session)
+**Authentification :** Résolution via le hash SHA-256 de l'IP (compte le plus récemment actif). Non enregistré → `401 { error: 'unknown_user' }` (faire `GET /aur` d'abord). L'`uid` est la clé 12 hex.
 
 ## 🎯 Fonctionnement
 
@@ -19,7 +19,7 @@ La route `/aj` permet à un utilisateur de rejoindre une instance existante en u
 - Validation de l'existence de l'instance
 
 ### 2. **Gestion de l'utilisateur**
-- Récupération/création automatique de l'utilisateur via UID
+- Résolution automatique de l'utilisateur (clé 12 hex) via le hash de l'IP
 - Mise à jour automatique du `last_seen_at`
 
 ### 3. **Gestion des associations**
@@ -38,7 +38,7 @@ Toutes les réponses suivent la structure standardisée suivante :
   "link_type": "j",      // Type de route (j=join)
   "link_id": "2a",        // ID d'instance en base36
   "iid": 42,             // Instance ID rejointe
-  "uid": 12345,          // User ID
+  "uid": "330ea1cc96e9", // User ID = clé 12 hex
   "time": 1728499200000  // Timestamp de la réponse
 }
 ```
@@ -50,7 +50,7 @@ Toutes les réponses suivent la structure standardisée suivante :
 | `link_type` | string | Type de route : `"j"` pour join |
 | `link_id` | string | Code de l'instance en base36 (ex: "2a" pour 42) |
 | `iid` | number | ID de l'instance rejointe (0-63) |
-| `uid` | number | ID de l'utilisateur |
+| `uid` | string | ID de l'utilisateur = clé 12 hex |
 | `time` | number | Timestamp Unix en millisecondes |
 
 ### **Succès (200)**
@@ -59,7 +59,7 @@ Toutes les réponses suivent la structure standardisée suivante :
   "link_type": "j",
   "link_id": "2a",
   "iid": 42,
-  "uid": 12345,
+  "uid": "330ea1cc96e9",
   "time": 1728499200000
 }
 ```
@@ -75,6 +75,14 @@ Toutes les réponses suivent la structure standardisée suivante :
 ```json
 {
   "error": "Instance not found"
+}
+```
+
+### **Erreur (401)**
+```json
+{
+  "error": "unknown_user",
+  "hint": "Register via /aur first"
 }
 ```
 
@@ -133,8 +141,8 @@ Instance ID → Base36
 
 ### **Logs automatiques**
 ```
-✅ User 12345 joined instance 42
-🔄 Cleaned old associations for user 12345
+✅ User 330ea1cc96e9 joined instance 42
+🔄 Cleaned old associations for user 330ea1cc96e9
 ```
 
 ## 🔗 Liens connexes

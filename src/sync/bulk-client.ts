@@ -6,9 +6,11 @@
 const JSONStream = require('JSONStream');
 import { Readable } from 'stream';
 import { pipeline } from 'stream/promises';
+import * as readline from 'readline';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import { createGunzip, gunzipSync } from 'zlib';
 
 import {
   BulkData,
@@ -69,13 +71,18 @@ export interface BulkDataClient {
 
 export class ScryfallBulkDataClient implements BulkDataClient {
   private readonly baseUrl = SCRYFALL_API_BASE;
+  private readonly requestHeaders = {
+    'User-Agent': 'MTG-VRC/1.0'
+  };
 
   /**
    * Récupère tous les objets bulk data disponibles
    */
   async getAllBulkData(): Promise<ApiResponse<BulkDataList>> {
     try {
-      const response = await fetch(`${this.baseUrl}${ENDPOINTS.BULK_DATA}`);
+      const response = await fetch(`${this.baseUrl}${ENDPOINTS.BULK_DATA}`, {
+        headers: this.requestHeaders
+      });
       const data = await response.json();
 
       if (!response.ok) {
@@ -93,7 +100,9 @@ export class ScryfallBulkDataClient implements BulkDataClient {
    */
   async getBulkDataById(id: string): Promise<ApiResponse<BulkData>> {
     try {
-      const response = await fetch(`${this.baseUrl}${ENDPOINTS.BULK_DATA_BY_ID(id)}`);
+      const response = await fetch(`${this.baseUrl}${ENDPOINTS.BULK_DATA_BY_ID(id)}`, {
+        headers: this.requestHeaders
+      });
       const data = await response.json();
 
       if (!response.ok) {
@@ -111,7 +120,9 @@ export class ScryfallBulkDataClient implements BulkDataClient {
    */
   async getBulkDataByType(type: BulkDataType): Promise<ApiResponse<BulkData>> {
     try {
-      const response = await fetch(`${this.baseUrl}${ENDPOINTS.BULK_DATA_BY_TYPE(type)}`);
+      const response = await fetch(`${this.baseUrl}${ENDPOINTS.BULK_DATA_BY_TYPE(type)}`, {
+        headers: this.requestHeaders
+      });
       const data = await response.json();
 
       if (!response.ok) {
@@ -139,8 +150,12 @@ export class ScryfallBulkDataClient implements BulkDataClient {
       throw new Error(`Impossible de récupérer les infos du fichier ${type}: ${bulkDataInfo.details}`);
     }
 
-    const downloadUrl = bulkDataInfo.download_uri;
-    const fileSize = bulkDataInfo.size;
+    const downloadUrl = bulkDataInfo.jsonl_download_uri || bulkDataInfo.download_uri;
+    const fileSize = bulkDataInfo.compressed_size || bulkDataInfo.size || 0;
+
+    if (!downloadUrl) {
+      throw new Error(`Le fichier bulk ${type} ne contient aucune URI de téléchargement`);
+    }
 
     // Vérifier si le fichier n'est pas trop volumineux
     if (fileSize > 1024 * 1024 * 1024) { // > 1GB
@@ -148,7 +163,9 @@ export class ScryfallBulkDataClient implements BulkDataClient {
     }
 
     try {
-      const response = await fetch(downloadUrl);
+      const response = await fetch(downloadUrl, {
+        headers: this.requestHeaders
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -157,7 +174,8 @@ export class ScryfallBulkDataClient implements BulkDataClient {
       let downloadedBytes = 0;
       const startTime = Date.now();
 
-      // Setup du tracking de progression si demandé
+      // Récupérer les octets bruts (avec ou sans suivi de progression)
+      let rawBytes: Uint8Array;
       if (options.showProgress && response.body) {
         const reader = response.body.getReader();
         const chunks: Uint8Array[] = [];
@@ -192,20 +210,23 @@ export class ScryfallBulkDataClient implements BulkDataClient {
 
         // Reconstituer le contenu
         const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
-        const result = new Uint8Array(totalLength);
+        rawBytes = new Uint8Array(totalLength);
         let offset = 0;
         for (const chunk of chunks) {
-          result.set(chunk, offset);
+          rawBytes.set(chunk, offset);
           offset += chunk.length;
         }
-
-        const jsonString = new TextDecoder().decode(result);
-        return JSON.parse(jsonString) as BulkDataContentMap[T];
       } else {
         // Téléchargement simple sans progression
-        const jsonString = await response.text();
-        return JSON.parse(jsonString) as BulkDataContentMap[T];
+        rawBytes = new Uint8Array(await response.arrayBuffer());
       }
+
+      // Le format actuel de Scryfall est du JSONL gzippé (.jsonl.gz)
+      return this.parseBulkContent(
+        rawBytes,
+        downloadUrl,
+        response.headers.get('content-encoding') || ''
+      ) as BulkDataContentMap[T];
 
     } catch (error) {
       if (error instanceof SyntaxError) {
@@ -213,6 +234,30 @@ export class ScryfallBulkDataClient implements BulkDataClient {
       }
       throw new Error(`${ERROR_MESSAGES.BULK_DOWNLOAD_FAILED}: ${error}`);
     }
+  }
+
+  /**
+   * Parse un contenu bulk data : JSON array ou JSONL, éventuellement gzippé
+   * Scryfall fournit désormais des fichiers .jsonl.gz
+   */
+  private parseBulkContent(raw: Uint8Array, url: string, contentEncoding: string): any[] {
+    // Le fetch Node/undici décompresse automatiquement les réponses
+    // avec Content-Encoding: gzip, donc il ne faut pas regunzipper dans ce cas
+    const autoDecoded = contentEncoding.includes('gzip');
+    const needsGunzip = /\.gz$/i.test(url) && !autoDecoded;
+
+    const buf = needsGunzip ? gunzipSync(Buffer.from(raw)) : Buffer.from(raw);
+    const text = buf.toString('utf8');
+
+    const isJsonl = /\.jsonl(\.gz)?$/i.test(url);
+    if (isJsonl) {
+      return text
+        .split(/\r?\n/)
+        .filter(line => line.trim())
+        .map(line => JSON.parse(line));
+    }
+
+    return JSON.parse(text);
   }
 
   /**
@@ -235,13 +280,17 @@ export class ScryfallBulkDataClient implements BulkDataClient {
       throw new Error(`Impossible de récupérer les infos du fichier ${type}: ${bulkDataInfo.details}`);
     }
 
-    const downloadUrl = bulkDataInfo.download_uri;
-    const fileSize = bulkDataInfo.size;
+    const downloadUrl = bulkDataInfo.jsonl_download_uri || bulkDataInfo.download_uri;
+    const fileSize = bulkDataInfo.compressed_size || bulkDataInfo.size || 0;
+    if (!downloadUrl) {
+      throw new Error(`Le fichier bulk ${type} ne contient aucune URI de téléchargement`);
+    }
     const batchSize = processingOptions.batchSize || getRecommendedBufferSize(type);
 
     // Créer un fichier temporaire pour le téléchargement
     const tempDir = os.tmpdir();
-    const tempFilePath = path.join(tempDir, `scryfall-${type}-${Date.now()}.json`);
+    const tempExt = bulkDataInfo.jsonl_download_uri ? '.jsonl' : '.json';
+    const tempFilePath = path.join(tempDir, `scryfall-${type}-${Date.now()}${tempExt}`);
 
     try {
       console.log(`📥 Downloading bulk file to ${tempFilePath}...`);
@@ -250,9 +299,7 @@ export class ScryfallBulkDataClient implements BulkDataClient {
       // ÉTAPE 1: Télécharger le fichier complet
       const downloadStartTime = Date.now();
       const response = await fetch(downloadUrl, {
-        headers: {
-          'User-Agent': 'MTG-VRC/1.0'
-        }
+        headers: this.requestHeaders
       });
 
       if (!response.ok) {
@@ -266,6 +313,12 @@ export class ScryfallBulkDataClient implements BulkDataClient {
       // Écrire le fichier
       const fileStream = fs.createWriteStream(tempFilePath);
       const nodeStream = Readable.fromWeb(response.body as any);
+
+      // Le fetch Node/undici décompresse automatiquement Content-Encoding: gzip,
+      // donc on ne regunzippe que si l'URL se termine par .gz sans auto-décodage
+      const contentEncoding = response.headers.get('content-encoding') || '';
+      const needsGunzip = /\.gz$/i.test(downloadUrl) && !contentEncoding.includes('gzip');
+      const dataStream = needsGunzip ? nodeStream.pipe(createGunzip()) : nodeStream;
       
       await new Promise<void>((resolve, reject) => {
         let downloadedBytes = 0;
@@ -285,10 +338,11 @@ export class ScryfallBulkDataClient implements BulkDataClient {
           }
         });
         
-        nodeStream.pipe(fileStream);
+        dataStream.pipe(fileStream);
         fileStream.on('finish', resolve);
         fileStream.on('error', reject);
         nodeStream.on('error', reject);
+        dataStream.on('error', reject);
       });
 
       const downloadTime = Date.now() - downloadStartTime;
@@ -327,7 +381,7 @@ export class ScryfallBulkDataClient implements BulkDataClient {
     processingOptions: StreamProcessingOptions<any>,
     batchSize: number
   ): Promise<BulkFileMetadata> {
-    const fileSize = bulkDataInfo.size;
+    const fileSize = bulkDataInfo.compressed_size || bulkDataInfo.size || 0;
     let totalItems = 0;
     let processedItems = 0;
     const startTime = Date.now();
@@ -337,101 +391,65 @@ export class ScryfallBulkDataClient implements BulkDataClient {
 
     try {
       const fileStream = fs.createReadStream(filePath, { encoding: 'utf8' });
-      const jsonParser = JSONStream.parse('*');
+      const lines = readline.createInterface({ input: fileStream, crlfDelay: Infinity });
 
-      return new Promise<BulkFileMetadata>((resolve, reject) => {
-        jsonParser.on('data', async (item: any) => {
-          jsonParser.pause(); // Pause pour synchroniser le parsing avec le traitement
-          
+      for await (const line of lines) {
+        if (!line.trim()) continue;
+
+        let item: any;
+        try {
+          item = JSON.parse(line);
+        } catch (error) {
+          throw new Error(`${ERROR_MESSAGES.BULK_PARSE_ERROR}: ${(error as Error).message}`);
+        }
+
+        totalItems++;
+        const objType = item.object || 'unknown';
+        stats[objType] = (stats[objType] || 0) + 1;
+
+        if (processingOptions.onItem) {
           try {
-            totalItems++;
-
-            // Statistiques
-            const objType = item.object || 'unknown';
-            stats[objType] = (stats[objType] || 0) + 1;
-
-            // Traitement individuel
-            if (processingOptions.onItem) {
-              try {
-                await processingOptions.onItem(item, totalItems - 1);
-              } catch (error) {
-                if (processingOptions.onError) {
-                  processingOptions.onError(error as Error, item, totalItems - 1);
-                }
-              }
-            }
-
-            // Ajout au batch
-            batch.push(item);
-
-            if (batch.length >= batchSize) {
-              if (processingOptions.onBatch) {
-                try {
-                  const t0 = Date.now();
-                  await processingOptions.onBatch([...batch], batchIndex);
-                  const t1 = Date.now();
-                  console.log(`Batch ${batchIndex} processed in ${t1 - t0} ms`);
-                  
-                  processedItems += batch.length;
-                  batch = [];
-                  batchIndex++;
-
-                  // Force garbage collection hint périodiquement
-                  if (batchIndex % 5 === 0 && global.gc) {
-                    global.gc();
-                  }
-                } catch (error) {
-                  if (processingOptions.onError) {
-                    processingOptions.onError(error as Error);
-                  }
-                }
-              } else {
-                processedItems += batch.length;
-                batch = [];
-                batchIndex++;
-              }
-            }
+            await processingOptions.onItem(item, totalItems - 1);
           } catch (error) {
-            jsonParser.emit('error', error);
+            processingOptions.onError?.(error as Error, item, totalItems - 1);
           }
+        }
 
-          jsonParser.resume(); // Resume après traitement
-        });
-
-        jsonParser.on('end', async () => {
-          try {
-            // Traiter le dernier batch
-            if (batch.length > 0 && processingOptions.onBatch) {
+        batch.push(item);
+        if (batch.length >= batchSize) {
+          if (processingOptions.onBatch) {
+            try {
+              const t0 = Date.now();
               await processingOptions.onBatch([...batch], batchIndex);
+              console.log(`Batch ${batchIndex} processed in ${Date.now() - t0} ms`);
               processedItems += batch.length;
+              batch = [];
+              batchIndex++;
+              if (batchIndex % 5 === 0 && global.gc) global.gc();
+            } catch (error) {
+              processingOptions.onError?.(error as Error);
             }
-
-            const processingTime = Date.now() - startTime;
-
-            resolve({
-              type,
-              totalItems,
-              fileSize,
-              lastUpdated: bulkDataInfo.updated_at,
-              processingTime,
-              stats
-            });
-          } catch (error) {
-            reject(error);
+          } else {
+            processedItems += batch.length;
+            batch = [];
+            batchIndex++;
           }
-        });
+        }
+      }
 
-        jsonParser.on('error', (error: Error) => {
-          reject(new Error(`${ERROR_MESSAGES.BULK_PARSE_ERROR}: ${error.message}`));
-        });
+      if (batch.length > 0 && processingOptions.onBatch) {
+        await processingOptions.onBatch([...batch], batchIndex);
+        processedItems += batch.length;
+      }
 
-        fileStream.on('error', (error: Error) => {
-          reject(new Error(`Error reading local file: ${error.message}`));
-        });
-
-        fileStream.pipe(jsonParser);
-      });
-
+      return {
+        type,
+        totalItems,
+        fileSize,
+        lastUpdated: bulkDataInfo.updated_at,
+        processingTime: Date.now() - startTime,
+        stats
+      };
     } catch (error) {
       throw new Error(`${ERROR_MESSAGES.BULK_DOWNLOAD_FAILED}: ${error}`);
     }
@@ -453,8 +471,8 @@ export class ScryfallBulkDataClient implements BulkDataClient {
       throw new Error(`Impossible de récupérer les infos du fichier ${type}: ${bulkDataInfo.details}`);
     }
 
-    const downloadUrl = bulkDataInfo.download_uri;
-    const fileSize = bulkDataInfo.size;
+    const downloadUrl = bulkDataInfo.jsonl_download_uri || bulkDataInfo.download_uri;
+    const fileSize = bulkDataInfo.compressed_size || bulkDataInfo.size || 0;
     const batchSize = processingOptions.batchSize || getRecommendedBufferSize(type);
 
     let totalItems = 0;
@@ -464,6 +482,10 @@ export class ScryfallBulkDataClient implements BulkDataClient {
     let batch: any[] = [];
     let batchIndex = 0;
 
+    if (!downloadUrl) {
+      throw new Error(`Le fichier bulk ${type} ne contient aucune URI de téléchargement`);
+    }
+
     try {
       // Créer un AbortController avec timeout de 10 minutes
       const controller = new AbortController();
@@ -471,9 +493,7 @@ export class ScryfallBulkDataClient implements BulkDataClient {
       
       const response = await fetch(downloadUrl, {
         signal: controller.signal,
-        headers: {
-          'User-Agent': 'MTG-VRC/1.0'
-        }
+        headers: this.requestHeaders
       });
 
       clearTimeout(timeoutId);

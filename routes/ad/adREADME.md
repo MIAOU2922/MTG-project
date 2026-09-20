@@ -10,6 +10,10 @@ GET /ad?q=action:param1:param2:param3...
 
 Format unifié : un seul paramètre `q` avec séparateurs `:` (comme `/as?q=`).
 
+## Authentification
+
+L'utilisateur est résolu via le **hash SHA-256 de l'IP** (compte le plus récemment actif). Non enregistré → `401 { error: 'unknown_user' }` (faire `GET /aur` d'abord). L'`uid` est la clé 12 hex et identifie le propriétaire des decks (`save`, `delete`, `list`).
+
 ---
 
 ## Actions Disponibles
@@ -246,6 +250,166 @@ COUNT NAME (SET) COLLECTOR_NUMBER
 | **load** | `load:id` | `load:abc-123-def-456` |
 | **delete** | `delete:id` | `delete:abc-123-def-456` |
 | **list** | `list:search` | `list` ou `list:Lightning` |
+
+## Réponses JSON
+
+Toutes les réponses partagent l'en-tête standardisé :
+
+```json
+{
+  "link_type": "d",
+  "link_id": "<action>",
+  "iid": <number|null>,
+  "uid": "330ea1cc96e9",
+  "time": 1728499200000,
+  "data": { ... }
+}
+```
+
+### `parse`
+
+```json
+{
+  "link_type": "d",
+  "link_id": "parse",
+  "iid": null,
+  "uid": "330ea1cc96e9",
+  "time": 1728499200000,
+  "data": {
+    "action": "parse",
+    "format": "deckstats",
+    "deck_count": 60,
+    "commander": "Tifa, Martial Artist",
+    "cards": [
+      {
+        "count": 4,
+        "name": "Lightning Bolt",
+        "set": "M21",
+        "collector_number": "154",
+        "lang": "en",
+        "card_id": "595ae6ab-f0d4-489b-bb99-99a3f1b96e93",
+        "rarity": "common",
+        "type_line": "Instant",
+        "oracle_id": "8485cfaa-1dbf-432b-b5d0-92a6aa6a329b",
+        "is_commander": false,
+        "zone": "main",
+        "found": true,
+        "found_as": "exact",
+        "match_confidence": 1
+      }
+    ],
+    "stats": {
+      "found": 55,
+      "not_found": 5,
+      "partial_matches": 3,
+      "errors": []
+    }
+  }
+}
+```
+
+Champs par carte : `count`, `name`, `set`, `collector_number`, `lang`, `card_id` (si trouvée), `rarity`, `type_line`, `oracle_id`, `is_commander`, `zone`, `found` (booléen), `found_as` (`exact` / `partial` / `not_found`), `match_confidence` (1.0 exact, 0.8 partial, 0 non trouvée).
+
+### `save`
+
+```json
+{
+  "link_type": "d",
+  "link_id": "save",
+  "iid": null,
+  "uid": "330ea1cc96e9",
+  "time": 1728499200000,
+  "data": {
+    "action": "save",
+    "deck_id": "550e8400-e29b-41d4-a716-446655440000",
+    "deck_name": "Mon Deck",
+    "commander": "Tifa, Martial Artist",
+    "cards_found": 55,
+    "cards_not_found": 5,
+    "total_cards": 60,
+    "message": "Deck created successfully"
+  }
+}
+```
+
+### `load`
+
+```json
+{
+  "link_type": "d",
+  "link_id": "load",
+  "iid": 42,
+  "uid": "330ea1cc96e9",
+  "time": 1728499200000,
+  "data": {
+    "action": "load",
+    "deck_type": "saved",
+    "deck_id": "550e8400-e29b-41d4-a716-446655440000",
+    "deck_name": "Mon Deck",
+    "commander": "Tifa, Martial Artist",
+    "unique_cards": 35,
+    "total_cards": 60,
+    "cards_added_to_instance": 60,
+    "cards_by_zone": {
+      "main": [ { "count": 4, "name": "Lightning Bolt", "card_id": "...", "is_commander": false } ],
+      "sideboard": [],
+      "commander": [ { "count": 1, "name": "Tifa, Martial Artist", "card_id": "...", "is_commander": true } ],
+      "companion": [],
+      "oathbreaker": [],
+      "wishboard": []
+    },
+    "message": "Deck loaded successfully and cards added to instance"
+  }
+}
+```
+
+### `delete`
+
+```json
+{
+  "link_type": "d",
+  "link_id": "delete",
+  "iid": null,
+  "uid": "330ea1cc96e9",
+  "time": 1728499200000,
+  "data": {
+    "action": "delete",
+    "deck_id": "550e8400-e29b-41d4-a716-446655440000",
+    "deck_name": "Mon Deck",
+    "message": "Deck deleted successfully"
+  }
+}
+```
+
+### `list`
+
+```json
+{
+  "link_type": "d",
+  "link_id": "list",
+  "iid": null,
+  "uid": "330ea1cc96e9",
+  "time": 1728499200000,
+  "data": {
+    "action": "list",
+    "search_name": null,
+    "decks_count": 3,
+    "decks": [
+      {
+        "id": "550e8400-e29b-41d4-a716-446655440000",
+        "name": "Red Aggro",
+        "description": "Fast red deck",
+        "commander": null,
+        "owner_id": "330ea1cc96e9",
+        "is_owner": true,
+        "cards_count": 60,
+        "created_at": "2026-09-19T10:00:00.000Z",
+        "updated_at": "2026-09-19T10:00:00.000Z"
+      }
+    ]
+  }
+}
+```
 
 ---
 

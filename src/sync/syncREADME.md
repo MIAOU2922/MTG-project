@@ -247,20 +247,22 @@ try {
 
 ## Scheduling Automatique
 
-Le sync est automatiquement déclenché chaque jour à **1:00 AM**:
+Le sync est automatiquement déclenché **chaque lundi à 1:00 AM** (Europe/Paris) :
 
 ```typescript
 // Dans /src/Main.ts
-setupSyncScheduler() {
-    cron.schedule('0 1 * * *', async () => {
-        const sync = new ScryFallSync();
-        await sync.start({ syncCards: true, syncRulings: true });
-    });
-}
+cron.schedule('0 1 * * 1', async () => {
+    // cartes d'abord, puis rulings
+    await runSync();
+}, { timezone: 'Europe/Paris' });
 ```
 
 **Fonctionnalités**:
-- Cron job tous les jours à 1:00 AM (UTC)
+- Cron job tous les lundis à 1:00 AM Europe/Paris
+- Sync **cartes** puis **rulings**
+- Les dates de mise à jour des bulk Scryfall sont comparées aux configs
+  `sync:last_cards_bulk_updated_at` / `sync:last_rulings_bulk_updated_at` :
+  **sync sauté si rien n'a changé**
 - Flag `syncInProgress` empêche exécutions concurrentes
 - Erreurs loggées mais ne bloquent pas le serveur
 - Logs timestampés pour troubleshooting

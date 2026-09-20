@@ -14,7 +14,7 @@ export interface DeckCardWithZone extends DeckCardData {
 
 export interface IDeck {
     id: string;
-    user_id: number;
+    user_id: string;
     name: string;
     description: string | null;
     commander: string | null;
@@ -24,7 +24,7 @@ export interface IDeck {
 
 export default class Deck implements IDeck {
     public readonly id: string;
-    public readonly user_id: number;
+    public readonly user_id: string;
     public readonly name: string;
     public readonly description: string | null;
     public readonly commander: string | null;
@@ -45,7 +45,7 @@ export default class Deck implements IDeck {
      * Create a new deck
      */
     public static async create(
-        userId: number,
+        userId: string,
         deckName: string,
         cards: DeckCardData[],
         description?: string,
@@ -82,7 +82,7 @@ export default class Deck implements IDeck {
     /**
      * Find decks by user ID
      */
-    public static async findByUserId(userId: number): Promise<Deck[]> {
+    public static async findByUserId(userId: string): Promise<Deck[]> {
         const decks = await (Database.prisma as any).deck.findMany({
             where: { user_id: userId },
             orderBy: { created_at: 'desc' }
@@ -93,7 +93,7 @@ export default class Deck implements IDeck {
     /**
      * Find a deck by name and user (user's own decks)
      */
-    public static async findByNameAndUser(deckName: string, userId: number): Promise<Deck | null> {
+    public static async findByNameAndUser(deckName: string, userId: string): Promise<Deck | null> {
         const deck = await (Database.prisma as any).deck.findFirst({
             where: {
                 name: deckName,
@@ -123,7 +123,7 @@ export default class Deck implements IDeck {
      * Update a deck (with permission check)
      */
     public async update(
-        userId: number,
+        userId: string,
         data: {
             name?: string;
             description?: string;
@@ -169,7 +169,7 @@ export default class Deck implements IDeck {
     /**
      * Delete a deck (with permission check)
      */
-    public async delete(userId: number): Promise<void> {
+    public async delete(userId: string): Promise<void> {
         if (this.user_id !== userId) {
             throw new Error('Only the deck owner can delete this deck');
         }
@@ -325,7 +325,7 @@ export default class Deck implements IDeck {
     /**
      * Check if the user owns this deck
      */
-    public isOwner(userId: number): boolean {
+    public isOwner(userId: string): boolean {
         return this.user_id === userId;
     }
 }

@@ -3,26 +3,51 @@ import Database from "@/database/Database";
 import Instance from "@/database/Instance";
 
 export default class User implements IUser {
-    public readonly id: number;
+    public readonly id: string;
+    public readonly ip_hash: string | null;
     public readonly created_at: Date;
     public readonly last_seen_at: Date;
 
     constructor(data: IUser) {
         this.id = data.id;
+        this.ip_hash = data.ip_hash;
         this.created_at = data.created_at;
         this.last_seen_at = data.last_seen_at;
     }
 
-    public static async findById(id: number): Promise<User | null> {
+    public static async findById(id: string): Promise<User | null> {
         const user = await Database.prisma.user.findUnique({ where: { id } });
         return user ? new User(user) : null;
     }
 
-    public static async findOrCreate(id: number): Promise<User> {
-        let user = await Database.prisma.user.findUnique({ where: { id } });
-        if (!user) user = await Database.prisma.user.create({ data: { id } });
+    /**
+     * Crée un compte dont l'id EST la clé (12 hex).
+     * `ipHash` = hash SHA-256 de l'IP (jamais d'IP en clair).
+     */
+    public static async createWithKey(key: string, ipHash: string): Promise<User> {
+        const user = await Database.prisma.user.create({ data: { id: key, ip_hash: ipHash } });
         return new User(user);
+    }
 
+    /**
+     * Plusieurs users peuvent partager la même IP (même hash) :
+     * on résout vers le plus récemment actif (dernier login gagnant).
+     */
+    public static async findMostRecentByIpHash(ipHash: string): Promise<User | null> {
+        const user = await Database.prisma.user.findFirst({
+            where: { ip_hash: ipHash },
+            orderBy: { last_seen_at: 'desc' },
+        });
+        return user ? new User(user) : null;
+    }
+
+    /** Lie ce compte à une IP (hash) après un login par chunks réussi */
+    public async setIpHash(ipHash: string): Promise<User> {
+        const user = await Database.prisma.user.update({
+            where: { id: this.id },
+            data: { ip_hash: ipHash },
+        });
+        return new User(user);
     }
 
     public async getInstance(): Promise<Instance | null> {

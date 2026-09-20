@@ -11,7 +11,7 @@ Toutes les routes suivent une structure JSON cohérente pour faciliter l'intégr
   "link_type": "<type>",   // Type de route (c, j, s, d, t, u)
   "link_id": "<id>",       // ID ou paramètre spécifique
   "iid": <number|null>,    // Instance ID (null si non applicable)
-  "uid": <number>,         // User ID
+  "uid": "<12hex>",         // User ID = clé 12 hex (renvoyée par /aur)
   "time": <timestamp>,     // Timestamp Unix en millisecondes
   "data": { ... }          // Données spécifiques (optionnel)
 }
@@ -24,7 +24,7 @@ Toutes les routes suivent une structure JSON cohérente pour faciliter l'intégr
 | `link_type` | string | Type de route (voir tableau ci-dessous) | Toujours |
 | `link_id` | string | ID du lien ou paramètre de requête | Toujours |
 | `iid` | number\|null | ID de l'instance active (0-63 ou null) | Toujours |
-| `uid` | number | ID de l'utilisateur | Toujours |
+| `uid` | string | ID utilisateur = clé 12 hex (ex: `330ea1cc96e9`) | Toujours |
 | `time` | number | Timestamp Unix en millisecondes | Toujours |
 | `data` | object | Données spécifiques à la route | Selon route |
 
@@ -39,7 +39,7 @@ Toutes les routes suivent une structure JSON cohérente pour faciliter l'intégr
 | [/as](as/asREADME.md) | `s` (search) | Rechercher des cartes MTG | Oui |
 | [/ad](ad/adREADME.md) | `d` (deck) | Gestion des decks | Oui |
 | [/at](at/atREADME.md) | `t` (texture) | Liens statiques & atlas | Oui |
-| [/au](au/auREADME.md) | `u` (user) | Informations utilisateur | Oui |
+| [/au](au/auREADME.md) | `u` (user) | Identité : enregistrement (`/aur`) et login (`/aul…`) | Oui |
 
 ## 📊 Détails par Route
 
@@ -52,7 +52,7 @@ Toutes les routes suivent une structure JSON cohérente pour faciliter l'intégr
   "link_type": "c",
   "link_id": "",
   "iid": 42,
-  "uid": 12345,
+  "uid": "330ea1cc96e9",
   "time": 1728499200000
 }
 ```
@@ -70,7 +70,7 @@ Toutes les routes suivent une structure JSON cohérente pour faciliter l'intégr
   "link_type": "j",
   "link_id": "2a",
   "iid": 42,
-  "uid": 12345,
+  "uid": "330ea1cc96e9",
   "time": 1728499200000
 }
 ```
@@ -91,7 +91,7 @@ Toutes les routes suivent une structure JSON cohérente pour faciliter l'intégr
   "link_type": "s",
   "link_id": "lightning bolt",
   "iid": 42,
-  "uid": 12345,
+  "uid": "330ea1cc96e9",
   "time": 1728499200000,
   "data": {
     "query": "lightning bolt",
@@ -117,7 +117,7 @@ Toutes les routes suivent une structure JSON cohérente pour faciliter l'intégr
   "link_type": "d",
   "link_id": "parse",
   "iid": null,
-  "uid": 12345,
+  "uid": "330ea1cc96e9",
   "time": 1728499200000,
   "data": {
     "action": "parse",
@@ -148,7 +148,7 @@ Toutes les routes suivent une structure JSON cohérente pour faciliter l'intégr
   "link_type": "t",
   "link_id": "0",
   "iid": 42,
-  "uid": 12345,
+  "uid": "330ea1cc96e9",
   "time": 1728499200000,
   "data": {
     "cards_loaded_count": 150,
@@ -170,7 +170,7 @@ Retourne une image PNG d'atlas (6×4 cartes, max 2048px).
 
 ---
 
-### `/au` - Informations Utilisateur
+### `/au` - Identité & Login Utilisateur
 
 **Type:** `u` (user)
 
@@ -179,7 +179,7 @@ Retourne une image PNG d'atlas (6×4 cartes, max 2048px).
   "link_type": "u",
   "link_id": "",
   "iid": null,
-  "uid": 12345,
+  "uid": "330ea1cc96e9",
   "time": 1728499200000,
   "data": {
     "last_seen_at": 1728499200000
@@ -187,11 +187,24 @@ Retourne une image PNG d'atlas (6×4 cartes, max 2048px).
 }
 ```
 
-**Usage:** Récupérer les informations utilisateur (création automatique si inexistant).
+**Endpoints:**
+- `GET /aur` : enregistrement — crée le compte (l'id EST la clé 12 hex) et renvoie `{ uid, key }`
+- `GET /aul{3hex}` : login par chunks — 4 requêtes de 3 hex, la clé est reconstituée par permutation (TTL 90 s)
+- `GET /aul{12hex}` : login direct avec la clé complète
+
+**Usage:** Le client doit s'enregistrer via `/aur` avant toute autre route. Les routes `/ac`, `/aj`, `/as`, `/at`, `/ad` résolvent l'utilisateur via le **hash SHA-256 de l'IP** (compte le plus récemment actif) et renvoient `401 { error: 'unknown_user' }` si l'IP n'est pas liée à un compte.
 
 ---
 
 ## 🔄 Workflow Typique
+
+### 0. Enregistrer le client
+
+```
+GET /aur → { "uid": "330ea1cc96e9", "key": "330ea1cc96e9", ... }
+```
+
+La clé 12 hex renvoyée sert d'`uid` pour toutes les autres routes.
 
 ### 1. Démarrer une Session
 

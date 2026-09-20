@@ -2,12 +2,13 @@ import { Request, Response, Router } from "express";
 import User from "@/database/User";
 import Instance from "@/database/Instance";
 import Deck from "@/database/Deck";
-import { uid } from "@/utils";
+import { getUserId } from "@/utils";
 import Database from "@/database/Database";
 import fs from "fs";
 import path from "path";
 import https from "https";
 import { createCanvas, loadImage } from "canvas";
+import { createHash } from "crypto";
 
 export const atRouter = Router();
 atRouter.get('/at:linkId', atHandler);
@@ -26,9 +27,15 @@ async function atHandler(req: Request, res: Response) {
         // Convertir l'ID base36 en nombre
         const linkIndex = parseInt(linkId, 36);
 
-        // Récupérer ou créer l'utilisateur
-        const userId = uid(req);
-        const user = await User.findOrCreate(userId);
+        // Récupérer l'utilisateur (IP déjà liée via /aur ou login par clé)
+        const userId = await getUserId(req);
+        if (userId === null) {
+            return res.status(401).json({ error: 'unknown_user', hint: 'Register via /aur first' });
+        }
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(401).json({ error: 'unknown_user' });
+        }
         await user.updateLastSeen();
 
         // Gérer l'instance du joueur (utilise les instances existantes créées via ac/aj)
@@ -149,7 +156,7 @@ async function managePlayerInstance(user: User): Promise<Instance | null> {
 /**
  * Nettoie les anciennes associations joueur-instance si nécessaire
  */
-async function cleanupOldPlayerAssociations(currentUserId: number): Promise<void> {
+async function cleanupOldPlayerAssociations(currentUserId: string): Promise<void> {
     // Cette logique peut être étendue selon les besoins
     // Pour l'instant, on ne fait rien de spécial
 }
@@ -158,7 +165,7 @@ async function cleanupOldPlayerAssociations(currentUserId: number): Promise<void
  * Génère la liste des decks de l'utilisateur
  * at1 : Retourne juste l'ID et le nom de chaque deck
  */
-async function generateDeckListData(userId: number): Promise<any> {
+async function generateDeckListData(userId: string): Promise<any> {
     try {
         const userDecks = await Deck.findByUserId(userId);
         
@@ -211,6 +218,17 @@ async function generateSetsData(): Promise<any> {
             error: 'Failed to fetch sets'
         };
     }
+}
+
+/**
+ * Construit un id stable pour un ruling à partir de sa clé naturelle
+ * (oracle_id + date + hash court du commentaire), l'id autoincrement
+ * ayant été supprimé au profit de la clé primaire composite.
+ */
+function buildRulingId(oracleId: string, publishedAt: Date, comment: string): string {
+    const date = publishedAt.toISOString().slice(0, 10);
+    const hash = createHash('sha256').update(comment).digest('hex').slice(0, 8);
+    return `${oracleId}_${date}_${hash}`;
 }
 
 /**
@@ -319,9 +337,10 @@ async function generateInstanceCardsData(instance: Instance): Promise<any> {
             card.faces.forEach(face => {
                 if (face.oracle?.rulings) {
                     face.oracle.rulings.forEach(ruling => {
-                        if (!group.rulings.has(ruling.id)) {
-                            group.rulings.set(ruling.id, {
-                                id: ruling.id,
+                        const id = buildRulingId(ruling.oracle_id, ruling.published_at, ruling.comment);
+                        if (!group.rulings.has(id)) {
+                            group.rulings.set(id, {
+                                id,
                                 published_at: ruling.published_at,
                                 comment: ruling.comment
                             });
@@ -357,7 +376,7 @@ async function generateInstanceCardsData(instance: Instance): Promise<any> {
  * Génère les données JSON pour un lien donné
  * Utilise le même calcul de coordonnées UV que le script Python
  */
-async function generateJsonData(linkIndex: number, instance: Instance, userId: number): Promise<any> {
+async function generateJsonData(linkIndex: number, instance: Instance, userId: string): Promise<any> {
     // at1 : Retourner la liste des decks de l'utilisateur
     if (linkIndex === 1) {
         return generateDeckListData(userId);

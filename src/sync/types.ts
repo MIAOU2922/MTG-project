@@ -650,10 +650,14 @@ export interface BulkData {
   name: string;
   /** Description */
   description: string;
-  /** Taille en bytes */
-  size: number;
-  /** URI de téléchargement */
-  download_uri: URI;
+  /** Taille en bytes (legacy bulk API field) */
+  size?: number;
+  /** URI de téléchargement (legacy bulk API field) */
+  download_uri?: URI;
+  /** URI du fichier JSON Lines compressé */
+  jsonl_download_uri?: URI;
+  /** Taille compressée en bytes */
+  compressed_size?: number;
   /** Date de mise à jour */
   updated_at: Date;
   /** Type de contenu MIME */

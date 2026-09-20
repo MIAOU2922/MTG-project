@@ -4,7 +4,14 @@ import { router } from "@routes/route";
 import cors from 'cors';
 import * as cron from 'cron';
 import Instance from '@/database/Instance';
+import Config from '@/database/Config';
 import ScryFallSync from '@/sync/index';
+import { ScryfallBulkDataClient } from '@/sync/bulk-client';
+import { BulkData } from '@/sync/types';
+
+/** Clés Config pour mémoriser le dernier bulk synchronisé */
+const LAST_CARDS_SYNC_KEY = 'sync:last_cards_bulk_updated_at';
+const LAST_RULINGS_SYNC_KEY = 'sync:last_rulings_bulk_updated_at';
 
 export default class Main extends EventEmitter {
     private static _instance: Main;
@@ -84,30 +91,85 @@ export default class Main extends EventEmitter {
     }
 
     private setupSyncScheduler(): void {
-        // Planifier la sync des cartes tous les jours à 1h du matin
-        // Cron format: minute hour day-of-month month day-of-week
-        // "0 1 * * *" = 01:00 AM tous les jours
-        const syncJob = new cron.CronJob('0 1 * * *', async () => {
+        // Mise à jour hebdomadaire via les bulks Scryfall : tous les lundis à 1h du matin (heure locale)
+        // Ordre : d'abord les cartes, puis les rulings
+        const syncJob = new cron.CronJob('0 1 * * 1', async () => {
             if (this.syncInProgress) {
                 console.log('⏭️  Sync already in progress, skipping scheduled sync');
                 return;
             }
 
-            console.log('🔄 Starting scheduled daily sync at 1:00 AM...');
+            console.log('🔄 Starting scheduled weekly sync (Monday 1:00 AM Europe/Paris)...');
             this.syncInProgress = true;
 
             try {
-                const sync = new ScryFallSync(5); // 5 cartes/rulings en parallèle
-                await sync.start({ syncCards: true, syncRulings: true });
-                console.log('✅ Scheduled daily sync completed successfully');
-            } catch (error) {
-                console.error('❌ Error during scheduled daily sync:', error);
+                const bulk = new ScryfallBulkDataClient();
+
+                // 1) Cartes
+                try {
+                    const cardsInfo = await bulk.getLatestBulkDataInfo('all_cards');
+                    if (await this.needsSync('all_cards', cardsInfo, LAST_CARDS_SYNC_KEY)) {
+                        await this.runSync({ syncCards: true, syncRulings: false });
+                        if (cardsInfo) {
+                            await Config.set(LAST_CARDS_SYNC_KEY, String(cardsInfo.updated_at));
+                            console.log(`💾 Saved last cards sync timestamp: ${cardsInfo.updated_at}`);
+                        }
+                    }
+                } catch (error) {
+                    console.error('❌ Cards sync failed:', error);
+                }
+
+                // 2) Rulings (tentés même si la synchro cartes a échoué)
+                try {
+                    const rulingsInfo = await bulk.getLatestBulkDataInfo('rulings');
+                    if (await this.needsSync('rulings', rulingsInfo, LAST_RULINGS_SYNC_KEY)) {
+                        await this.runSync({ syncCards: false, syncRulings: true });
+                        if (rulingsInfo) {
+                            await Config.set(LAST_RULINGS_SYNC_KEY, String(rulingsInfo.updated_at));
+                            console.log(`💾 Saved last rulings sync timestamp: ${rulingsInfo.updated_at}`);
+                        }
+                    }
+                } catch (error) {
+                    console.error('❌ Rulings sync failed:', error);
+                }
+
+                console.log('✅ Scheduled weekly sync finished');
             } finally {
                 this.syncInProgress = false;
             }
-        });
+        }, null, false, 'Europe/Paris'); // start=false, timezone Europe/Paris (1h du matin locale)
 
         syncJob.start();
-        console.log('📅 Daily sync scheduler started (runs at 1:00 AM every day)');
+        console.log('📅 Weekly sync scheduler started (runs every Monday at 1:00 AM Europe/Paris, cards then rulings)');
+    }
+
+    /** Lance une synchro Scryfall avec la concurrence par défaut */
+    private async runSync(options: { syncCards: boolean; syncRulings: boolean }): Promise<void> {
+        const sync = new ScryFallSync(5);
+        await sync.start(options);
+    }
+
+    /**
+     * Détermine si un bulk doit être synchronisé :
+     * - true si le bulk est plus récent que la dernière synchro mémorisée
+     * - true si on ne peut pas vérifier (API indisponible) pour ne pas sauter de mise à jour
+     */
+    private async needsSync(type: 'all_cards' | 'rulings', info: BulkData | null, configKey: string): Promise<boolean> {
+        if (!info) {
+            console.warn(`⚠️  Unable to fetch bulk info for ${type}, running sync anyway`);
+            return true;
+        }
+
+        const cfg = await Config.get(configKey, '');
+        if (cfg.value) {
+            const lastSync = new Date(cfg.value);
+            if (!isNaN(lastSync.getTime()) && new Date(info.updated_at) <= lastSync) {
+                console.log(`⏭️  ${type} bulk unchanged since last sync (${info.updated_at}), skipping`);
+                return false;
+            }
+        }
+
+        console.log(`🆕 ${type} bulk updated (${info.updated_at}), syncing...`);
+        return true;
     }
 }

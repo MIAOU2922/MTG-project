@@ -5,7 +5,7 @@ import { apiCreateRouter } from "@routes/ac/route";
 import { apiSearchRouter } from "@routes/as/route";
 import { atRouter } from "@routes/at/route";
 import { apiDeckRouter } from "@routes/ad/route";
-import { uid } from "@/utils";
+import { getUserId } from "@/utils";
 
 export const router = Router();
 router.use(apiUserRouter);
@@ -16,9 +16,9 @@ router.use(atRouter);
 router.use(apiDeckRouter);
 router.get('/h', healthHandler);
 
-function healthHandler(req: Request, res: Response) {
+async function healthHandler(req: Request, res: Response) {
     res.json({
         status: 'ok',
-        uid: uid(req)
+        uid: await getUserId(req)
     });
 }

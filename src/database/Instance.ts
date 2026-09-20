@@ -12,7 +12,7 @@ export default class Instance implements IInstance {
     public readonly created_at: Date;
     public readonly last_seen_at: Date;
     public card_ids: string[];
-    public user_ids: number[];
+    public user_ids: string[];
 
     // File d'attente pour limiter les téléchargements simultanés
     private static downloadQueue: string[] = [];
@@ -149,7 +149,7 @@ export default class Instance implements IInstance {
      * Remove a user from all instances in the database
      * This ensures a user can only be in one instance at a time
      */
-    public static async removeUserFromAllInstances(userId: number): Promise<void> {
+    public static async removeUserFromAllInstances(userId: string): Promise<void> {
         // Find all instances containing this user
         const instances = await Database.prisma.instance.findMany({
             where: { user_ids: { has: userId } }
@@ -210,7 +210,7 @@ export default class Instance implements IInstance {
         return users.map(user => new User(user));
     }
 
-    public async addUser(userId: number): Promise<void> {
+    public async addUser(userId: string): Promise<void> {
         // Remove user from all other instances first to ensure exclusivity
         await Instance.removeUserFromAllInstances(userId);
         
@@ -225,7 +225,7 @@ export default class Instance implements IInstance {
         }
     }
 
-    public async removeUser(userId: number): Promise<void> {
+    public async removeUser(userId: string): Promise<void> {
         const newUserIds = this.user_ids.filter(id => id !== userId);
         await Database.prisma.instance.update({
             where: { id: this.id },
@@ -234,7 +234,7 @@ export default class Instance implements IInstance {
         this.user_ids = newUserIds;
     }
 
-    public hasUser(userId: number): boolean {
+    public hasUser(userId: string): boolean {
         return this.user_ids.includes(userId);
     }
 

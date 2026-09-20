@@ -87,29 +87,30 @@ Le système supporte **6 zones** pour les decks:
 ### Méthodes Statiques (Factory)
 ```prisma
 model User {
-  id              Int
-  username        String @unique
-  email           String @unique
-  decks           Deck[]
+  id           String   @id // clé 12 hex = uid, renvoyée par /aur
+  ip_hash      String?  // hash SHA-256 de la dernière IP connue (non unique)
+  created_at   DateTime @default(now())
+  last_seen_at DateTime @default(now()) @updatedAt
 }
 
 model Deck {
-  id              Int
-  name            String
-  owner_id        Int
-  owner           User
-  cards           DeckCard[]
-  created_at      DateTime
-  updated_at      DateTime
+  id          String   @id @default(uuid())
+  user_id     String   // uid du propriétaire (clé 12 hex)
+  name        String
+  description String?
+  commander   String?
+  cards       DeckCard[]
+  created_at  DateTime @default(now())
+  updated_at  DateTime @default(now()) @updatedAt
 }
 
 model DeckCard {
-  id              Int
-  deck_id         Int
-  card_id         String
-  zone            String  // main, sideboard, commander, etc.
-  quantity        Int
-  is_commander    Boolean
+  id           String   @id @default(uuid())
+  deck_id      String
+  card_id      String
+  count        Int      @default(1)
+  zone         String   @default("main") // main, sideboard, commander, companion, oathbreaker, wishboard
+  is_commander Boolean  @default(false)
 }
 
 model Card {
@@ -136,7 +137,7 @@ model Set {
 ```
 
 ## Relations
-- **User ↔ Deck**: Un utilisateur peut avoir plusieurs decks (1:N)
+- **User ↔ Deck**: Les decks référencent leur propriétaire via `user_id` (clé 12 hex, pas de FK en base) (1:N)
 - **Deck ↔ DeckCard**: Un deck contient plusieurs cartes (1:N)
 - **DeckCard → Card**: Une carte du deck référence le modèle Card (N:1)
 - **Card → Oracle**: Une carte peut avoir un texte Oracle (N:1)
@@ -144,10 +145,11 @@ model Set {
 
 ## Migrations
 Les migrations sont stockées dans `/prisma/migrations/`:
-- `20251007155317_init`: Création initiale des tables
-- `20251008130116_`: Ajout des données initiales
-- `20251008130312_change_mapping`: Changements de structure
-- `20251008201336_optimize_legalities_to_json`: Optimisation des légalités
+- `20260525175816_`: Création initiale des tables
+- `20260918213202_fix_ruling_composite_unique`: Unicité rulings par (oracle, date, texte)
+- `20260919083246_user_key_string_identity`: `users.id` → clé 12 hex (String)
+- `20260919132857_hash_user_ip`: colonne `ip_hash` (SHA-256, jamais d'IP en clair)
+- `20260919225905_ruling_natural_pk`: Ruling → clé primaire naturelle (oracle_id, published_at, comment), suppression de l'id autoincrement
 
 ## Types TypeScript
 
