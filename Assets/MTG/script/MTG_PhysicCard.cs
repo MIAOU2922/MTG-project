@@ -10,7 +10,7 @@ using TMPro;
 namespace MTG
 {
     [UdonBehaviourSyncMode(BehaviourSyncMode.Continuous)]
-    public class MTG_PhysicCard : MTG_Card
+    public class MTG_PhysicCard : MTG_TickableCard
     {
     
         [Header("=== PHYSIC CARD DATA ===")]
@@ -21,6 +21,7 @@ namespace MTG
         [Header("=== POOL REFERENCES ===")]
         [HideInInspector] public int PoolIndex = -1;
         [HideInInspector] public MTG_PhysicCardPoolManager PoolManager;
+        [SerializeField] private bool _CountedActive = false;
 
         [Header("=== NETWORK SYNC ===")]
         [UdonSynced, SerializeField] private string _SyncedCardKey = "";
@@ -50,6 +51,95 @@ namespace MTG
         {
             base.Start();
             OriginalScale = transform.localScale;
+
+            // S'enregistrer dans la pool (late join / objet reseau replique)
+            EnsurePoolRegistration();
+        }
+
+        // Activation (activation synchronisee par VRChat) : enregistrement + comptage.
+        // Necessaire car un GO inactif = script inactif (pas de Start ni Update).
+        protected override void OnEnable()
+        {
+            base.OnEnable();
+            EnsurePoolRegistration();
+        }
+
+        // Applique la visibilite dictee par l'etat reseau : VRChat ne synchronise
+        // pas SetActive, donc on se base sur la cle synced pour activer/desactiver.
+        public void ApplyNetworkVisibility()
+        {
+            if (!string.IsNullOrEmpty(_SyncedCardKey))
+            {
+                if (!gameObject.activeSelf)
+                    gameObject.SetActive(true);
+            }
+            else if (gameObject.activeSelf)
+            {
+                gameObject.SetActive(false);
+            }
+        }
+
+        // Spawn recu du reseau (broadcast par le pool manager) : on affiche la
+        // carte sans prendre l'ownership ni serialiser.
+        public void ApplyRemoteSpawn(string _Key, Vector3 _Pos, Quaternion _Rot)
+        {
+            transform.position = _Pos;
+            transform.rotation = _Rot;
+            // Coherence locale avec le reseau (evite une desactivation ulterieure)
+            _SyncedCardKey = _Key;
+            _LastDeserializedKey = _Key;
+            if (!gameObject.activeSelf)
+                gameObject.SetActive(true);
+            EnsurePoolRegistration();
+            base.SetCardKey(_Key);
+        }
+
+        // Despawn recu du reseau (broadcast par le pool manager)
+        public void ApplyRemoteDespawn()
+        {
+            IsHeld = false;
+            ZoomOut();
+            _SyncedCardKey = "";
+            _LastDeserializedKey = "";
+            _PendingLateJoinInit = false;
+            base.SetCardKey("");
+            if (gameObject.activeSelf)
+                gameObject.SetActive(false);
+        }
+
+        // Retrouve la pool via le Manager, s'y enregistre et se compte active si besoin.
+        // Idempotent : appelable depuis OnEnable, OnDeserialization, Start et la pool.
+        public void EnsurePoolRegistration()
+        {
+            if (PoolManager == null)
+            {
+                if (Manager != null && Manager.PhysicCardPool != null)
+                    PoolManager = Manager.PhysicCardPool;
+                else
+                    return;
+            }
+            if (PoolIndex < 0)
+                PoolManager.RegisterCard(this);
+
+            // La carte est active mais pas encore comptee dans la pool
+            if (!_CountedActive && PoolIndex >= 0 && gameObject.activeSelf)
+            {
+                _CountedActive = true;
+                PoolManager.MarkCardActive(this);
+            }
+        }
+
+        // Desactivation (despawn synchronise par VRChat) : decompte + desinscription
+        protected override void OnDisable()
+        {
+            if (_CountedActive)
+            {
+                _CountedActive = false;
+                if (PoolManager != null) PoolManager.MarkCardInactive(this);
+            }
+            if (PoolManager != null && PoolIndex >= 0)
+                PoolManager.UnregisterCard(this);
+            base.OnDisable();
         }
 
         // Initialise la carte avec synchro reseau
@@ -77,6 +167,17 @@ namespace MTG
 
         public override void OnDeserialization()
         {
+            // Visibilite : VRChat ne synchronise PAS le SetActive des GameObjects.
+            // La cle synced fait foi : non vide = carte spawn (on active),
+            // vide = carte despawn (on desactive).
+            ApplyNetworkVisibility();
+            if (string.IsNullOrEmpty(_SyncedCardKey))
+                return; // carte despawn : rien d'autre a traiter
+
+            // S'assurer que la carte est connue de la pool locale
+            // (spawn distant ou late join)
+            EnsurePoolRegistration();
+
             // Eviter les boucles de deserialisation
             if (_SyncedCardKey == _LastDeserializedKey && !_PendingLateJoinInit)
             {
@@ -97,8 +198,9 @@ namespace MTG
                 _LastDeserializedKey = _SyncedCardKey;
                 _PendingLateJoinInit = true;
 
-                // Delai aleatoire 0 a 5 secondes pour stagger le chargement
-                _LateJoinInitTime = Time.time + (PoolIndex * 0.15f);
+                // Delai plafonne pour stagger le chargement (max ~15s, la pool
+                // peut contenir des milliers de slots)
+                _LateJoinInitTime = Time.time + Mathf.Min(PoolIndex, 100) * 0.15f;
                 this.VerboseLog($"Late join queued: {_SyncedCardKey}, delay={_LateJoinInitTime - Time.time:F2}s (index={PoolIndex})");
                 return;
             }
@@ -127,6 +229,9 @@ namespace MTG
         protected override void Update()
         {
             base.Update();
+
+            // (Pas de retry ici : MTG_Card gere le chargement en mode evenementiel
+            // via la file d'attente du Manager.)
 
             // Traitement differe du late join (evite de tout charger d'un coup)
             if (_PendingLateJoinInit && Time.time >= _LateJoinInitTime)
@@ -220,6 +325,11 @@ namespace MTG
             // Reset synced data
             _SyncedCardKey = "";
             _LastDeserializedKey = "";
+            _PendingLateJoinInit = false;
+
+            // Notifie les autres clients du despawn (cle vide = carte a desactiver)
+            if (Networking.LocalPlayer != null && Networking.IsOwner(Networking.LocalPlayer, gameObject))
+                RequestSerialization();
 
             // Reset la carte (SetCardKey vide → reset ImageFrontLoaded/BackLoaded/IsFlipped)
             base.SetCardKey("");

@@ -7591,7 +7591,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   serializationData:
-    SerializedFormat: 2
+    SerializedFormat: 0
     SerializedBytes: 
     ReferencedUnityObjects: []
     SerializedBytesString: 
@@ -7604,6 +7604,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_DeckInterface
+  _updateEveryNFrames: 50
   ValidatedInput: {fileID: 7888198382738878430}
   UrlDisplayText: {fileID: 3307339680021873776}
   CardPrefab: {fileID: 6588703018279975428, guid: bfa0832650a4e7044b5b252b1bb72c26,
@@ -7613,6 +7614,8 @@ MonoBehaviour:
   DeckNameInput: {fileID: 2594010802438678729}
   DeckDescriptionInput: {fileID: 2781469264477871599}
   CardListInput: {fileID: 7804994680598065007}
+  DeckIds: []
+  DeckNames: []
 --- !u!114 &7593443425105987315
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10668,8 +10671,7 @@ PrefabInstance:
         type: 3}
       propertyPath: serializationData.Prefab
       value: 
-      objectReference: {fileID: 6326017995217307430, guid: bfa0832650a4e7044b5b252b1bb72c26,
-        type: 3}
+      objectReference: {fileID: 0}
     - target: {fileID: 6588703018279975428, guid: bfa0832650a4e7044b5b252b1bb72c26,
         type: 3}
       propertyPath: m_Name

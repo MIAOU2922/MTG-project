@@ -13,4 +13,5 @@
 *.csproj
 /ClientSimStorage
 /Logs
+/server-web
 .env

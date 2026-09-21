@@ -37,48 +37,43 @@ namespace MTG
         [SerializeField] protected bool ImageBackLoaded = false;
         [SerializeField] protected bool IsFlipped = false;
         [SerializeField] protected bool IsDoubleFaced = false;
+        [SerializeField] protected bool RegisteredForRefresh = false;
         
         //methodes
-        protected override void Update()
+        // (Pas d'Update ici : MTG_Card est purement evenementiel. Seule
+        // MTG_TickableCard ajoute un Update pour les cartes qui en ont besoin.)
+
+        // Pool / destruction : la carte se retire de la file d'attente du Manager
+        protected override void OnDisable()
         {
-            if (!ImageFrontLoaded && !String.IsNullOrEmpty(CardKey))
-            {
-                if (Time.time - LastRetryTime >= RETRY_INTERVAL)
-                {
-                    LastRetryTime = Time.time;
-                    
-                    // Verifier si l'atlas est en cours de chargement
-                    bool _AtlasIsLoading = IsAtlasCurrentlyLoading();
-                    
-                    if (_AtlasIsLoading)
-                    {
-                        // Atlas en cours de telechargement - ne pas compter comme retry
-                        AtlasLoadingRetryCount++;
-                    }
-                    else
-                    {
-                        // Atlas pas en chargement - compter comme retry normal
-                        RetryCount++;
-                        if (RetryCount >= MAX_RETRY_COUNT)
-                        {
-                            this.Error($"Failed to load card {CardKey} after {MAX_RETRY_COUNT} retries");
-                            if (Loading != null) Loading.SetActive(false);
-                            return;
-                        }
-                        if (RetryCount <= 2 || RetryCount % 5 == 0)
-                            this.Log($"Retry {RetryCount}/{MAX_RETRY_COUNT} loading card {CardKey}");
-                    }
-                    
-                    SetImageFromId();
-                }
-            }
+            CancelRefreshRegistration();
         }
-        
-        // Verifie si l'atlas de cette carte est en cours de telechargement
-        private bool IsAtlasCurrentlyLoading()
+
+        // Evenement : les donnees d'atlas ont change ou une image d'atlas est prete.
+        // Appele par les interfaces (Search/Deck) en mode evenementiel.
+        public virtual void OnAtlasDataUpdated()
         {
-            if (!Manager || AtlasIndexFront < 0) return false;
-            return Manager.IsAtlasLoading(AtlasIndexFront);
+            if (ImageFrontLoaded || string.IsNullOrEmpty(CardKey)) return;
+            SetImageFromId();
+        }
+
+        // Enregistre la carte dans la file d'attente du Manager : elle sera
+        // re-tentee quand les donnees d'atlas changent ou qu'une image est prete
+        // (mode evenementiel, aucun polling).
+        protected void RegisterForRefresh()
+        {
+            if (RegisteredForRefresh) return;
+            if (!Manager) return;
+            Manager.RequestCardRefresh(this);
+            RegisteredForRefresh = true;
+        }
+
+        // Retire la carte de la file d'attente du Manager
+        protected void CancelRefreshRegistration()
+        {
+            if (!RegisteredForRefresh) return;
+            RegisteredForRefresh = false;
+            if (Manager) Manager.CancelCardRefresh(this);
         }
         // definie la carte a afficher via son id ( CardKey )
         public void SetCardKey(String _CardKey)
@@ -103,6 +98,7 @@ namespace MTG
                 LastRetryTime = -RETRY_INTERVAL;
                 RetryCount = 0;
                 AtlasLoadingRetryCount = 0;
+                CancelRefreshRegistration();
                 UpdateFlipVisibility();
 
                 // Appliquer le placeholder
@@ -127,12 +123,18 @@ namespace MTG
             ImageBackLoaded = false;
             IsFlipped = false;
             IsDoubleFaced = false;
-            LastRetryTime = Time.time + 2f; // attendre 2s avant premier retry (temps que l'atlas charge)
+            LastRetryTime = Time.time;
             RetryCount = 0; // Reset retry counter
             AtlasLoadingRetryCount = 0; // Reset atlas loading counter
             UpdateFlipVisibility();
             
-            // Le chargement de l'image sera declenche par Update() apres le delai
+            // Tentative immediate (les atlas deja charges repondent tout de suite) ;
+            // sinon la carte s'enregistre pour etre re-tentee en mode evenementiel
+            SetImageFromId();
+            if (ImageFrontLoaded)
+                CancelRefreshRegistration();
+            else
+                RegisterForRefresh();
         }
         public String GetCardKey()
         {
@@ -258,9 +260,12 @@ namespace MTG
                 CardImageFront.uvRect = uvRectFront;
                 ImageFrontLoaded = true;
             }
-            if (ImageFrontLoaded && Loading != null)
+            if (ImageFrontLoaded)
             {
-                Loading.SetActive(false);
+                // Image chargee : la carte quitte la file d'attente du Manager
+                CancelRefreshRegistration();
+                if (Loading != null)
+                    Loading.SetActive(false);
             }
         }
         // met a jour la visibilite des images et du bouton flip

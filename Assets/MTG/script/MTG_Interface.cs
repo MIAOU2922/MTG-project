@@ -30,10 +30,9 @@ namespace MTG
         {
             base.Start();
         }
-        protected override void Update()
-        {
-            base.Update();
-        }
+
+        // (Pas d'Update ici : les interfaces heritent de MTG_TickableInterface
+        // seulement si elles ont besoin d'un tick par frame.)
 
         protected virtual void GenerateUrl()
         {
@@ -96,6 +95,11 @@ namespace MTG
         public virtual void OnDeckResponse(IVRCStringDownload _Json)
         {
             this.VerboseLog("OnDeckResponse called (base implementation)");
+        }
+
+        public virtual void OnDeckListResponse(IVRCStringDownload _Json)
+        {
+            this.VerboseLog("OnDeckListResponse called (base implementation)");
         }
 
 

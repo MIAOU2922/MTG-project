@@ -13,7 +13,7 @@ using TMPro;
 
 namespace MTG
 {
-    public class MTG_SearchInterface : MTG_Interface
+    public class MTG_SearchInterface : MTG_TickableInterface
     {
 
         [Header("=== INPUT FIELDS ===")]
@@ -114,7 +114,8 @@ namespace MTG
         protected override void Start()
         {
             base.Start();
-            VRCStringDownloader.LoadUrl(Manager.TempURLs[2], (IUdonEventReceiver)this);
+            // at2 (liste des sets) est fetch une seule fois par le Manager
+            // dans InitialFetch() apres le login/join, puis forwarde ici.
         }
 
         [ContextMenu("Force Initialize Card Pool")]
@@ -218,6 +219,7 @@ namespace MTG
                 LoadNextBatchOfCards();
             }
         }
+
         //placeholder pour GenerateUrl pour les element UI
         public void OnEndEdit()
         {
@@ -361,7 +363,8 @@ namespace MTG
 
         // Traite la reponse de la liste des sets (TempURLs[2]) et remplit le SetDropdown
         // Format JSON: { "count": N, "sets": ["Nom du set (code)", ...] }
-        private void ProcessSetListResponse(IVRCStringDownload _Json)
+        // Appele par le Manager quand il recoit la reponse at2 (InitialFetch)
+        public void ProcessSetListResponse(IVRCStringDownload _Json)
         {
             this.Log("ProcessSetListResponse called");
             if (_Json == null || _Json.Result == null)
@@ -558,6 +561,11 @@ namespace MTG
             _PreviewCard = CardsPreview.GetComponent<MTG_SearchCard>();
             if (_PreviewCard == null) return;
             _PreviewCard.SetCardKey(_CardKey);
+
+            // Apercu : le remonter en tete de la file d'attente du Manager
+            // (SetCardKey l'a enregistre ; on le met en priorite)
+            if (Manager != null)
+                Manager.RequestCardRefreshPriority(_PreviewCard);
         }
 
         // Spawn une carte physique depuis la preview

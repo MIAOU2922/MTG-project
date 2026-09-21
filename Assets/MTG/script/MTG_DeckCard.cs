@@ -40,6 +40,9 @@ namespace MTG
             base.Start();
             if (DeckInterface == null) TryFindDeckInterface();
         }
+
+        // (Pas de Update ici : MTG_Card gere le chargement en mode evenementiel
+        // via la file d'attente du Manager.)
         public void SetCount(int count)
         {
             cardCount = Mathf.Max(0, count);
