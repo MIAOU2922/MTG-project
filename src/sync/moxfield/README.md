@@ -79,8 +79,8 @@ formats à commander).
   des decks qui la contiennent (tri par vues). Le `publicId` déduplique les
   chevauchements.
 - **Reprise automatique** : la progression est sauvegardée dans la table
-  `configs` (clé `moxfield:sweep:progress:…`) toutes les N cartes
-  (`--progress-every`, défaut 10) et sur SIGINT/SIGTERM. Relancer la même
+  `configs` (clé `moxfield:sweep:progress:…`) après **chaque carte**
+  (`--progress-every`, défaut 1) et sur SIGINT/SIGTERM. Relancer la même
   commande reprend là où ça s'était arrêté (si le plan a changé après un re-sync
   BDD, il repart de zéro).
 - Durée : ~2 s/carte à `--delay 500` → **~18 h** pour les 32 000 cartes avec

@@ -60,7 +60,7 @@ function parseArgs(argv: string[]): Args {
         users: [],
         publicId: "",
         onlyCommanders: false,
-        progressEvery: 10,
+        progressEvery: 1,
         reset: false,
         startFrom: "",
         help: false
@@ -250,7 +250,7 @@ Options :
 
 Mode sweep uniquement :
   --only-commanders         Ne balaye que les cartes légendaires (~4 000).
-  --progress-every N        Sauvegarde la progression toutes les N cartes (défaut 10).
+  --progress-every N        Sauvegarde la progression toutes les N cartes (défaut 1 = chaque carte).
   --reset                   Repart de zéro (ignore la progression sauvegardée).
   --start-from NAME         Commence à partir de ce nom de carte.
 
