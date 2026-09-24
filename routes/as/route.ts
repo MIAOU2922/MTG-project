@@ -233,20 +233,20 @@ async function performSearch(query: string) {
                     type_line: true,
                     printed_type_line: true,
                     mana_cost: true,
-                    cmc: true,
                     power: true,
                     toughness: true,
                     loyalty: true,
                     colors: true,
-                    color_identities: true,
-                    keywords: true,
+                    printed_text: true,
+                    flavor_text: true,
                     oracle: {
                         select: {
                             text: true,
+                            cmc: true,
+                            color_identities: true,
+                            keywords: true,
                         }
-                    },
-                    printed_text: true,
-                    flavor_text: true,
+                    }
                 }
             }
         },
@@ -259,7 +259,33 @@ async function performSearch(query: string) {
     return {
         query,
         count: processedCards.length,
-        items: processedCards,
+        // Aplatir : cmc/keywords/color_identities vivent sur Oracle, le reste
+        // sur la face — l'API garde son format d'origine
+        items: processedCards.map(flattenCardForApi),
+    };
+}
+
+/** Aplatit un card Prisma (oracle → face) pour conserver le format de réponse API */
+function flattenCardForApi(card: any): any {
+    return {
+        ...card,
+        faces: (card.faces ?? []).map((f: any) => ({
+            name: f.name,
+            oracle_id: f.oracle_id,
+            type_line: f.type_line ?? null,
+            printed_type_line: f.printed_type_line,
+            flavor_text: f.flavor_text,
+            printed_text: f.printed_text,
+            mana_cost: f.mana_cost ?? null,
+            power: f.power ?? null,
+            toughness: f.toughness ?? null,
+            loyalty: f.loyalty ?? null,
+            colors: f.colors ?? [],
+            cmc: f.oracle?.cmc ?? null,
+            color_identities: f.oracle?.color_identities ?? [],
+            keywords: f.oracle?.keywords ?? [],
+            oracle: f.oracle ? { text: f.oracle.text } : null,
+        })),
     };
 }
 
@@ -297,9 +323,10 @@ function collectMeta(branches: SearchCond[][]): any {
 }
 
 /** Exclusions par défaut (types de sets blacklistés, cartes extra, noms A-, mémorabilia) */
-function buildDefaultExclusions(meta: any): { cardNot: any[]; faceNot: any[] } {
+function buildDefaultExclusions(meta: any): { cardNot: any[]; faceNot: any[]; oracleNot: any[] } {
     const cardNot: any[] = [];
     const faceNot: any[] = [];
+    const oracleNot: any[] = [];
     const extras = meta.include === 'extras';
 
     for (const type of BLACKLISTED_SET_TYPES) {
@@ -339,18 +366,20 @@ function buildDefaultExclusions(meta: any): { cardNot: any[]; faceNot: any[] } {
     const memIncluded = extras || meta.settype === 'memorabilia' || meta.setTypeFromDb === 'memorabilia';
     if (!memIncluded) cardNot.push({ set: { type: 'memorabilia' } });
 
-    return { cardNot, faceNot };
+    return { cardNot, faceNot, oracleNot };
 }
 
 /** Construit la clause Prisma d'une branche (AND de conditions + exclusions par défaut) */
-function buildBranchWhere(branch: SearchCond[], defaults: { cardNot: any[]; faceNot: any[] }): any {
+function buildBranchWhere(branch: SearchCond[], defaults: { cardNot: any[]; faceNot: any[]; oracleNot: any[] }): any {
     const cardAnd: any[] = [];
     const faceAnd: any[] = [];
+    const oracleAnd: any[] = [];
     const cardNot: any[] = [...defaults.cardNot];
     const faceNot: any[] = [...defaults.faceNot];
+    const oracleNot: any[] = [...defaults.oracleNot];
 
     for (const cond of branch) {
-        applyCond(cond, { cardAnd, faceAnd, cardNot, faceNot });
+        applyCond(cond, { cardAnd, faceAnd, oracleAnd, cardNot, faceNot, oracleNot });
     }
 
     const and: any[] = [...cardAnd];
@@ -359,6 +388,12 @@ function buildBranchWhere(branch: SearchCond[], defaults: { cardNot: any[]; face
         if (faceAnd.length > 0) face.AND = faceAnd;
         if (faceNot.length > 0) face.NOT = faceNot;
         and.push({ faces: { some: face } });
+    }
+    if (oracleAnd.length > 0 || oracleNot.length > 0) {
+        const oracle: any = {};
+        if (oracleAnd.length > 0) oracle.AND = oracleAnd;
+        if (oracleNot.length > 0) oracle.NOT = oracleNot;
+        and.push({ faces: { some: { oracle } } });
     }
 
     const where: any = {};
@@ -375,16 +410,20 @@ function applyCond(cond: SearchCond, ctx: any): void {
 
     const pushCard = (obj: any) => (neg ? ctx.cardNot : ctx.cardAnd).push(obj);
     const pushFace = (obj: any) => (neg ? ctx.faceNot : ctx.faceAnd).push(obj);
+    const pushOracle = (obj: any) => (neg ? ctx.oracleNot : ctx.oracleAnd).push(obj);
 
     if (cond.key === '~') {
         // Mot libre : recherche basique Scryfall = nom + type line + texte Oracle
         const word = { contains: value, mode: 'insensitive' };
+        const faceWord = {
+            faces: { some: { OR: [{ type_line: word }, { oracle: { text: word } }] } },
+        };
         if (neg) {
             ctx.cardNot.push({
                 OR: [
                     { name: word },
                     { printed_name: word },
-                    { faces: { some: { OR: [{ type_line: word }, { oracle: { text: word } }] } } },
+                    faceWord,
                 ],
             });
         } else {
@@ -392,7 +431,7 @@ function applyCond(cond: SearchCond, ctx: any): void {
                 OR: [
                     { name: word },
                     { printed_name: word },
-                    { faces: { some: { OR: [{ type_line: word }, { oracle: { text: word } }] } } },
+                    faceWord,
                 ],
             });
         }
@@ -420,15 +459,17 @@ function applyCond(cond: SearchCond, ctx: any): void {
             break;
         case 'oracle':
         case 'fulloracle':
-            pushFace({ oracle: { text: ci } });
+            pushOracle({ text: ci });
             break;
         case 'keyword': {
             const kw = value.toLowerCase();
             const capKw = kw.charAt(0).toUpperCase() + kw.slice(1); // base stockée en casse Scryfall ("Flying")
+            // Même sémantique qu'avant : keyword (sur oracle), texte oracle ou
+            // texte imprimé — le tout dans un seul filtre de face
             pushFace({
                 OR: [
-                    { keywords: { has: kw } },
-                    { keywords: { has: capKw } },
+                    { oracle: { keywords: { has: kw } } },
+                    { oracle: { keywords: { has: capKw } } },
                     { oracle: { text: ci } },
                     { printed_text: ci },
                 ],
@@ -446,7 +487,7 @@ function applyCond(cond: SearchCond, ctx: any): void {
             break;
         case 'cmc': {
             const c = numericCond(value, 'cmc', false);
-            if (c) pushFace(c);
+            if (c) pushOracle(c);
             break;
         }
         case 'power': {
@@ -473,7 +514,7 @@ function applyCond(cond: SearchCond, ctx: any): void {
             applyColorCond(ctx, value, neg, 'color_identities');
             break;
         case 'layout':
-            pushFace({ layout: value.toLowerCase() });
+            pushOracle({ layout: value.toLowerCase() });
             break;
         case 'set':
             pushCard({ set: { set: value.toLowerCase() } });
@@ -495,17 +536,17 @@ function applyCond(cond: SearchCond, ctx: any): void {
             break;
         case 'format': {
             const fmt = value.toLowerCase();
-            pushCard({ legalities: { path: [fmt], equals: 'legal' } });
+            pushOracle({ legalities: { path: [fmt], equals: 'legal' } });
             break;
         }
         case 'banned': {
             const fmt = value.toLowerCase();
-            pushCard({ legalities: { path: [fmt], equals: 'banned' } });
+            pushOracle({ legalities: { path: [fmt], equals: 'banned' } });
             break;
         }
         case 'restricted': {
             const fmt = value.toLowerCase();
-            pushCard({ legalities: { path: [fmt], equals: 'restricted' } });
+            pushOracle({ legalities: { path: [fmt], equals: 'restricted' } });
             break;
         }
         case 'year':
@@ -636,7 +677,13 @@ function dateCond(value: string): any | null {
 /** Condition de couleurs / identité de couleur (c:, id:, avec modes et nicknames) */
 function applyColorCond(ctx: any, rawValue: string, neg: boolean, field: 'colors' | 'color_identities'): void {
     const { mode, letters } = parseColorValue(rawValue);
-    const push = (obj: any) => (neg ? ctx.faceNot : ctx.faceAnd).push(obj);
+    // colors → face, color_identities → oracle
+    const push = (obj: any) => {
+        const target = field === 'colors'
+            ? (neg ? ctx.faceNot : ctx.faceAnd)
+            : (neg ? ctx.oracleNot : ctx.oracleAnd);
+        target.push(obj);
+    };
 
     if (mode === 'unsupported') return;
 
@@ -671,6 +718,7 @@ function applyColorCond(ctx: any, rawValue: string, neg: boolean, field: 'colors
 function applyIsCond(ctx: any, raw: string, neg: boolean): void {
     const v = raw.toLowerCase();
     const pushFace = (obj: any) => (neg ? ctx.faceNot : ctx.faceAnd).push(obj);
+    const pushOracle = (obj: any) => (neg ? ctx.oracleNot : ctx.oracleAnd).push(obj);
     const pushCard = (obj: any) => (neg ? ctx.cardNot : ctx.cardAnd).push(obj);
 
     const hasType = (t: string) => ({ type_line: { contains: t, mode: 'insensitive' } });
@@ -689,38 +737,38 @@ function applyIsCond(ctx: any, raw: string, neg: boolean): void {
             pushFace({ AND: [hasType('creature'), { printed_text: null }] });
             break;
         case 'dfc':
-            pushFace({ layout: { in: ['transform', 'modal_dfc', 'meld', 'reversible_card'] } });
+            pushOracle({ layout: { in: ['transform', 'modal_dfc', 'meld', 'reversible_card'] } });
             break;
         case 'mdfc':
-            pushFace({ layout: 'modal_dfc' });
+            pushOracle({ layout: 'modal_dfc' });
             break;
         case 'split':
-            pushFace({ layout: 'split' });
+            pushOracle({ layout: 'split' });
             break;
         case 'flip':
-            pushFace({ layout: 'flip' });
+            pushOracle({ layout: 'flip' });
             break;
         case 'transform':
         case 'tdfc':
-            pushFace({ layout: 'transform' });
+            pushOracle({ layout: 'transform' });
             break;
         case 'meld':
-            pushFace({ layout: 'meld' });
+            pushOracle({ layout: 'meld' });
             break;
         case 'leveler':
-            pushFace({ layout: 'leveler' });
+            pushOracle({ layout: 'leveler' });
             break;
         case 'adventure':
-            pushFace({ layout: 'adventure' });
+            pushOracle({ layout: 'adventure' });
             break;
         case 'saga':
-            pushFace({ layout: 'saga' });
+            pushOracle({ layout: 'saga' });
             break;
         case 'class':
-            pushFace({ layout: 'class' });
+            pushOracle({ layout: 'class' });
             break;
         case 'mutate':
-            pushFace({ layout: 'mutate' });
+            pushOracle({ layout: 'mutate' });
             break;
         case 'battle':
             pushFace(hasType('battle'));
@@ -753,10 +801,10 @@ function applyIsCond(ctx: any, raw: string, neg: boolean): void {
             });
             break;
         case 'partner':
-            pushFace({ oracle: { text: { contains: 'partner', mode: 'insensitive' } } });
+            pushOracle({ text: { contains: 'partner', mode: 'insensitive' } });
             break;
         case 'companion':
-            pushFace({ oracle: { text: { contains: 'companion', mode: 'insensitive' } } });
+            pushOracle({ text: { contains: 'companion', mode: 'insensitive' } });
             break;
         default:
             break; // non supporté (reprint, reserved, full, foil, lands shortcuts, ...)
@@ -806,20 +854,20 @@ async function replaceProblematicCards(cards: any[]): Promise<any[]> {
                         type_line: true,
                         printed_type_line: true,
                         mana_cost: true,
-                        cmc: true,
                         power: true,
                         toughness: true,
                         loyalty: true,
                         colors: true,
-                        color_identities: true,
-                        keywords: true,
+                        printed_text: true,
+                        flavor_text: true,
                         oracle: {
                             select: {
                                 text: true,
+                                cmc: true,
+                                color_identities: true,
+                                keywords: true,
                             }
                         },
-                        printed_text: true,
-                        flavor_text: true,
                     }
                 }
             },

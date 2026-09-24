@@ -6,10 +6,13 @@ interface SyncOptions {
     syncCards?: boolean;
     syncRulings?: boolean;
     concurrency?: number; // Nombre de cartes/rulings à traiter en parallèle
+    /** Ne ré-upserte que les cartes multi-faces (resync ciblé des DFC) */
+    onlyDfc?: boolean;
 }
 
 export default class ScryFallSync {
     private concurrency: number;
+    private onlyDfc: boolean = false;
 
     constructor(concurrency: number = 5) {
         this.concurrency = concurrency; // Par défaut, traiter 5 items en parallèle
@@ -19,8 +22,9 @@ export default class ScryFallSync {
         if (options.concurrency) {
             this.concurrency = options.concurrency;
         }
+        this.onlyDfc = options.onlyDfc ?? false;
         
-        console.log(`🔄 Syncing ${options.syncCards && options.syncRulings ? 'BOTH cards and rulings' : options.syncCards ? 'cards ONLY' : 'rulings ONLY'}`);
+        console.log(`🔄 Syncing ${options.syncCards && options.syncRulings ? 'BOTH cards and rulings' : options.syncCards ? 'cards ONLY' : 'rulings ONLY'}${this.onlyDfc ? ' (DFC uniquement)' : ''}`);
         console.log(`⚡ Concurrency level: ${this.concurrency}`);
 
         try {
@@ -135,11 +139,20 @@ export default class ScryFallSync {
         let batchSuccesses = 0;
         let batchErrors = 0;
         
-        // Traiter les cartes en parallèle avec limite de concurrence
-        console.log(`Processing ${cards.length} cards with concurrency ${this.concurrency}...`);
+        // Mode DFC ciblé : on ne ré-upserte que les cartes multi-faces
+        // (les cartes simple face sont déjà correctes en base)
+        const toUpsert = this.onlyDfc
+            ? cards.filter(c => (c.card_faces?.length ?? 0) > 1)
+            : cards;
+        if (toUpsert.length === 0) {
+            return 0;
+        }
         
-        for (let i = 0; i < cards.length; i += this.concurrency) {
-            const chunk = cards.slice(i, i + this.concurrency);
+        // Traiter les cartes en parallèle avec limite de concurrence
+        console.log(`Processing ${toUpsert.length}/${cards.length} cards with concurrency ${this.concurrency}...`);
+        
+        for (let i = 0; i < toUpsert.length; i += this.concurrency) {
+            const chunk = toUpsert.slice(i, i + this.concurrency);
             
             // Traiter ce chunk en parallèle
             const results = await Promise.allSettled(
@@ -158,13 +171,13 @@ export default class ScryFallSync {
             });
             
             // Log progress
-            const processed = Math.min(i + this.concurrency, cards.length);
-            if (processed % 50 === 0 || processed === cards.length) {
-                console.log(`  Processed ${processed}/${cards.length} cards (${Math.round((processed / cards.length) * 100)}%)`);
+            const processed = Math.min(i + this.concurrency, toUpsert.length);
+            if (processed % 50 === 0 || processed === toUpsert.length) {
+                console.log(`  Processed ${processed}/${toUpsert.length} cards (${Math.round((processed / toUpsert.length) * 100)}%)`);
             }
             
             // Petit délai entre les chunks pour ne pas surcharger la DB
-            if (i + this.concurrency < cards.length) {
+            if (i + this.concurrency < toUpsert.length) {
                 await new Promise(resolve => setTimeout(resolve, 10));
             }
         }
@@ -361,38 +374,70 @@ export default class ScryFallSync {
         };
 
         // Upsert the main card (sets are already handled in sub-batch)
-        const dbCard = await tx.card.upsert({
+        await tx.card.upsert({
             where: { id: card.id },
             update: {
-                name: cardData.name,
-                lang: cardData.lang,
-                printed_name: cardData.printed_name,
-                set_id: cardData.set_id,
-                collector_number: cardData.collector_number,
-                rarity: cardData.rarity,
-                image_url: cardData.image_url,
-                image_status: cardData.image_status,
-                release_at: cardData.release_at,
-                legalities: card.legalities || {},
+                ...cardData,
                 updated_at: new Date(),
             },
-            create: {
-                ...cardData,
-                legalities: card.legalities || {},
-            },
+            create: cardData,
         });
 
-        // Handle Oracle record
-        if (card.oracle_id) {
+        // =========================================================================
+        // ORACLE : champs COMMUNS à toutes les faces/impressions (legalities,
+        // cmc, layout, keywords, color_identities). Les champs qui varient par
+        // face (type_line, mana_cost, power/toughness/loyalty/defense, colors)
+        // restent sur Face : les cartes double face partagent un même oracle.
+        // =========================================================================
+        interface OracleSource {
+            text: string;
+            cmc?: number | null;
+            layout?: string | null;
+            keywords?: string[] | null;
+            color_identities?: string[] | null;
+        }
+
+        // Les champs `undefined` ne sont pas touchés par l'update (upsert) ;
+        // `create` reçoit toujours des valeurs (défauts explicites).
+        const buildOracleData = (source: OracleSource) => {
+            const data: Record<string, unknown> = {
+                text: source.text,
+                // Legalities card-level : identiques pour toutes les faces d'une
+                // carte double face (Scryfall ne les donne qu'au niveau carte)
+                legalities: card.legalities || {},
+            };
+            if (source.cmc !== undefined) data.cmc = source.cmc ?? null;
+            if (source.layout !== undefined) data.layout = source.layout || null;
+            if (source.keywords !== undefined) data.keywords = source.keywords || [];
+            if (source.color_identities !== undefined) data.color_identities = source.color_identities || [];
+            return data;
+        };
+
+        const upsertOracle = async (oracleId: string, source: OracleSource): Promise<void> => {
+            const data = buildOracleData(source);
             await tx.oracle.upsert({
-                where: { id: card.oracle_id },
-                update: {
-                    text: card.oracle_text || "",
-                },
+                where: { id: oracleId },
+                update: data,
                 create: {
-                    id: card.oracle_id,
-                    text: card.oracle_text || "",
+                    id: oracleId,
+                    text: source.text,
+                    cmc: source.cmc ?? null,
+                    layout: source.layout || null,
+                    keywords: source.keywords || [],
+                    color_identities: source.color_identities || [],
+                    legalities: card.legalities || {},
                 },
+            });
+        };
+
+        // Oracle principal (cartes simple face)
+        if (card.oracle_id) {
+            await upsertOracle(card.oracle_id, {
+                text: card.oracle_text || "",
+                cmc: card.cmc,
+                layout: card.layout,
+                keywords: card.keywords,
+                color_identities: card.color_identity,
             });
         }
 
@@ -407,14 +452,23 @@ export default class ScryFallSync {
             for (let i = 0; i < card.card_faces.length; i++) {
                 const face = card.card_faces[i];
                 const faceOracleId = face.oracle_id || card.oracle_id;
+                const isSharedOracle = faceOracleId === card.oracle_id;
 
                 // Chaque face peut avoir son propre oracle (cartes réversibles) :
                 // s'assurer qu'il existe pour la FK faces_oracle_id_fkey
                 if (faceOracleId) {
-                    await tx.oracle.upsert({
-                        where: { id: faceOracleId },
-                        update: { text: face.oracle_text || card.oracle_text || "" },
-                        create: { id: faceOracleId, text: face.oracle_text || card.oracle_text || "" },
+                    await upsertOracle(faceOracleId, {
+                        text: face.oracle_text || card.oracle_text || "",
+                        cmc: face.cmc ?? card.cmc,
+                        layout: face.layout || card.layout,
+                        // Scryfall ne donne pas de keywords par face : card-level
+                        // sur la face avant uniquement, sinon on ne touche pas
+                        keywords: i === 0 ? card.keywords : undefined,
+                        // Oracle partagé → identité card-level (déjà posée) ;
+                        // oracle propre (réversible) → color_indicator de la face
+                        color_identities: isSharedOracle
+                            ? undefined
+                            : face.color_indicator || card.color_identity,
                     });
                 }
 
@@ -423,49 +477,43 @@ export default class ScryFallSync {
                         index: i,
                         name: face.name,
                         oracle_id: faceOracleId,
-                        layout: face.layout || card.layout,
                         card_id: card.id,
-                        cmc: face.cmc || card.cmc,
-                        type_line: face.type_line,
+                        type_line: face.type_line ?? card.type_line ?? null,
                         printed_type_line: face.printed_type_line || null,
-                        mana_cost: face.mana_cost,
-                        power: face.power,
-                        toughness: face.toughness,
-                        loyalty: face.loyalty,
-                        defense: face.defense,
+                        mana_cost: face.mana_cost ?? null,
+                        power: face.power ?? null,
+                        toughness: face.toughness ?? null,
+                        loyalty: face.loyalty ?? null,
+                        defense: face.defense ?? null,
+                        colors: face.colors || [],
                         flavor_text: face.flavor_text,
                         printed_text: face.printed_text || null,
-                        keywords: [], // Keywords are not available on individual faces
-                        color_identities: face.color_indicator || [],
-                        colors: face.colors || [],
-                        flavor_name: card.flavor_name || null, // flavor_name is on the main card
+                        flavor_name: card.flavor_name || null, // flavor_name est card-level
                         image_url: face.image_uris?.normal || face.image_uris?.large || cardData.image_url,
                     },
                 });
             }
-        } else await tx.face.create({
-            data: {
-                index: 0,
-                name: card.name,
-                oracle_id: card.oracle_id,
-                layout: card.layout,
-                card_id: card.id,
-                cmc: card.cmc,
-                type_line: card.type_line,
-                printed_type_line: card.printed_type_line || null,
-                mana_cost: card.mana_cost,
-                power: card.power,
-                toughness: card.toughness,
-                loyalty: card.loyalty,
-                defense: card.defense,
-                flavor_text: card.flavor_text,
-                printed_text: card.printed_text || null,
-                keywords: card.keywords,
-                color_identities: card.color_identity,
-                colors: card.colors || [],
-                flavor_name: card.flavor_name || null,
-                image_url: cardData.image_url,
-            },
-        });
+        } else {
+            await tx.face.create({
+                data: {
+                    index: 0,
+                    name: card.name,
+                    oracle_id: card.oracle_id,
+                    card_id: card.id,
+                    type_line: card.type_line ?? null,
+                    printed_type_line: card.printed_type_line || null,
+                    mana_cost: card.mana_cost ?? null,
+                    power: card.power ?? null,
+                    toughness: card.toughness ?? null,
+                    loyalty: card.loyalty ?? null,
+                    defense: card.defense ?? null,
+                    colors: card.colors || [],
+                    flavor_text: card.flavor_text,
+                    printed_text: card.printed_text || null,
+                    flavor_name: card.flavor_name || null,
+                    image_url: cardData.image_url,
+                },
+            });
+        }
     }
 }

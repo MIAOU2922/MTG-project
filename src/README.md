@@ -194,7 +194,7 @@ interface Card {
   set_id: string;            // Code du set (e.g., "neo")
   collector_number: string;  // Numéro collecteur
   rarity: string;            // common, uncommon, rare, mythic
-  legalities: {              // JSON avec légalité par format
+  legalities: {              // JSON avec légalité par format — désormais sur Oracle
     "standard": "legal" | "banned" | "restricted",
     "modern": "legal",
     "commander": "legal",

@@ -12,7 +12,9 @@
     "dev:watch": "npx tsx watch src/index.ts",
     "sync": "node --max-old-space-size=4096 --expose-gc node_modules/.bin/tsx src/scryfall_sync.ts",
     "sync:cards": "node --max-old-space-size=4096 --expose-gc node_modules/.bin/tsx src/scryfall_sync.ts cards",
+    "sync:dfc": "node --max-old-space-size=4096 --expose-gc node_modules/.bin/tsx src/scryfall_sync.ts dfc",
     "sync:rulings": "node --max-old-space-size=4096 --expose-gc node_modules/.bin/tsx src/scryfall_sync.ts rulings",
+    "scrape:moxfield": "node --max-old-space-size=2048 node_modules/.bin/tsx src/moxfield_scraper.ts",
     "docker:restart": "docker compose restart",
     "docker:up": "docker compose up -d --build",
     "docker:down": "docker compose down"

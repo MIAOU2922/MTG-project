@@ -15,6 +15,11 @@ export interface DeckCardWithZone extends DeckCardData {
 export interface IDeck {
     id: string;
     user_id: string;
+    source: string | null;
+    source_id: string | null;
+    source_url: string | null;
+    format: string | null;
+    author: string | null;
     name: string;
     description: string | null;
     commander: string | null;
@@ -25,6 +30,11 @@ export interface IDeck {
 export default class Deck implements IDeck {
     public readonly id: string;
     public readonly user_id: string;
+    public readonly source: string | null;
+    public readonly source_id: string | null;
+    public readonly source_url: string | null;
+    public readonly format: string | null;
+    public readonly author: string | null;
     public readonly name: string;
     public readonly description: string | null;
     public readonly commander: string | null;
@@ -34,6 +44,11 @@ export default class Deck implements IDeck {
     constructor(data: IDeck) {
         this.id = data.id;
         this.user_id = data.user_id;
+        this.source = data.source ?? null;
+        this.source_id = data.source_id ?? null;
+        this.source_url = data.source_url ?? null;
+        this.format = data.format ?? null;
+        this.author = data.author ?? null;
         this.name = data.name;
         this.description = data.description;
         this.commander = data.commander;
@@ -117,6 +132,19 @@ export default class Deck implements IDeck {
             orderBy: { created_at: 'desc' }
         });
         return decks.map((deck: any) => new Deck(deck));
+    }
+
+    /**
+     * Find an imported deck by its source + source_id (ex: "moxfield" + publicId)
+     */
+    public static async findBySource(source: string, sourceId: string): Promise<Deck | null> {
+        const deck = await (Database.prisma as any).deck.findFirst({
+            where: {
+                source,
+                source_id: sourceId
+            }
+        });
+        return deck ? new Deck(deck) : null;
     }
 
     /**

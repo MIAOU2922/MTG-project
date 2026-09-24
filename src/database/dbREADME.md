@@ -120,12 +120,23 @@ model Card {
   collector_number String
   rarity          String
   image_url       String
-  legalities      Json  // Format: { "standard": "legal", "modern": "banned", ... }
+  // legalities → déplacées sur Oracle (identiques pour toutes les impressions)
 }
 
 model Oracle {
-  id              String @id
-  text            String
+  id               String @id
+  text             String
+  cmc              Float?
+  color_identities String[]
+  keywords         String[]
+  layout           String?
+  legalities       Json    // Format: { "standard": "legal", "modern": "banned", ... }
+}
+
+model Face {
+  // Champs par face (les cartes double face partagent un oracle) :
+  // type_line, mana_cost, power, toughness, loyalty, defense, colors
+  // + champs par impression : printed_type_line, flavor_text, printed_text, image_url
 }
 
 model Set {

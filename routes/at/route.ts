@@ -316,14 +316,15 @@ async function generateInstanceCardsData(instance: Instance): Promise<any> {
             if (!card) return;
 
             // Trouver l'oracle_id
-            const oracleId = card.faces.find(f => f.oracle_id)?.oracle_id;
-            if (!oracleId) return;
+            const oracleFace = card.faces.find(f => f.oracle_id);
+            if (!oracleFace) return;
+            const oracleId = oracleFace.oracle_id!;
 
             // Créer ou récupérer le groupe pour cet oracle_id
             if (!oracleGroups.has(oracleId)) {
                 oracleGroups.set(oracleId, {
                     ids: [],
-                    legalities: card.legalities,
+                    legalities: oracleFace.oracle?.legalities ?? {},
                     rulings: new Map()
                 });
             }

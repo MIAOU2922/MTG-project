@@ -40,9 +40,19 @@ model Config {
 }
 
 model Oracle {
-  id     String   @id
-  text   String
-  faces  Face[]
+  id   String @id
+  text String
+
+  // Champs COMMUNS à toutes les faces/impressions d'une carte fonctionnelle
+  // (les champs qui varient par face — type_line, mana_cost, power… — restent
+  // sur Face, car les cartes double face partagent le même oracle)
+  cmc              Float?
+  color_identities String[]
+  keywords         String[]
+  layout           String?
+  legalities       Json     @default("{}")
+
+  faces   Face[]
   rulings Ruling[]
 
   @@map("oracles")
@@ -61,7 +71,6 @@ model Card {
   image_status     String? // highres_scan, lowres, placeholder, missing
   release_at       DateTime
   faces            Face[]
-  legalities       Json     @default("{}")
 
   created_at DateTime @default(now())
   updated_at DateTime @default(now()) @updatedAt
@@ -73,26 +82,24 @@ model Card {
 }
 
 model Face {
-  index            Int      @default(0)
-  name             String
-  oracle_id        String?
-  layout           String
-  card_id          String
-  cmc              Float?
-  type_line        String?
+  index             Int      @default(0)
+  name              String
+  oracle_id         String?
+  card_id           String
+  // Champs qui varient PAR FACE (cartes double face partagent un oracle)
+  type_line         String?
   printed_type_line String?
-  mana_cost        String?
-  power            String?
-  toughness        String?
-  loyalty          String?
-  defense          String?
-  flavor_text      String?
-  printed_text     String?
-  keywords         String[]
-  color_identities String[]
-  colors           String[]
-  flavor_name      String?
-  image_url        String
+  mana_cost         String?
+  power             String?
+  toughness         String?
+  loyalty           String?
+  defense           String?
+  colors            String[]
+  // Champs PAR IMPRESSION
+  flavor_text       String?
+  printed_text      String?
+  flavor_name       String?
+  image_url         String
 
   card   Card    @relation(fields: [card_id], references: [id], onDelete: Cascade)
   oracle Oracle? @relation(fields: [oracle_id], references: [id], onDelete: Cascade)
@@ -135,16 +142,26 @@ model Ruling {
 
 
 model Deck {
-  id           String   @id @default(uuid())
-  user_id      String
-  name         String
-  description  String?
-  commander    String?
-  created_at   DateTime @default(now())
-  updated_at   DateTime @default(now()) @updatedAt
+  id          String   @id @default(uuid())
+  user_id     String
+  // Origine d'import (ex: "moxfield") — null pour les decks créés dans l'app
+  source      String?
+  source_id   String?
+  source_url  String?
+  // Métadonnées d'import : format (commander, modern, ...) et pseudo de l'auteur
+  format      String?
+  author      String?
+  name        String
+  description String?
+  commander   String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @default(now()) @updatedAt
   
   cards DeckCard[]
 
+  // Clé de déduplication des imports : un deck par (source, source_id).
+  // Nullable → les decks des utilisateurs (source NULL) ne sont pas concernés.
+  @@unique([source, source_id])
   @@map("decks")
 }
 

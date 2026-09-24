@@ -21,6 +21,7 @@ async function main() {
   
   let syncCards = true;
   let syncRulings = true;
+  let onlyDfc = false;
   
   // Vérifier si le premier argument est un nombre (concurrency)
   if (syncType && !isNaN(Number(syncType))) {
@@ -36,6 +37,16 @@ async function main() {
     } else {
       console.log("📋 Syncing CARDS only");
     }
+  } else if (syncType === 'dfc') {
+    // Resync ciblé : uniquement les cartes multi-faces (double face)
+    syncRulings = false;
+    onlyDfc = true;
+    if (args[1] && !isNaN(Number(args[1]))) {
+      concurrency = Number(args[1]);
+      console.log(`🃏 Syncing DFC CARDS only (concurrency: ${concurrency})`);
+    } else {
+      console.log("🃏 Syncing DFC CARDS only");
+    }
   } else if (syncType === 'rulings') {
     syncCards = false;
     // Vérifier si le deuxième argument est un nombre
@@ -46,11 +57,12 @@ async function main() {
       console.log("⚖️ Syncing RULINGS only");
     }
   } else if (syncType && syncType !== 'all') {
-    console.error("❌ Invalid option. Use: 'cards', 'rulings', a number, or no argument");
+    console.error("❌ Invalid option. Use: 'cards', 'rulings', 'dfc', a number, or no argument");
     console.log("Usage:");
     console.log("  npm run sync                    - Sync both cards and rulings (concurrency: 5)");
     console.log("  npm run sync cards              - Sync only cards");
     console.log("  npm run sync rulings            - Sync only rulings");
+    console.log("  npm run sync dfc                - Re-upsert uniquement les cartes multi-faces");
     console.log("  npm run sync 10                 - Sync both with concurrency of 10");
     console.log("  npm run sync cards 10           - Sync cards with concurrency of 10");
     process.exit(1);
@@ -60,7 +72,7 @@ async function main() {
   
   try {
     const sync = new ScryFallSync(concurrency);
-    await sync.start({ syncCards, syncRulings });
+    await sync.start({ syncCards, syncRulings, onlyDfc });
     
     console.log("✅ Sync completed successfully!");
     process.exit(0);
