@@ -21,6 +21,21 @@ interface ResolvedCard {
     is_commander: boolean;
 }
 
+/** Regroupe des cartes résolues en lignes de zone (card_ids[i] ↔ counts[i]) */
+function buildZones(cards: ResolvedCard[]): Array<{ zone: string; card_ids: string[]; counts: number[] }> {
+    const map = new Map<string, { card_ids: string[]; counts: number[] }>();
+    for (const card of cards) {
+        let entry = map.get(card.zone);
+        if (!entry) {
+            entry = { card_ids: [], counts: [] };
+            map.set(card.zone, entry);
+        }
+        entry.card_ids.push(card.card_id);
+        entry.counts.push(card.count);
+    }
+    return [...map.entries()].map(([zone, entry]) => ({ zone, card_ids: entry.card_ids, counts: entry.counts }));
+}
+
 export class DeckImporter {
     /** scryfall_id → cards.id (null = introuvable) */
     private readonly scryfallCache = new Map<string, string | null>();
@@ -30,9 +45,13 @@ export class DeckImporter {
     private readonly nameCache = new Map<string, string | null>();
 
     /**
-     * Importe un deck normalisé. 'skipped' si (source, source_id) existe déjà.
+     * Importe un deck normalisé.
+     * - 'skipped' si (source, source_id) existe déjà et refresh=false.
+     * - 'updated' si refresh=true et le deck existait : champs mis à jour
+     *   et deck_cards remplacés (la liste Moxfield peut avoir changé).
+     * - 'imported' sinon.
      */
-    public async importDeck(deck: NormalizedDeck): Promise<ImportResult> {
+    public async importDeck(deck: NormalizedDeck, options: { refresh?: boolean } = {}): Promise<ImportResult> {
         const prisma = Database.prisma;
 
         // Déduplication (source, source_id) avant tout travail
@@ -40,7 +59,7 @@ export class DeckImporter {
             where: { source: deck.source, source_id: deck.sourceId },
             select: { id: true }
         });
-        if (existing) return "skipped";
+        if (existing && !options.refresh) return "skipped";
 
         const resolved: ResolvedCard[] = [];
         const unresolvedNames = new Set<string>();
@@ -64,19 +83,61 @@ export class DeckImporter {
             }
         }
 
+        const deckFields = {
+            source: deck.source,
+            source_id: deck.sourceId,
+            source_url: deck.url,
+            format: deck.format?.slice(0, 64) ?? null,
+            author: deck.author?.slice(0, 255) ?? null,
+            name: deck.name.slice(0, 255),
+            description: deck.description?.slice(0, 10_000) ?? null,
+            commander: deck.commander?.slice(0, 255) ?? null,
+        };
+
+        // Regrouper les cartes résolues en zones (tableaux parallèles)
+        const zones = buildZones(resolved);
+
         try {
+            if (existing) {
+                // Rafraîchissement : on remplace tout le contenu du deck
+                await prisma.$transaction(async (tx) => {
+                    await tx.deck.update({
+                        where: { id: existing.id },
+                        data: { ...deckFields, updated_at: new Date() }
+                    });
+                    await tx.deckZone.deleteMany({ where: { deck_id: existing.id } });
+                    if (zones.length > 0) {
+                        await tx.deckZone.createMany({
+                            data: zones.map(z => ({
+                                deck_id: existing.id,
+                                zone: z.zone,
+                                card_ids: z.card_ids,
+                                counts: z.counts
+                            }))
+                        });
+                    }
+                });
+                if (unresolvedNames.size > 0) {
+                    console.warn(
+                        `  ⚠️ ${unresolvedNames.size} carte(s) non résolue(s) dans ${deck.name} : ` +
+                        [...unresolvedNames].slice(0, 5).join(", ") +
+                        (unresolvedNames.size > 5 ? ", …" : "")
+                    );
+                }
+                return "updated";
+            }
+
             await prisma.deck.create({
                 data: {
                     user_id: IMPORT_USER_ID,
-                    source: deck.source,
-                    source_id: deck.sourceId,
-                    source_url: deck.url,
-                    format: deck.format?.slice(0, 64) ?? null,
-                    author: deck.author?.slice(0, 255) ?? null,
-                    name: deck.name.slice(0, 255),
-                    description: deck.description?.slice(0, 10_000) ?? null,
-                    commander: deck.commander?.slice(0, 255) ?? null,
-                    cards: { create: resolved }
+                    ...deckFields,
+                    zones: {
+                        create: zones.map(z => ({
+                            zone: z.zone,
+                            card_ids: z.card_ids,
+                            counts: z.counts
+                        }))
+                    }
                 }
             });
         } catch (error) {
@@ -162,6 +223,32 @@ export class DeckImporter {
             id = dbCard?.id ?? null;
             this.nameCache.set(card.name, id);
         }
-        return id;
+        if (id) return id;
+
+        // 4) Variantes Arena/Alchemy "A-" : retomber sur la carte réelle
+        //    (ex: "A-Unholy Heat" → "Unholy Heat", "A-Faceless Haven" → …)
+        if (card.name.startsWith("A-")) {
+            const realName = card.name.slice(2);
+            let realId = this.nameCache.get(realName);
+            if (realId === undefined) {
+                let dbCard = await Database.prisma.card.findFirst({
+                    where: { name: realName, lang: "en" },
+                    select: { id: true },
+                    orderBy: { release_at: "desc" }
+                });
+                if (!dbCard) {
+                    dbCard = await Database.prisma.card.findFirst({
+                        where: { name: realName },
+                        select: { id: true },
+                        orderBy: { release_at: "desc" }
+                    });
+                }
+                realId = dbCard?.id ?? null;
+                this.nameCache.set(realName, realId);
+            }
+            return realId;
+        }
+
+        return null;
     }
 }

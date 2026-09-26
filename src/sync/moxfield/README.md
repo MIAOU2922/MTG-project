@@ -1,7 +1,7 @@
 # Scraper Moxfield (`src/sync/moxfield/`)
 
 Importe des **decklists publiques** de [Moxfield](https://moxfield.com) dans la
-BDD (`Deck` + `DeckCard`). Tout le code dépendant de l'API non officielle est
+BDD (`Deck` + `DeckZone`). Tout le code dépendant de l'API non officielle est
 isolé ici : si Moxfield bloque/bloque l'API, on remplace ce module sans toucher
 au reste du projet (les adaptateurs Archidekt / Deckstats viendront s'ajouter à
 côté avec la même sortie normalisée).
@@ -15,13 +15,15 @@ Moxfield API (api2.moxfield.com, non officielle)
 client.ts      → transport HTTP (curl par défaut, retry/backoff, throttle)
       │
       ▼
-crawler.ts     → 4 stratégies de découverte (top / commander / carte / auteur)
+crawler.ts     → 5 stratégies de découverte (top / commander / carte / auteur / nom)
       │
       ▼
 normalize.ts   → MoxfieldDeck JSON → NormalizedDeck (format interne commun)
       │
       ▼
-importer.ts    → résolution des cartes + upsert Deck/DeckCard (Prisma)
+importer.ts    → résolution des cartes + upsert Deck/DeckZone (Prisma)
+
+liveRefresh.ts → file de re-scraping déclenchée par les recherches /ad (list)
 ```
 
 ## Endpoints utilisés
@@ -57,12 +59,31 @@ npm run scrape:moxfield -- --mode commander --commanders "Atraxa, Praetors' Voic
 npm run scrape:moxfield -- --mode card --cards "Sol Ring|Rhystic Study"
 npm run scrape:moxfield -- --mode user --users ComedIan
 npm run scrape:moxfield -- --mode deck --public-id j-0aJlxuOUm9FnKRvJcfZw
+
+nohup npm run scrape:moxfield -- --mode sweep --delay 500 --per-partition 300 > logs/moxfield_sweep.log 2>&1 &
+
 ```
 
 Options : `--format` (**défaut `all` = tous les formats** ; `commander`,
 `modern`…), `--max-decks` (0 = illimité), `--max-pages`, `--page-size`,
 `--per-partition` (défaut 100, 0 = jusqu'au plafond API de 10 000 par carte),
-`--delay` (ms).
+`--delay` (ms), `--refresh` (re-fetch et **met à jour** les decks déjà en base
+au lieu de les skipper : champs + zones `deck_zones` remplacées).
+
+## Live refresh depuis /ad
+
+Toute recherche publique `list` sur `/ad` (filtres nom / format / auteur /
+commander) est **forwardée au scraper** : `liveRefresh.ts` maintient une file
+(un seul job à la fois, dédupliquée) et re-scrape en arrière-plan les decks
+Moxfield correspondants (`refresh` + `limitMode: "discovered"`).
+
+- `commander` → `crawlByCommander` · `author` → `crawlByUser` ·
+  `name` → `crawlByName` · `format` seul → `crawlTopDecks` (top du format).
+- Réponse `/ad` : champ `refresh` (`job_id`, `type`, `query`, `status`) ;
+  état complet via `GET /ad?q=refresh`.
+- Env : `MOXFIELD_LIVE_ENABLED=0` (couper), `MOXFIELD_LIVE_MAX_DECKS`
+  (déf. 300), `MOXFIELD_LIVE_MAX_PER_PARTITION` (déf. 200),
+  `MOXFIELD_LIVE_DELAY_MS` (déf. 150).
 
 ### Données stockées
 
@@ -135,7 +156,9 @@ exactement la PK `id` de notre table `cards`. Chemin de résolution :
 
 - `Deck.user_id` des imports = `import:moxfield` (pseudo-utilisateur technique,
   aucune ligne `User` créée — pas de FK).
-- Un deck déjà présent (`source` + `source_id`) n'est jamais re-fetché.
+- Un deck déjà présent (`source` + `source_id`) n'est jamais re-fetché, sauf avec
+  `--refresh` : il est alors re-fetché et **mis à jour en place** (nom,
+  description, commander, format, auteur + `deck_cards` remplacées).
 - Déduplication/versions/hashes : phase 2 (cf. conversation d'origine).
 - Volume : garder `--delay` ≥ 500 ms ; l'API est non officielle et peut changer
   sans préavis.

@@ -142,11 +142,12 @@ export interface NormalizedDeck {
 }
 
 /** Résultat d'un import en base */
-export type ImportResult = 'imported' | 'skipped' | 'failed';
+export type ImportResult = 'imported' | 'updated' | 'skipped' | 'failed';
 
 export interface CrawlStats {
     discovered: number;
     imported: number;
+    updated: number;
     skipped: number;
     failed: number;
     errors: string[];

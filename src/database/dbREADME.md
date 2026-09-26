@@ -94,23 +94,29 @@ model User {
 }
 
 model Deck {
-  id          String   @id @default(uuid())
+  id          String   @id @default(uuid()) @db.Uuid
   user_id     String   // uid du propriétaire (clé 12 hex)
+  source      String?
+  source_id   String?
+  source_url  String?
+  format      String?
+  author      String?
   name        String
   description String?
   commander   String?
-  cards       DeckCard[]
+  zones       DeckZone[]
   created_at  DateTime @default(now())
   updated_at  DateTime @default(now()) @updatedAt
 }
 
-model DeckCard {
-  id           String   @id @default(uuid())
-  deck_id      String
-  card_id      String
-  count        Int      @default(1)
-  zone         String   @default("main") // main, sideboard, commander, companion, oathbreaker, wishboard
-  is_commander Boolean  @default(false)
+// UNE ligne par zone — cartes en tableaux parallèles card_ids[i] ↔ counts[i]
+model DeckZone {
+  deck_id  String   @db.Uuid
+  zone     String
+  card_ids String[] @db.Uuid @default([])
+  counts   Int[]    @default([])
+
+  @@id([deck_id, zone])
 }
 
 model Card {
@@ -149,8 +155,8 @@ model Set {
 
 ## Relations
 - **User ↔ Deck**: Les decks référencent leur propriétaire via `user_id` (clé 12 hex, pas de FK en base) (1:N)
-- **Deck ↔ DeckCard**: Un deck contient plusieurs cartes (1:N)
-- **DeckCard → Card**: Une carte du deck référence le modèle Card (N:1)
+- **Deck ↔ DeckZone**: Un deck contient plusieurs zones (1:N) — une ligne par zone
+- **DeckZone → Card**: les cartes sont référencées dans `card_ids[]` (pas de FK)
 - **Card → Oracle**: Une carte peut avoir un texte Oracle (N:1)
 - **Card → Set**: Une carte appartient à un set (N:1)
 

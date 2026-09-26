@@ -40,7 +40,7 @@ model Config {
 }
 
 model Oracle {
-  id   String @id
+  id   String @id @db.Uuid
   text String
 
   // Champs COMMUNS à toutes les faces/impressions d'une carte fonctionnelle
@@ -59,12 +59,12 @@ model Oracle {
 }
 
 model Card {
-  id   String @id
+  id   String @id @db.Uuid
   name String
 
   lang             String
   printed_name     String?
-  set_id           String
+  set_id           String   @db.Uuid
   collector_number String
   rarity           String
   image_url        String
@@ -84,8 +84,8 @@ model Card {
 model Face {
   index             Int      @default(0)
   name              String
-  oracle_id         String?
-  card_id           String
+  oracle_id         String?  @db.Uuid
+  card_id           String   @db.Uuid
   // Champs qui varient PAR FACE (cartes double face partagent un oracle)
   type_line         String?
   printed_type_line String?
@@ -112,7 +112,7 @@ model Face {
 }
 
 model Set {
-  id    String @id
+  id    String @id @db.Uuid
   set   String?
   name  String
   type  String
@@ -125,7 +125,7 @@ model Set {
 }
 
 model Ruling {
-  oracle_id    String
+  oracle_id    String   @db.Uuid
   published_at DateTime
   comment      String
 
@@ -142,7 +142,7 @@ model Ruling {
 
 
 model Deck {
-  id          String   @id @default(uuid())
+  id          String   @id @default(uuid()) @db.Uuid
   user_id     String
   // Origine d'import (ex: "moxfield") — null pour les decks créés dans l'app
   source      String?
@@ -157,26 +157,22 @@ model Deck {
   created_at  DateTime @default(now())
   updated_at  DateTime @default(now()) @updatedAt
   
-  cards DeckCard[]
-
-  // Clé de déduplication des imports : un deck par (source, source_id).
-  // Nullable → les decks des utilisateurs (source NULL) ne sont pas concernés.
+  zones DeckZone[]
   @@unique([source, source_id])
   @@map("decks")
 }
 
-model DeckCard {
-  id           String   @id @default(uuid())
-  deck_id      String
-  card_id      String
-  count        Int      @default(1)
-  zone         String   @default("main") // main, sideboard, commander, companion, oathbreaker, wishboard
-  is_commander Boolean  @default(false)
-  created_at   DateTime @default(now())
-  updated_at   DateTime @default(now()) @updatedAt
-  
+// Stockage compact des cartes d'un deck : UNE ligne par zone, avec les
+// cartes en tableaux PostgreSQL parallèles (card_ids[i] ↔ counts[i]).
+// ~100-200 lignes par deck → 1-6 lignes.
+model DeckZone {
+  deck_id  String   @db.Uuid
+  zone     String
+  card_ids String[] @db.Uuid @default([])
+  counts   Int[]    @default([])
+
   deck Deck @relation(fields: [deck_id], references: [id], onDelete: Cascade)
 
-  @@unique([deck_id, card_id, zone])
-  @@map("deck_cards")
+  @@id([deck_id, zone])
+  @@map("deck_zones")
 }

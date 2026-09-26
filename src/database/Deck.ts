@@ -12,6 +12,27 @@ export interface DeckCardWithZone extends DeckCardData {
     is_commander: boolean;
 }
 
+/** Regroupe des DeckCardData (entrée API) en lignes DeckZone (tableaux parallèles) */
+function buildZones(cards: DeckCardData[]): Array<{ zone: string; card_ids: string[]; counts: number[] }> {
+    const map = new Map<string, { card_ids: string[]; counts: number[] }>();
+    for (const card of cards) {
+        const zone = card.zone || 'main';
+        let entry = map.get(zone);
+        if (!entry) {
+            entry = { card_ids: [], counts: [] };
+            map.set(zone, entry);
+        }
+        const idx = entry.card_ids.indexOf(card.card_id);
+        if (idx === -1) {
+            entry.card_ids.push(card.card_id);
+            entry.counts.push(card.count);
+        } else {
+            entry.counts[idx] += card.count;
+        }
+    }
+    return [...map.entries()].map(([zone, entry]) => ({ zone, card_ids: entry.card_ids, counts: entry.counts }));
+}
+
 export interface IDeck {
     id: string;
     user_id: string;
@@ -72,13 +93,8 @@ export default class Deck implements IDeck {
                 name: deckName,
                 description: description || null,
                 commander: commander || null,
-                cards: {
-                    create: cards.map((card) => ({
-                        card_id: card.card_id,
-                        count: card.count,
-                        zone: card.zone || 'main',
-                        is_commander: card.is_commander || false
-                    }))
+                zones: {
+                    create: buildZones(cards)
                 }
             }
         });
@@ -166,7 +182,7 @@ export default class Deck implements IDeck {
 
         // Delete existing cards if new cards are provided
         if (data.cards) {
-            await (Database.prisma as any).deckCard.deleteMany({
+            await (Database.prisma as any).deckZone.deleteMany({
                 where: { deck_id: this.id }
             });
         }
@@ -177,15 +193,8 @@ export default class Deck implements IDeck {
                 name: data.name || this.name,
                 description: data.description !== undefined ? data.description : this.description,
                 commander: data.commander !== undefined ? data.commander : this.commander,
-                cards: data.cards
-                    ? {
-                        create: data.cards.map((card) => ({
-                            card_id: card.card_id,
-                            count: card.count,
-                            zone: card.zone || 'main',
-                            is_commander: card.is_commander || false
-                        }))
-                    }
+                zones: data.cards
+                    ? { create: buildZones(data.cards) }
                     : undefined,
                 updated_at: new Date()
             }
@@ -224,17 +233,7 @@ export default class Deck implements IDeck {
             };
         }>
     > {
-        const deckCards = await (Database.prisma as any).deckCard.findMany({
-            where: { deck_id: this.id },
-            include: {
-                deck: {
-                    select: {
-                        id: true,
-                        name: true
-                    }
-                }
-            }
-        });
+        const deckCards = await this.getFlatCards();
 
         const cardsWithData = await Promise.all(
             deckCards.map(async (deckCard: any) => {
@@ -271,10 +270,7 @@ export default class Deck implements IDeck {
      * Example: if a card has count 3, it will appear 3 times in the array
      */
     public async getCardIds(): Promise<string[]> {
-        const deckCards = await (Database.prisma as any).deckCard.findMany({
-            where: { deck_id: this.id },
-            select: { card_id: true, count: true }
-        });
+        const deckCards = await this.getFlatCards();
 
         const cardIds: string[] = [];
         for (const deckCard of deckCards) {
@@ -290,24 +286,20 @@ export default class Deck implements IDeck {
      * Get unique card IDs (no repetitions)
      */
     public async getUniqueCardIds(): Promise<string[]> {
-        const deckCards = await (Database.prisma as any).deckCard.findMany({
-            where: { deck_id: this.id },
-            select: { card_id: true }
-        });
-
-        return deckCards.map((card: any) => card.card_id);
+        const zones = await this.getZones();
+        const ids = new Set<string>();
+        for (const zone of zones) {
+            for (const id of zone.card_ids) ids.add(id);
+        }
+        return [...ids];
     }
 
     /**
      * Get the total number of cards in the deck (counting duplicates)
      */
     public async getDeckSize(): Promise<number> {
-        const deckCards = await (Database.prisma as any).deckCard.findMany({
-            where: { deck_id: this.id },
-            select: { count: true }
-        });
-
-        return deckCards.reduce((sum: number, card: any) => sum + card.count, 0);
+        const zones = await this.getZones();
+        return zones.reduce((sum, zone) => sum + zone.counts.reduce((a, b) => a + b, 0), 0);
     }
 
     /**
@@ -323,10 +315,6 @@ export default class Deck implements IDeck {
             }>
         >
     > {
-        const deckCards = await (Database.prisma as any).deckCard.findMany({
-            where: { deck_id: this.id }
-        });
-
         const cardsByZone: Record<
             string,
             Array<{
@@ -336,18 +324,44 @@ export default class Deck implements IDeck {
             }>
         > = {};
 
-        for (const deckCard of deckCards) {
-            if (!cardsByZone[deckCard.zone]) {
-                cardsByZone[deckCard.zone] = [];
+        for (const card of await this.getFlatCards()) {
+            if (!cardsByZone[card.zone]) {
+                cardsByZone[card.zone] = [];
             }
-            cardsByZone[deckCard.zone].push({
-                card_id: deckCard.card_id,
-                count: deckCard.count,
-                is_commander: deckCard.is_commander
+            cardsByZone[card.zone].push({
+                card_id: card.card_id,
+                count: card.count,
+                is_commander: card.is_commander
             });
         }
 
         return cardsByZone;
+    }
+
+    /** Lit les DeckZone du deck */
+    private async getZones(): Promise<Array<{ zone: string; card_ids: string[]; counts: number[] }>> {
+        return (Database.prisma as any).deckZone.findMany({
+            where: { deck_id: this.id }
+        });
+    }
+
+    /** Aplatit les zones en cartes individuelles (card_id, count, zone, is_commander) */
+    private async getFlatCards(): Promise<
+        Array<{ card_id: string; count: number; zone: string; is_commander: boolean }>
+    > {
+        const zones = await this.getZones();
+        const cards: Array<{ card_id: string; count: number; zone: string; is_commander: boolean }> = [];
+        for (const zone of zones) {
+            zone.card_ids.forEach((cardId, i) => {
+                cards.push({
+                    card_id: cardId,
+                    count: zone.counts[i] ?? 1,
+                    zone: zone.zone,
+                    is_commander: zone.zone === 'commander'
+                });
+            });
+        }
+        return cards;
     }
 
     /**

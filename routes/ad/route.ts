@@ -4,6 +4,7 @@ import Deck, { DeckCardData } from "@/database/Deck";
 import Instance from "@/database/Instance";
 import { getUserId } from "@/utils";
 import Database from "@/database/Database";
+import { liveRefresh } from "@/sync/moxfield/liveRefresh";
 import https from "https";
 
 export const apiDeckRouter = Router();
@@ -17,6 +18,10 @@ interface ParsedQuery {
     lang?: string;
     deckId?: string;
     description?: string;
+    /** Filtres de l'action list (recherche publique) */
+    listFormat?: string;
+    listAuthor?: string;
+    listCommander?: string;
 }
 
 interface ParsedCard {
@@ -98,8 +103,16 @@ function parseAdQuery(queryParam: string): ParsedQuery {
             break;
             
         case 'list':
-            // list:search_name (optional)
+            // list:search_name:format:author:commander
+            //   - sans params : liste les decks de l'utilisateur
+            //   - avec params : recherche publique (decks importés), filtres
+            //     optionnels par nom (partiel), format exact, auteur (partiel)
+            //     et commander (partiel). La recherche est forwardée au scraper
+            //     Moxfield (re-scraping en arrière-plan pour rafraîchir la BDD).
             result.deckName = parts[1] ? decodeURIComponent(parts[1]) : undefined;
+            result.listFormat = parts[2] ? decodeURIComponent(parts[2]) : undefined;
+            result.listAuthor = parts[3] ? decodeURIComponent(parts[3]) : undefined;
+            result.listCommander = parts[4] ? decodeURIComponent(parts[4]) : undefined;
             break;
             
         default:
@@ -157,11 +170,14 @@ async function adHandler(req: Request, res: Response) {
                 return await handleDelete(res, user, parsedQuery.deckId);
                 
             case 'list':
-                return await handleList(res, user, parsedQuery.deckName);
-                
+                return await handleList(res, user, parsedQuery.deckName, parsedQuery.listFormat, parsedQuery.listAuthor, parsedQuery.listCommander);
+
+            case 'refresh':
+                return handleRefreshStatus(res, user);
+
             default:
                 return res.status(400).json({
-                    error: `Invalid action: ${parsedQuery.action}. Supported: parse, save, load, delete, list`
+                    error: `Invalid action: ${parsedQuery.action}. Supported: parse, save, load, delete, list, refresh`
                 });
         }
 
@@ -561,15 +577,14 @@ async function handleLoad(
             // For saved deck, get the card IDs (repeated by count)
             cardIds = await deck!.getCardIds();
 
-            // Fetch all cards grouped by zone
-            const savedDeckCards = await Database.prisma.deckCard.findMany({
+            // Fetch zones (card_ids[i] ↔ counts[i]) + détails des cartes
+            const savedZones = await Database.prisma.deckZone.findMany({
                 where: { deck_id: deck!.id }
             });
 
-            // Get card details
-            const deckCardIds = savedDeckCards.map(dc => dc.card_id);
+            const zoneCardIds = savedZones.flatMap(z => z.card_ids);
             const cardsDetails = await Database.prisma.card.findMany({
-                where: { id: { in: deckCardIds } },
+                where: { id: { in: zoneCardIds } },
                 select: {
                     id: true,
                     name: true
@@ -579,27 +594,26 @@ async function handleLoad(
             // Create a map for quick lookup
             const cardsMap = new Map(cardsDetails.map(c => [c.id, c]));
 
-            // Group cards by zone
-            for (const deckCard of savedDeckCards) {
-                const card = cardsMap.get(deckCard.card_id);
-                if (!card) continue;
-
-                const zone = (deckCard.zone || 'main') as string;
+            // Group cards by zone (tableaux parallèles déroulés)
+            for (const savedZone of savedZones) {
+                const zone = savedZone.zone || 'main';
                 if (!cardsByZone[zone]) {
                     cardsByZone[zone] = [];
                 }
 
-                const cardData: any = {
-                    count: deckCard.count,
-                    name: card.name,
-                    card_id: card.id
-                };
-
-                if (deckCard.is_commander) {
-                    cardData.is_commander = true;
-                }
-
-                cardsByZone[zone].push(cardData);
+                savedZone.card_ids.forEach((cardId, i) => {
+                    const card = cardsMap.get(cardId);
+                    if (!card) return;
+                    const cardData: any = {
+                        count: savedZone.counts[i] ?? 1,
+                        name: card.name,
+                        card_id: card.id
+                    };
+                    if (zone === 'commander') {
+                        cardData.is_commander = true;
+                    }
+                    cardsByZone[zone].push(cardData);
+                });
             }
         }
 
@@ -626,6 +640,9 @@ async function handleLoad(
                 deck_id: deck?.id,
                 deck_name: deck?.name || 'Temporary Deck',
                 commander: deck?.commander,
+                format: deck?.format,
+                author: deck?.author,
+                source_url: deck?.source_url,
                 unique_cards: uniqueCardIds.length,
                 total_cards: deckSize,
                 cards_added_to_instance: cardIds.length,
@@ -698,37 +715,139 @@ async function handleDelete(
 }
 
 /**
+ * REFRESH action: état de la file de re-scraping Moxfield (live refresh).
+ * Renvoie le job en cours, la file d'attente et les 20 derniers jobs.
+ */
+function handleRefreshStatus(res: Response, user: any): Response {
+    return res.json({
+        link_type: 'd',
+        link_id: 'refresh',
+        iid: null,
+        uid: user.id,
+        time: Date.now(),
+        data: {
+            action: 'refresh',
+            live_refresh: liveRefresh.status()
+        }
+    });
+}
+
+/**
  * LIST action: List user's decks or search public decks
+ *
+ * Formes :
+ *   list                      → decks de l'utilisateur
+ *   list:<nom>                → recherche publique par nom (partiel)
+ *   list::<format>            → decks publics d'un format (ex: commander)
+ *   list:::<auteur>           → decks publics d'un auteur Moxfield
+ *   list::::<commander>       → decks publics avec ce commander (partiel)
+ *   list:<nom>:<format>:<auteur>:<commander> → combinaison
+ *
+ * ⚡ Live refresh : toute recherche publique (au moins un filtre) est aussi
+ *   forwardée au scraper Moxfield, qui re-scrape en arrière-plan les decks
+ *   correspondants pour mettre la BDD à jour (voir `refresh` dans la réponse).
  */
 async function handleList(
     res: Response,
     user: any,
-    deckName: string | undefined
+    deckName: string | undefined,
+    listFormat: string | undefined,
+    listAuthor: string | undefined,
+    listCommander: string | undefined
 ): Promise<Response> {
     try {
-        let decks: Deck[] = [];
+        let deckEntries: Array<Record<string, unknown>> = [];
 
-        if (deckName) {
-            // Search public decks by name
-            decks = await Deck.findByNamePublic(deckName);
+        if (deckName || listFormat || listAuthor || listCommander) {
+            // ==== Recherche publique (decks importés) avec filtres ====
+            const where: any = { source: { not: null } };
+            if (deckName) where.name = { contains: deckName, mode: 'insensitive' };
+            if (listFormat) where.format = listFormat.toLowerCase();
+            if (listAuthor) where.author = { contains: listAuthor, mode: 'insensitive' };
+            if (listCommander) where.commander = { contains: listCommander, mode: 'insensitive' };
+
+            const rows = await Database.prisma.deck.findMany({
+                where,
+                orderBy: { created_at: 'desc' },
+                take: 200, // Limite de sécurité pour la réponse
+                select: {
+                    id: true,
+                    name: true,
+                    description: true,
+                    commander: true,
+                    user_id: true,
+                    source: true,
+                    source_id: true,
+                    source_url: true,
+                    format: true,
+                    author: true,
+                    created_at: true,
+                    updated_at: true,
+                    _count: { select: { zones: true } }
+                }
+            });
+
+            // Nombre total d'exemplaires par deck (somme des counts des zones)
+            const zoneRows = await Database.prisma.deckZone.findMany({
+                where: { deck_id: { in: rows.map(r => r.id) } },
+                select: { deck_id: true, counts: true }
+            });
+            const sizeMap = new Map<string, number>();
+            for (const z of zoneRows) {
+                sizeMap.set(z.deck_id, (sizeMap.get(z.deck_id) ?? 0) + z.counts.reduce((a, b) => a + b, 0));
+            }
+
+            deckEntries = rows.map((r: any) => ({
+                id: r.id,
+                name: r.name,
+                description: r.description,
+                commander: r.commander,
+                owner_id: r.user_id,
+                is_owner: r.user_id === user.id,
+                source: r.source,
+                source_id: r.source_id,
+                source_url: r.source_url,
+                format: r.format,
+                author: r.author,
+                cards_count: sizeMap.get(r.id) ?? 0,
+                created_at: r.created_at,
+                updated_at: r.updated_at
+            }));
         } else {
-            // List user's decks
-            decks = await Deck.findByUserId(user.id);
+            // ==== Decks de l'utilisateur ====
+            const decks = await Deck.findByUserId(user.id);
+
+            deckEntries = await Promise.all(
+                decks.map(async (deck) => ({
+                    id: deck.id,
+                    name: deck.name,
+                    description: deck.description,
+                    commander: deck.commander,
+                    owner_id: deck.user_id,
+                    is_owner: deck.user_id === user.id,
+                    source: deck.source,
+                    source_id: deck.source_id,
+                    source_url: deck.source_url,
+                    format: deck.format,
+                    author: deck.author,
+                    cards_count: await deck.getDeckSize(),
+                    created_at: deck.created_at,
+                    updated_at: deck.updated_at
+                }))
+            );
         }
 
-        const deckList = await Promise.all(
-            decks.map(async (deck) => ({
-                id: deck.id,
-                name: deck.name,
-                description: deck.description,
-                commander: deck.commander,
-                owner_id: deck.user_id,
-                is_owner: deck.user_id === user.id,
-                cards_count: await deck.getDeckSize(),
-                created_at: deck.created_at,
-                updated_at: deck.updated_at
-            }))
-        );
+        // ⚡ Forward de la recherche au scraper Moxfield (re-scraping ciblé,
+        // jamais bloquant : la réponse part immédiatement, le crawl tourne en
+        // arrière-plan dans la file liveRefresh).
+        const refreshJob = deckName || listFormat || listAuthor || listCommander
+            ? liveRefresh.forwardSearch({
+                name: deckName,
+                format: listFormat,
+                author: listAuthor,
+                commander: listCommander
+            })
+            : null;
 
         return res.json({
             link_type: 'd',
@@ -739,8 +858,23 @@ async function handleList(
             data: {
                 action: 'list',
                 search_name: deckName || null,
-                decks_count: decks.length,
-                decks: deckList
+                format: listFormat || null,
+                author: listAuthor || null,
+                commander: listCommander || null,
+                decks_count: deckEntries.length,
+                decks: deckEntries,
+                refresh: refreshJob
+                    ? {
+                        job_id: refreshJob.id,
+                        type: refreshJob.type,
+                        query: refreshJob.query,
+                        format: refreshJob.format,
+                        status: refreshJob.status,
+                        message: refreshJob.status === 'queued'
+                            ? 'Re-scraping Moxfield planifié en arrière-plan'
+                            : 'Re-scraping Moxfield déjà en cours ou planifié'
+                    }
+                    : { status: 'disabled' }
             }
         });
     } catch (error) {

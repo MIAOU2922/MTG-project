@@ -25,6 +25,16 @@ export interface CrawlerOptions {
     logEvery?: number;
     /** Silencieux : pas de log par deck importé (utile pour les longs balayages) */
     quiet?: boolean;
+    /** Re-fetch et met à jour les decks déjà en base (au lieu de les skipper) */
+    refresh?: boolean;
+    /**
+     * Comment compter maxDecks :
+     * - "imported" (défaut) : s'arrête après N NOUVEAUX decks importés
+     *   (en mode refresh rien n'est compté → risque de tout balayer).
+     * - "discovered" : s'arrête après N decks VUS (importés, mis à jour
+     *   ou échoués). À utiliser avec refresh pour borner un rafraîchissement.
+     */
+    limitMode?: "imported" | "discovered";
 }
 
 export interface CrawlTopOptions {
@@ -61,14 +71,25 @@ export interface CrawlByUserOptions {
     maxDecks?: number;
 }
 
+export interface CrawlByNameOptions {
+    deckName: string;
+    fmt?: string;
+    pageSize?: number;
+    /** Nombre max de decks vus (0 = illimité jusqu'au plafond API) */
+    maxDecks?: number;
+}
+
 export class MoxfieldCrawler {
     private readonly deckDelayMs: number;
     private readonly logEvery: number;
     private readonly quiet: boolean;
+    private readonly refresh: boolean;
+    private readonly limitMode: "imported" | "discovered";
     private readonly seen = new Set<string>();
     private stats: CrawlStats = {
         discovered: 0,
         imported: 0,
+        updated: 0,
         skipped: 0,
         failed: 0,
         errors: []
@@ -82,10 +103,17 @@ export class MoxfieldCrawler {
         this.deckDelayMs = options.deckDelayMs ?? 150;
         this.logEvery = options.logEvery ?? 10;
         this.quiet = options.quiet ?? false;
+        this.refresh = options.refresh ?? false;
+        this.limitMode = options.limitMode ?? "imported";
     }
 
     public getStats(): CrawlStats {
         return { ...this.stats };
+    }
+
+    /** Compteur utilisé pour les limites maxDecks (voir limitMode). */
+    private get limitCount(): number {
+        return this.limitMode === "discovered" ? this.stats.discovered : this.stats.imported;
     }
 
     // -------------------------------------------------------------------------
@@ -119,10 +147,10 @@ export class MoxfieldCrawler {
                 console.log(`   totalResults=${res.totalResults} (plafond API 10000), totalPages=${res.totalPages}`);
             }
             for (const item of res.data) {
-                if (this.stats.imported >= maxDecks) break;
+                if (this.limitCount >= maxDecks) break;
                 await this.importByPublicId(item.publicId, item.name);
             }
-            if (this.stats.imported >= maxDecks) break;
+            if (this.limitCount >= maxDecks) break;
             if (page >= res.totalPages || res.data.length === 0) break;
         }
         return this.getStats();
@@ -147,7 +175,7 @@ export class MoxfieldCrawler {
         );
 
         for (const commanderName of commanders) {
-            if (this.stats.imported >= maxDecks) break;
+            if (this.limitCount >= maxDecks) break;
 
             const resolved = await this.resolveMoxfieldCardId(commanderName);
             if (!resolved) {
@@ -191,7 +219,7 @@ export class MoxfieldCrawler {
         );
 
         for (const cardName of cardNames) {
-            if (this.stats.imported >= maxDecks) break;
+            if (this.limitCount >= maxDecks) break;
             await this.crawlOneCard(cardName, { fmt, pageSize, maxDecksPerCard, maxDecks });
         }
         return this.getStats();
@@ -256,15 +284,15 @@ export class MoxfieldCrawler {
         );
 
         for (const username of usernames) {
-            if (this.stats.imported >= maxDecks) break;
+            if (this.limitCount >= maxDecks) break;
 
             try {
                 let total = 0;
                 for (let page = 1; ; page++) {
-                    if (this.stats.imported >= maxDecks || total >= maxDecksPerUser) break;
+                    if (this.limitCount >= maxDecks || total >= maxDecksPerUser) break;
                     const res = await this.client.getUserDecks(username, page, pageSize);
                     for (const item of res.data) {
-                        if (this.stats.imported >= maxDecks || total >= maxDecksPerUser) break;
+                        if (this.limitCount >= maxDecks || total >= maxDecksPerUser) break;
                         total++;
                         await this.importByPublicId(item.publicId, item.name);
                     }
@@ -282,6 +310,43 @@ export class MoxfieldCrawler {
     }
 
     // -------------------------------------------------------------------------
+    // Stratégie 5 : recherche par nom de deck
+    // -------------------------------------------------------------------------
+
+    /**
+     * Decks dont le NOM correspond (filtre deckName de l'API Moxfield).
+     * Utile pour re-scraper les decks trouvés par une recherche /ad.
+     */
+    public async crawlByName(options: CrawlByNameOptions): Promise<CrawlStats> {
+        const { deckName, fmt, pageSize = 64, maxDecks = 200 } = options;
+        const maxTotal = maxDecks <= 0 ? Number.POSITIVE_INFINITY : maxDecks;
+
+        console.log(
+            `🔎 Moxfield par nom — "${deckName}" fmt=${fmt ?? "all"} maxDecks=${maxDecks <= 0 ? "∞" : maxDecks}`
+        );
+
+        try {
+            await this.paginateSearch(
+                {
+                    fmt: fmt || undefined,
+                    deckName,
+                    sortType: "views",
+                    sortDirection: "descending",
+                    pageSize
+                },
+                maxTotal,
+                maxTotal
+            );
+        } catch (error) {
+            this.stats.failed++;
+            const message = error instanceof Error ? error.message : String(error);
+            this.stats.errors.push(`name(${deckName}): ${message}`);
+            console.error(`  ❌ nom ${deckName} : ${message}`);
+        }
+        return this.getStats();
+    }
+
+    // -------------------------------------------------------------------------
     // Internes
     // -------------------------------------------------------------------------
 
@@ -291,8 +356,8 @@ export class MoxfieldCrawler {
         this.seen.add(publicId);
         this.stats.discovered++;
 
-        // Déjà en base ? On n'appelle pas l'API.
-        if (await this.importer.exists("moxfield", publicId)) {
+        // Déjà en base ? En mode refresh on re-fetch quand même pour mettre à jour.
+        if (!this.refresh && (await this.importer.exists("moxfield", publicId))) {
             this.stats.skipped++;
             return;
         }
@@ -301,11 +366,15 @@ export class MoxfieldCrawler {
             const deck = await this.client.getDeck(publicId);
             const { normalizeDeck } = await import("./normalize");
             const normalized = normalizeDeck(deck);
-            const result = await this.importer.importDeck(normalized);
+            const result = await this.importer.importDeck(normalized, { refresh: this.refresh });
 
             this.record(result);
-            if (result === "imported" && !this.quiet) {
-                console.log(`  ✅ #${this.stats.imported} ${summarize(normalized)}`);
+            if (!this.quiet) {
+                if (result === "imported") {
+                    console.log(`  ✅ #${this.stats.imported} ${summarize(normalized)}`);
+                } else if (result === "updated") {
+                    console.log(`  🔄 ${summarize(normalized)}`);
+                }
             }
         } catch (error) {
             if (error instanceof MoxfieldNotFoundError) {
@@ -337,13 +406,13 @@ export class MoxfieldCrawler {
     ): Promise<number> {
         let total = 0;
         for (let page = 1; ; page++) {
-            if (this.stats.imported >= maxDecks || total >= maxPerQuery) break;
+            if (this.limitCount >= maxDecks || total >= maxPerQuery) break;
             const res: MoxfieldDeckSearchResponse = await this.client.searchDecks({
                 ...baseParams,
                 pageNumber: page
             });
             for (const item of res.data) {
-                if (this.stats.imported >= maxDecks || total >= maxPerQuery) break;
+                if (this.limitCount >= maxDecks || total >= maxPerQuery) break;
                 total++;
                 await this.importByPublicId(item.publicId, item.name);
             }
@@ -369,6 +438,7 @@ export class MoxfieldCrawler {
 
     private record(result: ImportResult): void {
         if (result === "imported") this.stats.imported++;
+        else if (result === "updated") this.stats.updated++;
         else if (result === "skipped") this.stats.skipped++;
         else this.stats.failed++;
     }

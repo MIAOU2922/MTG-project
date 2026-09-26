@@ -68,7 +68,7 @@ src/
 
 **Responsabilités**:
 - Connexion PostgreSQL via Prisma
-- Modèles: User, Player, Deck, DeckCard, Card, Oracle, Set, Ruling
+- Modèles: User, Player, Deck, DeckZone, Card, Oracle, Set, Ruling
 - Opérations CRUD sur les decks
 - Validation et gestion des permissions
 - **✨ Nouveau:** Cache d'atlas 48h avec invalidation intelligente

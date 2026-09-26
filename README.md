@@ -256,7 +256,7 @@ Le schéma Prisma définit tous les modèles de données. Principales tables:
 - `User` - Utilisateurs
 - `Instance` - Sessions
 - `Deck` - Decks utilisateur
-- `DeckCard` - Cartes dans les decks (avec zones)
+- `DeckZone` - Zones des decks (une ligne par zone : card_ids[] + counts[])
 - `Card` - Cartes MTG
 - `Oracle` - Textes Oracle uniques
 - `Set` - Sets MTG

@@ -160,20 +160,48 @@ GET /ad?q=load:deckstats:%2F%2FMain%0A4%20Lightning%20Bolt%0A%2F%2FSideboard%0A2
 GET /ad?q=delete:550e8400-e29b-41d4-a716-446655440000
 ```
 
-### 5. `list` - Lister les decks
+### 5. `list` - Lister les decks / rechercher les decks importés
 
-**Description:** Liste les decks de l'utilisateur ou cherche des decks publics par nom.
+**Description:** Liste les decks de l'utilisateur ou cherche dans les decks
+publics importés (Moxfield) avec filtres par **nom**, **format**, **auteur**
+et **commander**.
 
 **Syntaxe:**
 ```
-/ad?q=list:search_name
+/ad?q=list
+/ad?q=list:<search_name>
+/ad?q=list::<format>
+/ad?q=list:::<author>
+/ad?q=list::::<commander>
+/ad?q=list:<search_name>:<format>:<author>:<commander>
 ```
 
-**Paramètres:**
-- `list` - Action
-- `search_name` - Terme de recherche (optionnel, encodé)
-  - Si absent : liste les decks de l'utilisateur
-  - Si présent : cherche les decks publics par nom
+**Paramètres (tous optionnels, dans cet ordre):**
+- `search_name` - recherche partielle sur le nom (insensible à la casse)
+- `format` - format exact (ex: `commander`, `modern`, `standard`)
+- `author` - pseudo Moxfield partiel (insensible à la casse)
+- `commander` - nom du commander partiel (insensible à la casse)
+- Si les 4 sont absents : liste les decks de l'utilisateur.
+
+Chaque deck retourné contient désormais : `source`, `source_id`, `source_url`,
+`format`, `author`, `cards_count`, `created_at`, `updated_at`, `is_owner`.
+Limite : 200 résultats, triés par `created_at` décroissant.
+
+**⚡ Live refresh (re-scraping automatique) :**
+Toute recherche publique (au moins un filtre) est aussi **forwardée au scraper
+Moxfield**, qui re-scrape en arrière-plan les decks correspondants pour mettre
+la BDD à jour (les decks existants sont rafraîchis, les nouveaux sont importés).
+- `commander` → re-scrape tous les decks avec ce commander
+- `author` → re-scrape les decks publics de l'auteur
+- `name` → re-scrape les decks Moxfield dont le nom correspond
+- `format` → re-scrape le top du format (par vues)
+
+La réponse contient un champ `refresh` : `job_id`, `type`, `query`, `status`
+(`queued` = planifié, `running` = déjà en cours, `disabled` si désactivé).
+Le crawl tourne en arrière-plan (un seul job à la fois) et ne bloque pas la
+réponse. Les limites sont réglables : `MOXFIELD_LIVE_MAX_DECKS` (déf. 300),
+`MOXFIELD_LIVE_MAX_PER_PARTITION` (déf. 200), `MOXFIELD_LIVE_ENABLED=0` pour
+couper.
 
 **Exemples:**
 ```
@@ -182,6 +210,42 @@ GET /ad?q=list
 
 # Chercher les decks publics contenant "Lightning"
 GET /ad?q=list:Lightning
+
+# Tous les decks commander importés
+GET /ad?q=list::commander
+
+# Les decks de l'auteur CoreyBMTG
+GET /ad?q=list:::CoreyBMTG
+
+# Decks commander de nom contenant "winota"
+GET /ad?q=list:winota:commander:
+
+# Decks ayant Winota en commander (re-scrape Moxfield en arrière-plan)
+GET /ad?q=list::::Winota
+```
+
+### 6. `refresh` - État du re-scraping Moxfield en cours
+
+**Description:** Renvoie l'état de la file de re-scraping déclenchée par les
+recherches `list` : job en cours, file d'attente, 20 derniers jobs terminés
+(avec stats `imported`/`updated`/`skipped`/`failed`).
+
+**Syntaxe:**
+```
+GET /ad?q=refresh
+```
+
+**Exemple de réponse:**
+```json
+{
+  "action": "refresh",
+  "live_refresh": {
+    "enabled": true,
+    "running": { "id": 3, "type": "commander", "query": "Winota", "status": "running", ... },
+    "queued": [],
+    "history": [ ... ]
+  }
+}
 ```
 
 ---

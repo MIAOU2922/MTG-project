@@ -41,6 +41,7 @@ interface Args {
     progressEvery: number;
     reset: boolean;
     startFrom: string;
+    refresh: boolean;
     help: boolean;
 }
 
@@ -63,6 +64,7 @@ function parseArgs(argv: string[]): Args {
         progressEvery: 1,
         reset: false,
         startFrom: "",
+        refresh: false,
         help: false
     };
 
@@ -94,6 +96,7 @@ function parseArgs(argv: string[]): Args {
             case "--progress-every": args.progressEvery = Number(next(i++)); break;
             case "--reset": args.reset = true; break;
             case "--start-from": args.startFrom = next(i++); break;
+            case "--refresh": args.refresh = true; break;
             default:
                 throw new Error(`Option inconnue : ${arg}`);
         }
@@ -212,6 +215,11 @@ function formatEta(seconds: number): string {
     return h > 0 ? `${h}h${String(m).padStart(2, "0")}m${String(sec).padStart(2, "0")}s` : `${m}m${String(sec).padStart(2, "0")}s`;
 }
 
+/** Timestamp local HH:MM:SS pour les logs du sweep */
+function ts(): string {
+    return new Date().toTimeString().slice(0, 8);
+}
+
 async function main(): Promise<void> {
     let args: Args;
     try {
@@ -247,6 +255,9 @@ Options :
   --page-size N             Taille de page (défaut 64).
   --per-partition N         Max de decks vus par commander/carte/user (défaut 100).
   --delay MS                Délai mini entre requêtes API (défaut 500ms).
+  --refresh                 Re-fetch et MET À JOUR les decks déjà en base
+                            (au lieu de les skipper) — utiles pour rafraîchir
+                            les listes qui ont changé sur Moxfield.
 
 Mode sweep uniquement :
   --only-commanders         Ne balaye que les cartes légendaires (~4 000).
@@ -270,7 +281,8 @@ Env : MOXFIELD_USER_AGENT (accès dédié éventuel), MOXFIELD_API_URL,
     const client = new MoxfieldClient({ minDelayMs: args.delayMs });
     const importer = new DeckImporter();
     const crawler = new MoxfieldCrawler(client, importer, {
-        quiet: args.mode === "sweep"
+        quiet: args.mode === "sweep",
+        refresh: args.refresh
     });
 
     const startTime = Date.now();
@@ -398,6 +410,18 @@ Env : MOXFIELD_USER_AGENT (accès dédié éventuel), MOXFIELD_API_URL,
                 const sweepStart = Date.now();
                 let lastSavedIndex = startIndex - 1;
                 let finishReason: "limit" | "interrupted" | "done" = "done";
+
+                // Heartbeat : prouve que le processus vit même pendant les
+                // cartes longues (la ligne de carte n'est loggée qu'à la fin)
+                const heartbeat = setInterval(() => {
+                    const stats = crawler.getStats();
+                    const since = Math.round((Date.now() - sweepStart) / 1000);
+                    console.log(
+                        `⏳ [${ts()}] heartbeat ${formatEta(since)} — cumul importés=${stats.imported} ` +
+                        `découverts=${stats.discovered} échecs=${stats.failed}`
+                    );
+                }, 60_000);
+
                 for (let i = startIndex; i < plan.length && !stop; i++) {
                     const stats = crawler.getStats();
                     if (stats.imported >= maxDecks) {
@@ -406,21 +430,23 @@ Env : MOXFIELD_USER_AGENT (accès dédié éventuel), MOXFIELD_API_URL,
                     }
 
                     const before = stats.imported;
+                    const cardStart = Date.now();
                     await crawler.crawlOneCard(plan[i], {
                         fmt: searchFmt,
                         pageSize: args.pageSize,
                         maxDecksPerCard: args.perPartition,
                         maxDecks: Number.isFinite(maxDecks) ? maxDecks : 0
                     });
+                    const cardSecs = (Date.now() - cardStart) / 1000;
 
                     const done = i - startIndex + 1;
                     const avgMs = (Date.now() - sweepStart) / done;
                     const etaSeconds = (avgMs * (plan.length - i - 1)) / 1000;
                     const now = crawler.getStats();
                     console.log(
-                        `[${String(i + 1).padStart(String(plan.length).length)}/${plan.length}] ` +
+                        `[${ts()}] [${String(i + 1).padStart(String(plan.length).length)}/${plan.length}] ` +
                         `${plan[i]} — +${now.imported - before} (cumul ${now.imported}) ` +
-                        `${(avgMs / 1000).toFixed(1)}s/carte | ETA ${formatEta(etaSeconds)}`
+                        `${cardSecs.toFixed(1)}s/carte | ETA ${formatEta(etaSeconds)}`
                     );
 
                     if (i - lastSavedIndex >= args.progressEvery || stop || i === plan.length - 1) {
@@ -437,6 +463,7 @@ Env : MOXFIELD_USER_AGENT (accès dédié éventuel), MOXFIELD_API_URL,
                 }
 
                 if (stop) finishReason = "interrupted";
+                clearInterval(heartbeat);
 
                 if (finishReason === "limit") {
                     console.log(`   ✅ Limite de ${maxDecks} nouveaux decks atteinte — stop.`);
@@ -461,8 +488,9 @@ Env : MOXFIELD_USER_AGENT (accès dédié éventuel), MOXFIELD_API_URL,
                 const deck = await client.getDeck(args.publicId);
                 const { normalizeDeck, summarize } = await import("./sync/moxfield/normalize");
                 const normalized = normalizeDeck(deck);
-                const result = await importer.importDeck(normalized);
-                console.log(`${result === "imported" ? "✅" : "⏭️"} ${summarize(normalized)}`);
+                const result = await importer.importDeck(normalized, { refresh: args.refresh });
+                const icon = result === "imported" ? "✅" : result === "updated" ? "🔄" : "⏭️";
+                console.log(`${icon} ${summarize(normalized)}`);
                 break;
             }
         }
@@ -472,7 +500,7 @@ Env : MOXFIELD_USER_AGENT (accès dédié éventuel), MOXFIELD_API_URL,
         console.log("=".repeat(60));
         console.log(
             `📊 Bilan en ${elapsed}s : découverts=${stats.discovered} ` +
-            `importés=${stats.imported} déjà_en_base=${stats.skipped} échecs=${stats.failed}`
+            `importés=${stats.imported} mis_à_jour=${stats.updated} déjà_en_base=${stats.skipped} échecs=${stats.failed}`
         );
         if (stats.errors.length > 0) {
             console.log("\n❌ Erreurs :");
