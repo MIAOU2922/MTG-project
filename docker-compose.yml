@@ -8,6 +8,8 @@ services:
       POSTGRES_USER: mtgvrc
       POSTGRES_PASSWORD: 4fhTE1P2jWpriqu3ZyGO
       POSTGRES_DB: mtgvrc
+      TZ: Europe/Paris
+      PGTZ: Europe/Paris
     ports:
       - "55432:5432"
     volumes:
@@ -26,6 +28,7 @@ services:
     #   - "55433:3000"
     environment:
       DATABASE_URL: postgres://mtgvrc:4fhTE1P2jWpriqu3ZyGO@mtgvrc_database:5432/mtgvrc
+      TZ: Europe/Paris
       # TEMPORAIRE : relance le sweep Moxfield tant qu'il n'a pas fini toute
       # la liste des cartes. Mettre "0" une fois le balayage terminé.
       MOXFIELD_AUTO_SWEEP: "1"
