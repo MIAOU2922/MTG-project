@@ -108,33 +108,32 @@ Toutes les routes suivent une structure JSON cohérente pour faciliter l'intégr
 
 ---
 
-### `/ad?q={action:params}` - Gestion des Decks
+### `/ad?q={action:params}` - Recherche & Chargement de Decks
 
 **Type:** `d` (deck)
 
 ```json
 {
   "link_type": "d",
-  "link_id": "parse",
+  "link_id": "load",
   "iid": null,
   "uid": "330ea1cc96e9",
   "time": 1728499200000,
   "data": {
-    "action": "parse",
-    "deck_count": 60,
-    "cards": [...]
+    "action": "load",
+    "deck_type": "saved",
+    "cards_by_zone": { ... }
   }
 }
 ```
 
-**Actions disponibles:**
-- `parse`: Parser un deck
-- `save`: Sauvegarder un deck
-- `load`: Charger un deck dans l'instance
-- `delete`: Supprimer un deck
-- `list`: Lister les decks
+**Actions disponibles (lecture seule, plus d'écriture directe en BDD):**
+- `load`: Charger un deck sauvegardé (UUID) dans l'instance
+- `list`: Lister mes decks / rechercher les decks importés (forward au scraper Moxfield)
+- `refresh`: État de la file de re-scraping Moxfield
 
-**Usage:** Gestion complète des decks (parsing, sauvegarde, chargement).
+**Usage:** Recherche et chargement de decks depuis la BDD ; la BDD n'est mise à
+jour qu'indirectement via le re-scraping Moxfield déclenché par `list`.
 
 ---
 

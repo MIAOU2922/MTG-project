@@ -311,8 +311,8 @@ grep "completed in" logs/sync-*.log
 # Rechercher des cartes
 curl "http://localhost:3000/as?q=lightning+bolt"
 
-# Créer un deck
-curl "http://localhost:3000/ad?q=save:Mon%20Deck:auto:4%20Lightning%20Bolt"
+# Rechercher des decks (forward au scraper Moxfield)
+curl "http://localhost:3000/ad?q=list::commander"
 
 # Charger un deck
 curl "http://localhost:3000/ad?q=load:deck-uuid-here"
@@ -348,23 +348,20 @@ GET /as?q=type:instant+color:red+cmc:<=3
 GET /as?q=name:bolt+set:m21+lang:fr
 ```
 
-#### Gestion de Decks
+#### Recherche & Chargement de Decks
 
 ```bash
-# Parser un deck (validation)
-GET /ad?q=parse:4%20Lightning%20Bolt%0A2%20Island
+# Lister mes decks
+GET /ad?q=list
 
-# Sauvegarder un deck
-GET /ad?q=save:Mon%20Deck:auto:4%20Lightning%20Bolt%0A2%20Island:en:Ma%20description
+# Rechercher les decks publics (forward au scraper Moxfield)
+GET /ad?q=list:winota:commander:
 
-# Charger un deck
+# Charger un deck sauvegardé dans l'instance
 GET /ad?q=load:550e8400-e29b-41d4-a716-446655440000
 
-# Supprimer un deck
-GET /ad?q=delete:550e8400-e29b-41d4-a716-446655440000
-
-# Lister les decks
-GET /ad?q=list
+# État du re-scraping Moxfield
+GET /ad?q=refresh
 ```
 
 ---

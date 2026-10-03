@@ -141,20 +141,24 @@ ScryFallSync.start()
         └─→ Log to same file
 ```
 
-### Flux de Création de Deck
+### Flux de Recherche / Chargement de Deck
 ```
-User Request: POST /ad?q=save:...
+User Request: GET /ad?q=list:...
     ↓
-parseAdQuery() - Extract card list & zone info
+parseAdQuery() - Extrait l'action et les filtres
     ↓
-Deck.saveDeck()
-    ├─→ Validate deck rules
-    ├─→ Create/update Deck entry
-    ├─→ For each card:
-    │   ├─→ Validate (required fields)
-    │   ├─→ Create DeckCard entry
-    │   └─→ Set zone & quantity
-    └─→ Return deck with zone breakdown
+handleList()
+    ├─→ Recherche en BDD (decks importés + filtres)
+    ├─→ liveRefresh.forwardSearch() → scraper Moxfield en arrière-plan
+    │     (seule écriture BDD : mise à jour par le scraper)
+    └─→ Réponse immédiate (non bloquante)
+
+User Request: GET /ad?q=load:uuid
+    ↓
+handleLoad()
+    ├─→ Deck.findById(uuid) (deck public)
+    ├─→ Lecture des zones + cartes
+    └─→ instance.addCard() pour chaque carte
 ```
 
 ## 📊 Modèles de Données Principaux

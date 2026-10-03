@@ -8,6 +8,7 @@ import Config from '@/database/Config';
 import ScryFallSync from '@/sync/index';
 import { ScryfallBulkDataClient } from '@/sync/bulk-client';
 import { BulkData } from '@/sync/types';
+import { AutoSweep } from '@/autoSweep';
 
 /** Clés Config pour mémoriser le dernier bulk synchronisé */
 const LAST_CARDS_SYNC_KEY = 'sync:last_cards_bulk_updated_at';
@@ -18,6 +19,7 @@ export default class Main extends EventEmitter {
     private app: Application;
     private port: number;
     private syncInProgress: boolean = false;
+    private autoSweep: AutoSweep;
 
     private constructor() {
         super();
@@ -27,6 +29,7 @@ export default class Main extends EventEmitter {
         this.setupRoutes();
         this.setupImageDownloadScheduler();
         this.setupSyncScheduler();
+        this.setupAutoSweep();
     }
 
     public static getInstance(): Main {
@@ -88,6 +91,16 @@ export default class Main extends EventEmitter {
 
         cleanupJob.start();
         console.log('📅 Image and atlas cleanup scheduler started (runs every hour, 48h threshold)');
+    }
+
+    /**
+     * TEMPORAIRE : relance automatiquement le sweep Moxfield « de base » tant
+     * qu'il n'a pas parcouru une fois toute la liste des cartes (voir
+     * src/autoSweep.ts). À désactiver via MOXFIELD_AUTO_SWEEP=0.
+     */
+    private setupAutoSweep(): void {
+        this.autoSweep = new AutoSweep();
+        this.autoSweep.start();
     }
 
     private setupSyncScheduler(): void {

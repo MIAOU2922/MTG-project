@@ -116,6 +116,16 @@ npm run scrape:moxfield -- --mode sweep --delay 500 --per-partition 300
 npm run scrape:moxfield -- --mode sweep --only-commanders --delay 400
 ```
 
+#### Auto-relance temporaire (serveur)
+
+`src/autoSweep.ts` : **tant que** le sweep de base (tous formats, toutes cartes)
+n'a pas fini de parcourir la liste une fois (`lastIndex >= total - 1` dans
+`configs`), le serveur le **relance automatiquement** au démarrage (~15 s
+après) puis toutes les 10 min (auto-guérison). Garde-fous : un seul sweep par
+serveur, et pas de relance si la progression date de moins de 10 min (un sweep
+tourne ailleurs). Env : `MOXFIELD_AUTO_SWEEP=0` pour couper (à faire une fois
+le balayage terminé).
+
 ## Environnement
 
 | Variable | Rôle |
@@ -141,7 +151,7 @@ exactement la PK `id` de notre table `cards`. Chemin de résolution :
 
 ## Zones
 
-| Board Moxfield | zone `deck_cards` |
+| Board Moxfield | zone `deck_zones` |
 |---|---|
 | commanders | `commander` (+ `is_commander`) |
 | companions | `companion` |
