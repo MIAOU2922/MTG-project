@@ -108,7 +108,7 @@ Toutes les routes suivent une structure JSON cohérente pour faciliter l'intégr
 
 ---
 
-### `/ad?q={action:params}` - Recherche & Chargement de Decks
+### `/ad`, `/adrefresh`, `/adl{index}` - Recherche & Chargement de Decks
 
 **Type:** `d` (deck)
 
@@ -127,13 +127,17 @@ Toutes les routes suivent une structure JSON cohérente pour faciliter l'intégr
 }
 ```
 
-**Actions disponibles (lecture seule, plus d'écriture directe en BDD):**
+**Actions et endpoints disponibles :**
 - `load`: Charger un deck sauvegardé (UUID) dans l'instance
 - `list`: Lister mes decks / rechercher les decks importés (forward au scraper Moxfield)
 - `refresh`: État de la file de re-scraping Moxfield
+- `/adrefresh`: Rejouer les filtres de la dernière liste de l'utilisateur et récupérer les données actuelles de la BDD
+- `/adl{index}`: Charger dans l'instance un deck de la dernière liste, avec index base36 commençant à 0
 
-**Usage:** Recherche et chargement de decks depuis la BDD ; la BDD n'est mise à
-jour qu'indirectement via le re-scraping Moxfield déclenché par `list`.
+Les résultats de la dernière liste sont conservés par utilisateur en BDD.
+`list` fournit le nombre retourné et le total correspondant aux filtres.
+Les chargements Moxfield tentent un re-scraping immédiat ; la copie BDD sert
+de repli si la source ne répond pas.
 
 ---
 

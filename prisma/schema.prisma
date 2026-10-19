@@ -14,15 +14,15 @@ datasource db {
 model User {
   id           String   @id // clé 12 hex, utilisée directement comme identifiant
   ip_hash      String? // hash SHA-256 de la dernière IP connue — jamais d'IP en clair (non unique : plusieurs users par IP)
-  created_at   DateTime @default(now())
-  last_seen_at DateTime @default(now()) @updatedAt
+  created_at   DateTime @default(now()) @db.Timestamptz(3)
+  last_seen_at DateTime @default(now()) @updatedAt @db.Timestamptz(3)
   @@map("users")
 }
 
 model Instance {
   id           Int      @id
-  created_at   DateTime @default(now())
-  last_seen_at DateTime @default(now()) @updatedAt
+  created_at   DateTime @default(now()) @db.Timestamptz(3)
+  last_seen_at DateTime @default(now()) @updatedAt @db.Timestamptz(3)
   card_ids     String[] @default([])
   user_ids     String[] @default([])
 
@@ -33,8 +33,8 @@ model Config {
   key   String @id
   value String
 
-  created_at DateTime @default(now())
-  updated_at DateTime @default(now()) @updatedAt
+  created_at DateTime @default(now()) @db.Timestamptz(3)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(3)
 
   @@map("configs")
 }
@@ -69,11 +69,11 @@ model Card {
   rarity           String
   image_url        String
   image_status     String? // highres_scan, lowres, placeholder, missing
-  release_at       DateTime
+  release_at       DateTime @db.Timestamptz(3)
   faces            Face[]
 
-  created_at DateTime @default(now())
-  updated_at DateTime @default(now()) @updatedAt
+  created_at DateTime @default(now()) @db.Timestamptz(3)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(3)
 
   set Set? @relation(fields: [set_id], references: [id])
 
@@ -104,8 +104,8 @@ model Face {
   card   Card    @relation(fields: [card_id], references: [id], onDelete: Cascade)
   oracle Oracle? @relation(fields: [oracle_id], references: [id], onDelete: Cascade)
 
-  created_at DateTime @default(now())
-  updated_at DateTime @default(now()) @updatedAt
+  created_at DateTime @default(now()) @db.Timestamptz(3)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(3)
 
   @@id([card_id, index])
   @@map("faces")
@@ -118,19 +118,19 @@ model Set {
   type  String
   cards Card[]
 
-  created_at DateTime @default(now())
-  updated_at DateTime @default(now()) @updatedAt
+  created_at DateTime @default(now()) @db.Timestamptz(3)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(3)
 
   @@map("sets")
 }
 
 model Ruling {
   oracle_id    String   @db.Uuid
-  published_at DateTime
+  published_at DateTime @db.Timestamptz(3)
   comment      String
 
-  created_at DateTime @default(now())
-  updated_at DateTime @default(now()) @updatedAt
+  created_at DateTime @default(now()) @db.Timestamptz(3)
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz(3)
 
   oracle Oracle @relation(fields: [oracle_id], references: [id], onDelete: Cascade)
 
@@ -154,8 +154,8 @@ model Deck {
   name        String
   description String?
   commander   String?
-  created_at  DateTime @default(now())
-  updated_at  DateTime @default(now()) @updatedAt
+  created_at  DateTime @default(now()) @db.Timestamptz(3)
+  updated_at  DateTime @default(now()) @updatedAt @db.Timestamptz(3)
   
   zones DeckZone[]
   @@unique([source, source_id])

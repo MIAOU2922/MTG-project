@@ -35,6 +35,13 @@ export interface CrawlerOptions {
      *   ou échoués). À utiliser avec refresh pour borner un rafraîchissement.
      */
     limitMode?: "imported" | "discovered";
+    /**
+     * Nombre de decks importés EN PARALLÈLE (défaut 1 = séquentiel).
+     * L'API Moxfield met ~4 s par requête : sans parallélisme, un deck =
+     * ~4,3 s. Les départs de requêtes restent espacés d'au moins
+     * `minDelayMs` par le throttle global du client (taux max inchangé).
+     */
+    deckConcurrency?: number;
 }
 
 export interface CrawlTopOptions {
@@ -85,6 +92,7 @@ export class MoxfieldCrawler {
     private readonly quiet: boolean;
     private readonly refresh: boolean;
     private readonly limitMode: "imported" | "discovered";
+    private readonly deckConcurrency: number;
     private readonly seen = new Set<string>();
     private stats: CrawlStats = {
         discovered: 0,
@@ -105,6 +113,7 @@ export class MoxfieldCrawler {
         this.quiet = options.quiet ?? false;
         this.refresh = options.refresh ?? false;
         this.limitMode = options.limitMode ?? "imported";
+        this.deckConcurrency = Math.max(1, Math.floor(options.deckConcurrency ?? 1));
     }
 
     public getStats(): CrawlStats {
@@ -411,14 +420,27 @@ export class MoxfieldCrawler {
                 ...baseParams,
                 pageNumber: page
             });
+            // Lots de `deckConcurrency` : les imports (fetch + BDD) se chevauchent,
+            // les départs HTTP restent cadencés par le throttle global du client.
+            let batch: Array<{ publicId: string; name?: string }> = [];
             for (const item of res.data) {
                 if (this.limitCount >= maxDecks || total >= maxPerQuery) break;
                 total++;
-                await this.importByPublicId(item.publicId, item.name);
+                batch.push(item);
+                if (batch.length >= this.deckConcurrency) {
+                    await this.importBatch(batch);
+                    batch = [];
+                }
             }
+            if (batch.length > 0) await this.importBatch(batch);
             if (page >= res.totalPages || res.data.length === 0) break;
         }
         return total;
+    }
+
+    /** Importe un lot de decks en parallèle (départs espacés par le throttle). */
+    private async importBatch(items: Array<{ publicId: string; name?: string }>): Promise<void> {
+        await Promise.all(items.map(item => this.importByPublicId(item.publicId, item.name)));
     }
 
     /** Résout un nom de carte vers l'ID interne Moxfield (via /v3/cards/named). */

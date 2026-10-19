@@ -32,6 +32,7 @@ interface Args {
     pageSize: number;
     perPartition: number;
     delayMs: number;
+    concurrency: number;
     commanders: string[];
     commandersFromDb: number;
     cards: string[];
@@ -55,6 +56,7 @@ function parseArgs(argv: string[]): Args {
         pageSize: 64,
         perPartition: 100,
         delayMs: 500,
+        concurrency: 8,
         commanders: [],
         commandersFromDb: 0,
         cards: [],
@@ -87,6 +89,7 @@ function parseArgs(argv: string[]): Args {
             case "--page-size": args.pageSize = Number(next(i++)); break;
             case "--per-partition": args.perPartition = Number(next(i++)); break;
             case "--delay": args.delayMs = Number(next(i++)); break;
+            case "--concurrency": args.concurrency = Number(next(i++)); break;
             case "--commanders": args.commanders = next(i++).split("|").map(s => s.trim()).filter(Boolean); break;
             case "--commanders-from-db": args.commandersFromDb = Number(next(i++)); break;
             case "--cards": args.cards = next(i++).split("|").map(s => s.trim()).filter(Boolean); break;
@@ -128,6 +131,9 @@ interface SweepProgress {
     planKey: string;
     /** Index de la dernière carte TERMINÉE (la reprise repart à +1) */
     lastIndex: number;
+    /** Nom de la dernière carte terminée — permet de reprendre même si le
+     *  plan a changé (re-sync : nouvelles cartes → planKey différente). */
+    lastCardName?: string;
     total: number;
     format: string;
     onlyCommanders: boolean;
@@ -255,6 +261,8 @@ Options :
   --page-size N             Taille de page (défaut 64).
   --per-partition N         Max de decks vus par commander/carte/user (défaut 100).
   --delay MS                Délai mini entre requêtes API (défaut 500ms).
+  --concurrency N           Decks importés en parallèle (défaut 8 ; les départs
+                            HTTP restent espacés d'au moins --delay ms).
   --refresh                 Re-fetch et MET À JOUR les decks déjà en base
                             (au lieu de les skipper) — utiles pour rafraîchir
                             les listes qui ont changé sur Moxfield.
@@ -282,7 +290,8 @@ Env : MOXFIELD_USER_AGENT (accès dédié éventuel), MOXFIELD_API_URL,
     const importer = new DeckImporter();
     const crawler = new MoxfieldCrawler(client, importer, {
         quiet: args.mode === "sweep",
-        refresh: args.refresh
+        refresh: args.refresh,
+        deckConcurrency: args.concurrency
     });
 
     const startTime = Date.now();
@@ -370,7 +379,24 @@ Env : MOXFIELD_USER_AGENT (accès dédié éventuel), MOXFIELD_API_URL,
                             `   ♻️ Reprise à la carte #${startIndex + 1} « ${plan[startIndex] ?? "—"} » (sauvegardé ${progress.updatedAt})`
                         );
                     } else if (progress) {
-                        console.log("   ⚠️ Le plan a changé (re-sync BDD ?) — reprise depuis le début.");
+                        // Plan modifié (re-sync BDD : nouvelles cartes, planKey différente) :
+                        // on se repère au NOM de la dernière carte terminée au lieu de repartir de zéro.
+                        if (progress.lastCardName) {
+                            const idx = plan.indexOf(progress.lastCardName);
+                            if (idx !== -1) {
+                                startIndex = Math.min(plan.length, idx + 1);
+                                console.log(
+                                    `   ♻️ Plan modifié (re-sync BDD ?) — reprise après « ${progress.lastCardName} » (#${startIndex + 1}/${plan.length})`
+                                );
+                            } else {
+                                console.warn(`   ⚠️ Plan modifié et « ${progress.lastCardName} » introuvable — reprise depuis le début.`);
+                            }
+                        } else if (progress.lastIndex >= 0 && progress.lastIndex < plan.length) {
+                            startIndex = progress.lastIndex + 1;
+                            console.log(`   ♻️ Plan modifié — reprise approximative à la carte #${startIndex + 1}.`);
+                        } else {
+                            console.log("   ⚠️ Le plan a changé (re-sync BDD ?) — reprise depuis le début.");
+                        }
                     }
                 }
                 if (args.startFrom) {
@@ -393,6 +419,7 @@ Env : MOXFIELD_USER_AGENT (accès dédié éventuel), MOXFIELD_API_URL,
                 console.log(
                     `🧹 Balayage : ${plan.length} cartes à traiter (${fmt}), ` +
                     `max ${args.perPartition} decks/carte, ` +
+                    `concurrence ${args.concurrency}, ` +
                     `${Number.isFinite(maxDecks) ? `${maxDecks} nouveaux decks max` : "nouveaux decks illimités"}, ` +
                     `progression sauvegardée toutes les ${args.progressEvery} cartes`
                 );
@@ -453,6 +480,7 @@ Env : MOXFIELD_USER_AGENT (accès dédié éventuel), MOXFIELD_API_URL,
                         await saveSweepProgress(configKey, {
                             planKey,
                             lastIndex: i,
+                            lastCardName: plan[i],
                             total: plan.length,
                             format: fmt,
                             onlyCommanders: args.onlyCommanders,

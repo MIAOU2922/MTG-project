@@ -77,6 +77,7 @@ export class MoxfieldClient {
     private readonly transport: "auto" | "curl" | "fetch";
     private useCurl: boolean;
     private lastRequestAt = 0;
+    private throttleChain: Promise<void> = Promise.resolve();
 
     constructor(options: MoxfieldClientOptions = {}) {
         this.baseUrl = (process.env.MOXFIELD_API_URL || DEFAULT_API_URL).replace(/\/+$/, "");
@@ -265,13 +266,20 @@ export class MoxfieldClient {
         return { status: response.status, body: await response.text() };
     }
 
-    /** Throttle global : espace les requêtes d'au moins minDelayMs. */
-    private async throttle(): Promise<void> {
-        const elapsed = Date.now() - this.lastRequestAt;
-        if (elapsed < this.minDelayMs) {
-            await sleep(this.minDelayMs - elapsed);
-        }
-        this.lastRequestAt = Date.now();
+    /** Throttle global : espace les DÉPARTS de requêtes d'au moins minDelayMs.
+     *  Concurrency-safe : même appelé en parallèle, les départs restent en file
+     *  (le taux global reste ≤ 1 requête / minDelayMs). */
+    private throttle(): Promise<void> {
+        const run = async (): Promise<void> => {
+            const elapsed = Date.now() - this.lastRequestAt;
+            if (elapsed < this.minDelayMs) {
+                await sleep(this.minDelayMs - elapsed);
+            }
+            this.lastRequestAt = Date.now();
+        };
+        const turn = this.throttleChain.then(run, run);
+        this.throttleChain = turn;
+        return turn;
     }
 
     private backoffMs(attempt: number): number {

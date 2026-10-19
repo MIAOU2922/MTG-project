@@ -2,12 +2,27 @@ import { Request, Response, Router } from "express";
 import User from "@/database/User";
 import Deck from "@/database/Deck";
 import Instance from "@/database/Instance";
+import Config from "@/database/Config";
 import { getUserId } from "@/utils";
 import Database from "@/database/Database";
 import { liveRefresh } from "@/sync/moxfield/liveRefresh";
 
 export const apiDeckRouter = Router();
+apiDeckRouter.get('/adrefresh', adRefreshHandler);
+apiDeckRouter.get('/adl:linkId', adLoadByIndexHandler);
 apiDeckRouter.get('/ad', adHandler);
+
+interface LastDeckSearch {
+    deckName?: string;
+    listFormat?: string;
+    listAuthor?: string;
+    listCommander?: string;
+    deckIds: string[];
+    refreshedJobId: number | null;
+    searchedAt: string;
+}
+
+const LAST_SEARCH_CONFIG_PREFIX = "ad:last-search:";
 
 interface ParsedQuery {
     action: string;
@@ -62,21 +77,15 @@ function parseAdQuery(queryParam: string): ParsedQuery {
 
 async function adHandler(req: Request, res: Response) {
     try {
+        res.setHeader('Cache-Control', 'private, no-store');
         const userId = await getUserId(req);
-        if (userId === null) {
-            return res.status(401).json({ error: 'unknown_user', hint: 'Register via /aur first' });
-        }
-        const user = await User.findById(userId);
+        const user = userId === null ? null : await User.findById(userId);
         if (!user) {
             return res.status(401).json({ error: 'unknown_user' });
         }
         await user.updateLastSeen();
 
-        // Get the current instance for this user
-        const instances = await Database.prisma.instance.findMany({
-            where: { user_ids: { has: userId } }
-        });
-        const currentInstance = instances.length > 0 ? new Instance(instances[0]) : null;
+        const currentInstance = await getCurrentInstance(user.id);
 
         // Parse the query parameter
         const queryParam = req.query.q as string;
@@ -117,6 +126,113 @@ async function adHandler(req: Request, res: Response) {
     }
 }
 
+async function getAuthenticatedUser(req: Request): Promise<User | null> {
+    const userId = await getUserId(req);
+    return userId === null ? null : User.findById(userId);
+}
+
+async function getCurrentInstance(userId: string): Promise<Instance | null> {
+    const instance = await Database.prisma.instance.findFirst({
+        where: { user_ids: { has: userId } }
+    });
+    return instance ? new Instance(instance) : null;
+}
+
+function isLastDeckSearch(value: unknown): value is LastDeckSearch {
+    if (typeof value !== "object" || value === null) return false;
+    const search = value as Record<string, unknown>;
+    const optionalStringFields = ["deckName", "listFormat", "listAuthor", "listCommander"] as const;
+    return (
+        Array.isArray(search.deckIds) &&
+        search.deckIds.every(id => typeof id === "string") &&
+        (search.refreshedJobId === null || typeof search.refreshedJobId === "number") &&
+        typeof search.searchedAt === "string" &&
+        optionalStringFields.every(field => search[field] === undefined || typeof search[field] === "string")
+    );
+}
+
+async function getLastSearch(userId: string): Promise<LastDeckSearch | null> {
+    const config = await Config.get(`${LAST_SEARCH_CONFIG_PREFIX}${userId}`, "");
+    if (!config.value) return null;
+
+    const parsed: unknown = JSON.parse(config.value);
+    if (!isLastDeckSearch(parsed)) {
+        throw new Error(`Invalid saved deck search for user ${userId}`);
+    }
+    return parsed;
+}
+
+async function saveLastSearch(userId: string, search: LastDeckSearch): Promise<void> {
+    await Config.set(`${LAST_SEARCH_CONFIG_PREFIX}${userId}`, JSON.stringify(search));
+}
+
+async function adRefreshHandler(req: Request, res: Response): Promise<Response> {
+    try {
+        res.setHeader('Cache-Control', 'private, no-store');
+        const user = await getAuthenticatedUser(req);
+        if (!user) {
+            return res.status(401).json({ error: 'unknown_user', hint: 'Register via /aur first' });
+        }
+        await user.updateLastSeen();
+
+        const lastSearch = await getLastSearch(user.id);
+        if (!lastSearch) {
+            return res.status(404).json({ error: 'no_previous_search', hint: 'Call /ad?q=list first' });
+        }
+
+        return handleList(
+            res,
+            user,
+            lastSearch.deckName,
+            lastSearch.listFormat,
+            lastSearch.listAuthor,
+            lastSearch.listCommander,
+            { refreshJobId: lastSearch.refreshedJobId }
+        );
+    } catch (error) {
+        console.error('Error refreshing last deck search:', error);
+        return res.status(500).json({ error: 'Error refreshing last deck search' });
+    }
+}
+
+async function adLoadByIndexHandler(req: Request, res: Response): Promise<Response> {
+    try {
+        res.setHeader('Cache-Control', 'private, no-store');
+        const user = await getAuthenticatedUser(req);
+        if (!user) {
+            return res.status(401).json({ error: 'unknown_user', hint: 'Register via /aur first' });
+        }
+        await user.updateLastSeen();
+
+        const linkId = req.params.linkId;
+        if (!/^[0-9a-z]+$/.test(linkId)) {
+            return res.status(400).json({ error: 'Invalid deck index. Use a base36 index.' });
+        }
+        const index = Number.parseInt(linkId, 36);
+        if (!Number.isSafeInteger(index)) {
+            return res.status(400).json({ error: 'Deck index is outside the supported range.' });
+        }
+
+        const lastSearch = await getLastSearch(user.id);
+        if (!lastSearch) {
+            return res.status(404).json({ error: 'no_previous_search', hint: 'Call /ad?q=list first' });
+        }
+        const deckId = lastSearch.deckIds[index];
+        if (!deckId) {
+            return res.status(404).json({ error: 'deck_index_not_found', index, count: lastSearch.deckIds.length });
+        }
+
+        const instance = await getCurrentInstance(user.id);
+        if (!instance) {
+            return res.status(400).json({ error: 'User is not in any instance' });
+        }
+        return handleLoad(res, user, instance, deckId, linkId);
+    } catch (error) {
+        console.error('Error loading deck by search index:', error);
+        return res.status(500).json({ error: 'Error loading deck by search index' });
+    }
+}
+
 
 /**
  * LOAD action: Load a saved deck from the DB and add its cards to the instance
@@ -124,9 +240,10 @@ async function adHandler(req: Request, res: Response) {
  */
 async function handleLoad(
     res: Response,
-    user: any,
+    user: User,
     instance: Instance,
-    deckId: string | undefined
+    deckId: string | undefined,
+    linkId = 'load'
 ): Promise<Response> {
     if (!deckId) {
         return res.status(400).json({
@@ -136,12 +253,17 @@ async function handleLoad(
 
     try {
         // Load by ID — anyone can load any public deck
-        const deck = await Deck.findById(deckId);
+        let deck = await Deck.findById(deckId);
 
         if (!deck) {
             return res.status(404).json({
                 error: 'Deck not found'
             });
+        }
+
+        const scrapeStatus = await liveRefresh.refreshDeck(deck.source, deck.source_id);
+        if (scrapeStatus === 'updated') {
+            deck = await Deck.findById(deck.id) ?? deck;
         }
 
         // Get the card IDs (repeated by count)
@@ -205,7 +327,7 @@ async function handleLoad(
 
         return res.json({
             link_type: 'd',
-            link_id: 'load',
+            link_id: linkId,
             iid: instance.id,
             uid: user.id,
             time: Date.now(),
@@ -213,6 +335,7 @@ async function handleLoad(
                 action: 'load',
                 deck_type: 'saved',
                 deck_id: deck.id,
+                data_freshness: scrapeStatus,
                 deck_name: deck.name,
                 commander: deck.commander,
                 format: deck.format,
@@ -269,14 +392,16 @@ function handleRefreshStatus(res: Response, user: any): Response {
  */
 async function handleList(
     res: Response,
-    user: any,
+    user: User,
     deckName: string | undefined,
     listFormat: string | undefined,
     listAuthor: string | undefined,
-    listCommander: string | undefined
+    listCommander: string | undefined,
+    options: { refreshJobId?: number | null } = {}
 ): Promise<Response> {
     try {
         let deckEntries: Array<Record<string, unknown>> = [];
+        let matchingTotalCount: number;
 
         if (deckName || listFormat || listAuthor || listCommander) {
             // ==== Recherche publique (decks importés) avec filtres ====
@@ -286,26 +411,30 @@ async function handleList(
             if (listAuthor) where.author = { contains: listAuthor, mode: 'insensitive' };
             if (listCommander) where.commander = { contains: listCommander, mode: 'insensitive' };
 
-            const rows = await Database.prisma.deck.findMany({
-                where,
-                orderBy: { created_at: 'desc' },
-                take: 200, // Limite de sécurité pour la réponse
-                select: {
-                    id: true,
-                    name: true,
-                    description: true,
-                    commander: true,
-                    user_id: true,
-                    source: true,
-                    source_id: true,
-                    source_url: true,
-                    format: true,
-                    author: true,
-                    created_at: true,
-                    updated_at: true,
-                    _count: { select: { zones: true } }
-                }
-            });
+            const [rows, totalCount] = await Promise.all([
+                Database.prisma.deck.findMany({
+                    where,
+                    orderBy: { created_at: 'desc' },
+                    take: 200, // Limite de sécurité pour la réponse
+                    select: {
+                        id: true,
+                        name: true,
+                        description: true,
+                        commander: true,
+                        user_id: true,
+                        source: true,
+                        source_id: true,
+                        source_url: true,
+                        format: true,
+                        author: true,
+                        created_at: true,
+                        updated_at: true,
+                        _count: { select: { zones: true } }
+                    }
+                }),
+                Database.prisma.deck.count({ where })
+            ]);
+            matchingTotalCount = totalCount;
 
             // Nombre total d'exemplaires par deck (somme des counts des zones)
             const zoneRows = await Database.prisma.deckZone.findMany({
@@ -336,6 +465,7 @@ async function handleList(
         } else {
             // ==== Decks de l'utilisateur ====
             const decks = await Deck.findByUserId(user.id);
+            matchingTotalCount = await Database.prisma.deck.count({ where: { user_id: user.id } });
 
             deckEntries = await Promise.all(
                 decks.map(async (deck) => ({
@@ -360,14 +490,29 @@ async function handleList(
         // ⚡ Forward de la recherche au scraper Moxfield (re-scraping ciblé,
         // jamais bloquant : la réponse part immédiatement, le crawl tourne en
         // arrière-plan dans la file liveRefresh).
-        const refreshJob = deckName || listFormat || listAuthor || listCommander
-            ? liveRefresh.forwardSearch({
-                name: deckName,
-                format: listFormat,
-                author: listAuthor,
-                commander: listCommander
-            })
-            : null;
+        const refreshJob = options.refreshJobId !== undefined
+            ? options.refreshJobId === null ? null : liveRefresh.findJob(options.refreshJobId)
+            : deckName || listFormat || listAuthor || listCommander
+                ? liveRefresh.forwardSearch({
+                    name: deckName,
+                    format: listFormat,
+                    author: listAuthor,
+                    commander: listCommander
+                })
+                : null;
+
+        const savedSearch: LastDeckSearch = {
+            deckName,
+            listFormat,
+            listAuthor,
+            listCommander,
+            deckIds: deckEntries.map(entry => String(entry.id)),
+            refreshedJobId: options.refreshJobId !== undefined
+                ? options.refreshJobId
+                : refreshJob?.id ?? null,
+            searchedAt: new Date().toISOString()
+        };
+        await saveLastSearch(user.id, savedSearch);
 
         return res.json({
             link_type: 'd',
@@ -382,6 +527,9 @@ async function handleList(
                 author: listAuthor || null,
                 commander: listCommander || null,
                 decks_count: deckEntries.length,
+                returned_count: deckEntries.length,
+                matching_total_count: matchingTotalCount,
+                searched_at: savedSearch.searchedAt,
                 decks: deckEntries,
                 refresh: refreshJob
                     ? {
@@ -392,9 +540,15 @@ async function handleList(
                         status: refreshJob.status,
                         message: refreshJob.status === 'queued'
                             ? 'Re-scraping Moxfield planifié en arrière-plan'
-                            : 'Re-scraping Moxfield déjà en cours ou planifié'
+                            : refreshJob.status === 'running'
+                                ? 'Re-scraping Moxfield en cours'
+                                : refreshJob.status === 'done'
+                                    ? 'Re-scraping Moxfield terminé'
+                                    : 'Le re-scraping Moxfield a échoué'
                     }
-                    : { status: 'disabled' }
+                    : options.refreshJobId
+                        ? { job_id: options.refreshJobId, status: 'unknown' }
+                        : { status: 'disabled' }
             }
         });
     } catch (error) {
@@ -404,6 +558,3 @@ async function handleList(
         });
     }
 }
-
-
-

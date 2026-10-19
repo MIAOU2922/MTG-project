@@ -22,6 +22,7 @@
 import { MoxfieldClient } from "./client";
 import { DeckImporter } from "./importer";
 import { MoxfieldCrawler } from "./crawler";
+import { normalizeDeck } from "./normalize";
 import type { CrawlStats } from "./types";
 
 export type RefreshJobType = "commander" | "author" | "name" | "format";
@@ -127,6 +128,31 @@ class LiveRefresh {
             queued: this.queue,
             history: this.history.slice(-20)
         };
+    }
+
+    public findJob(id: number): RefreshJob | null {
+        return this.running?.id === id
+            ? this.running
+            : this.queue.find(job => job.id === id) ?? this.history.find(job => job.id === id) ?? null;
+    }
+
+    /** Re-fetch one imported Moxfield deck immediately before loading it. */
+    public async refreshDeck(
+        source: string | null,
+        sourceId: string | null
+    ): Promise<"updated" | "unavailable" | "not_supported"> {
+        if (source !== "moxfield" || !sourceId) return "not_supported";
+
+        try {
+            const { client, importer } = this.ensureDeps();
+            const rawDeck = await client.getDeck(sourceId);
+            const result = await importer.importDeck(normalizeDeck(rawDeck), { refresh: true });
+            return result === "updated" ? "updated" : "unavailable";
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            console.warn(`Moxfield refresh failed for deck ${sourceId}; using the database copy: ${message}`);
+            return "unavailable";
+        }
     }
 
     // -------------------------------------------------------------------------

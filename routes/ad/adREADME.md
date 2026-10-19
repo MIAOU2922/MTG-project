@@ -1,9 +1,10 @@
 # API /ad - Recherche & Chargement de Decks
 
-Recherche de decks en base et chargement dans l'instance. La route **n'écrit
-plus directement dans la BDD** (actions `parse`/`save`/`delete` supprimées) :
-la seule écriture est indirecte — les recherches `list` sont forwardées au
-scraper Moxfield, qui met la BDD à jour en arrière-plan.
+Recherche de decks en base et chargement dans l'instance. Les actions
+`parse`/`save`/`delete` n'existent plus. Les recherches publiques déclenchent
+un re-scraping Moxfield en arrière-plan ; les chargements tentent aussi un
+re-scraping individuel avant d'utiliser le deck, avec repli sur la dernière
+copie en BDD si la source est indisponible.
 
 ## Endpoint
 
@@ -12,6 +13,13 @@ GET /ad?q=action:param1:param2:param3...
 ```
 
 Format unifié : un seul paramètre `q` avec séparateurs `:` (comme `/as?q=`).
+
+Endpoints statiques complémentaires :
+
+```
+GET /adrefresh  # rejoue la dernière recherche authentifiée contre la BDD
+GET /adl{index} # charge le deck à l'index base36 de la dernière liste (0-based)
+```
 
 ## Authentification
 
@@ -95,6 +103,13 @@ et **commander**.
 Chaque deck retourné contient désormais : `source`, `source_id`, `source_url`,
 `format`, `author`, `cards_count`, `created_at`, `updated_at`, `is_owner`.
 Limite : 200 résultats, triés par `created_at` décroissant.
+La réponse conserve `decks_count` et ajoute `returned_count` (nombre de decks
+dans la réponse) et `matching_total_count` (nombre total de decks correspondant
+aux filtres en BDD, avant la limite de 200).
+
+Chaque appel à `list` mémorise les filtres et l'ordre des résultats par
+utilisateur authentifié. Cet état est conservé en BDD afin que les endpoints
+statiques fonctionnent également après un redémarrage du serveur.
 
 **⚡ Live refresh (re-scraping automatique) :**
 Toute recherche publique (au moins un filtre) est aussi **forwardée au scraper
@@ -133,7 +148,43 @@ GET /ad?q=list:winota:commander:
 GET /ad?q=list::::Winota
 ```
 
-### 3. `refresh` - État du re-scraping Moxfield en cours
+### 3. `/adrefresh` - Rejouer la dernière recherche
+
+**Description:** Rejoue contre la BDD les filtres de la dernière requête `list`
+de l'utilisateur et retourne les résultats actuels, sans créer un nouveau job
+de scraping. L'application peut rappeler cette route après quelques secondes
+(par exemple après 30 secondes) pour récupérer les decks mis à jour par le
+scraping déclenché lors de la recherche initiale.
+
+**Syntaxe:**
+```
+GET /adrefresh
+```
+
+Retourne les mêmes données et compteurs que `list`, et actualise aussi l'ordre
+mémorisé pour les chargements par index. Sans recherche précédente, retourne
+`404 { "error": "no_previous_search" }`.
+
+### 4. `/adl{index}` - Charger par index de la dernière liste
+
+**Description:** Charge dans l'instance active le deck à l'index demandé dans
+la dernière recherche `list` (ou `/adrefresh`) de l'utilisateur. L'index est
+**base36 et 0-based** : `/adl0` charge le premier deck, `/adl1` le second et
+`/adla` le onzième.
+
+**Syntaxe:**
+```
+GET /adl0
+GET /adla
+```
+
+Le deck est re-scrapé juste avant son chargement si sa source est Moxfield.
+Si le scraping échoue ou si la source ne peut pas être rafraîchie, la dernière
+copie en BDD est chargée. La réponse indique `data_freshness` (`updated`,
+`unavailable` ou `not_supported`). L'index inexistant ou l'absence de liste
+précédente produit une erreur `404`.
+
+### 5. `refresh` - État du re-scraping Moxfield en cours
 
 **Description:** Renvoie l'état de la file de re-scraping déclenchée par les
 recherches `list` : job en cours, file d'attente, 20 derniers jobs terminés
@@ -165,7 +216,9 @@ GET /ad?q=refresh
 |--------|---------|---------|
 | **load** | `load:uuid` | `load:550e8400-e29b-41d4-a716-446655440000` |
 | **list** | `list:name:format:author:commander` | `list` ou `list:Lightning` |
-| **refresh** | `refresh` | `refresh` |
+| **refresh list** | `/adrefresh` | `/adrefresh` |
+| **load by index** | `/adl{index-base36}` | `/adl0`, `/adla` |
+| **refresh status** | `refresh` | `GET /ad?q=refresh` |
 
 ## Réponses JSON
 
@@ -195,6 +248,7 @@ Toutes les réponses partagent l'en-tête standardisé :
     "action": "load",
     "deck_type": "saved",
     "deck_id": "550e8400-e29b-41d4-a716-446655440000",
+    "data_freshness": "updated",
     "deck_name": "Mon Deck",
     "commander": "Tifa, Martial Artist",
     "unique_cards": 35,
@@ -224,8 +278,11 @@ Toutes les réponses partagent l'en-tête standardisé :
   "time": 1728499200000,
   "data": {
     "action": "list",
-    "search_name": null,
     "decks_count": 3,
+    "returned_count": 3,
+    "matching_total_count": 8,
+    "search_name": null,
+    "searched_at": "2026-10-10T00:00:00.000Z",
     "decks": [
       {
         "id": "550e8400-e29b-41d4-a716-446655440000",
@@ -286,13 +343,13 @@ curl "http://localhost:3000/ad?q=list::::$ENCODED"
 
 ---
 
-## Comment la BDD est alimentée (Moxfield)
+## Comment la BDD est actualisée (Moxfield)
 
-La route `/ad` n'écrit plus directement en base. Pour importer/mettre à jour
-des decks Moxfield, il suffit de faire une recherche `list` avec au moins un
-filtre : la recherche est forwardée au scraper Moxfield (`liveRefresh`), qui
-re-scrape les decks correspondants **en arrière-plan** (decks existants
-rafraîchis, nouveaux importés). L'état de la file est visible via
+Une recherche `list` publique avec au moins un filtre est forwardée au scraper
+Moxfield (`liveRefresh`), qui re-scrape les decks correspondants **en
+arrière-plan**. Le chargement par UUID ou par index tente également de
+re-scraper immédiatement le deck demandé. Si cette tentative échoue, le deck
+déjà présent en BDD est utilisé. L'état de la file est visible via
 `GET /ad?q=refresh`.
 
 Avec le parser C# (helper de génération de queries) :
@@ -309,8 +366,14 @@ string fullUrl = "https://mtg.hactazia.fr/ad?q=" + query;
 ## Notes d'Implémentation
 
 - `load` accepte uniquement un UUID de deck sauvegardé
+- `GET /adl{index}` accepte un index base36 0-based provenant de la dernière
+  liste de cet utilisateur
+- `GET /adrefresh` relit cette même liste depuis la BDD, sans relancer son
+  scraping
 - Quand un deck est chargé, toutes ses cartes (avec répétitions) sont
   ajoutées à l'instance (`instance.addCard`)
+- Chaque chargement re-scrape les decks Moxfield si possible et retombe sur
+  la version en BDD si la source est indisponible
 - Le deck size inclut les répétitions (2x Lightning Bolt = 2 dans le total)
 - `list` sans filtre → decks de l'utilisateur ; avec au moins un filtre →
   recherche publique (decks importés) + forward au scraper Moxfield

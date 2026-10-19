@@ -24,6 +24,7 @@
 //                                               balayage est terminé)
 //   MOXFIELD_AUTO_SWEEP_DELAY_MS (déf. 500)   → --delay du sweep
 //   MOXFIELD_AUTO_SWEEP_PER_PARTITION (déf. 300) → --per-partition du sweep
+//   MOXFIELD_AUTO_SWEEP_CONCURRENCY (déf. 8)  → --concurrency du sweep
 //   MOXFIELD_AUTO_SWEEP_MAX_OLD_SPACE (déf. 2048) → --max-old-space-size de node
 // =============================================================================
 
@@ -166,6 +167,7 @@ export class AutoSweep {
     private spawnSweep(): void {
         const delay = process.env.MOXFIELD_AUTO_SWEEP_DELAY_MS ?? "500";
         const perPartition = process.env.MOXFIELD_AUTO_SWEEP_PER_PARTITION ?? "300";
+        const concurrency = process.env.MOXFIELD_AUTO_SWEEP_CONCURRENCY ?? "8";
         const maxOldSpace = process.env.MOXFIELD_AUTO_SWEEP_MAX_OLD_SPACE ?? "2048";
         const logPath = path.join(process.cwd(), "logs", "moxfield_sweep.log");
 
@@ -190,7 +192,8 @@ export class AutoSweep {
                 "src/moxfield_scraper.ts",
                 "--mode", "sweep",
                 "--delay", delay,
-                "--per-partition", perPartition
+                "--per-partition", perPartition,
+                "--concurrency", concurrency
             ],
             {
                 cwd: process.cwd(),
