@@ -48,7 +48,7 @@ export interface MoxfieldClientOptions {
     transport?: "auto" | "curl" | "fetch";
 }
 
-export interface MoxfieldSearchParams {
+export type MoxfieldSearchParams = {
     pageNumber?: number;
     pageSize?: number;
     fmt?: string;
@@ -67,7 +67,7 @@ export interface MoxfieldSearchParams {
     maxBracket?: number;
     includePinned?: boolean;
     showIllegal?: boolean;
-}
+};
 
 export class MoxfieldClient {
     private readonly baseUrl: string;
