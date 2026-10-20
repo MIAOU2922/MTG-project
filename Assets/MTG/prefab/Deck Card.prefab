@@ -1533,6 +1533,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_DeckCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 5674019717530801091}
   CardImageBack: {fileID: 1343400058852077620}
   CardImagePlaceholder: {fileID: 0}
@@ -1561,6 +1562,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   DeckInterface: {fileID: 0}
   cardCount: 1
   countText: {fileID: 3180363754034451363}

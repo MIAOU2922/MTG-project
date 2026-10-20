@@ -33,12 +33,15 @@ namespace MTG
         public VRCUrl CreateURL; //ac
         public VRCUrl SearchURL; //as?q
         public VRCUrl DeckURL; //ad?q
+        public VRCUrl DeckRefreshURL; //adrefresh : rejoue la derniere liste
+        public VRCUrl[] DeckLoadURLs; //adl{index base36} : charge un deck de la derniere liste
         public VRCUrl[] JoinURLs; //aj
         public VRCUrl[] TempURLs; //at
 
         [Header("=== USER KEY (identite stable) ===")]
         public VRCUrl RegisterURL; //aur : demande d'une nouvelle key au serveur
         public VRCUrl[] LoginURLs; //aul{3hex} : login par chunks (4096 urls statiques)
+        public VRCUrl HealthURL; //h : etat du serveur (health check)
 
         [Header("=== ORACLE ===")]
         [VRC.Udon.Serialization.OdinSerializer.OdinSerialize] public String[][] CachedOracleIds;
@@ -75,13 +78,17 @@ namespace MTG
         // User key state (identite stable au lieu de l'IP)
         private string UserKey = null;
         private int LoginChunkIndex = 0;
-        private float NextLoginTime = 0f;
+        private float NextLoginTime = 0f;        // deadline du chunk courant / prochaine action login
         private bool LoginInProgress = false;
         private int LoginRetryCount = 0;
         private bool KeyReady = false;          // register OK ou login chunks OK
         private bool KeyCheckStarted = false;   // InitUserKey deja lance
         private float NextJoinTime = 0f;        // delai avant auto-join / retry
-        private const float LOGIN_INTERVAL = 5f;
+        private bool HealthCheckPending = false; // on attend la reponse /h
+        private float NextHealthTime = 0f;      // deadline du health check /h
+        private const float LOGIN_CHUNK_TIMEOUT = 8f;  // timeout chunk avant health check
+        private const float HEALTH_RETRY_DELAY = 5f;   // backoff du health check
+        private const float LOGIN_RETRY_DELAY = 3f;    // re-envoi chunk apres erreur
         private const int LOGIN_CHUNKS = 4;
         private const int LOGIN_CHUNK_SIZE = 3;
         private const int MAX_LOGIN_RETRIES = 3;
@@ -96,6 +103,10 @@ namespace MTG
             CreateURL = new VRCUrl($"{BaseURL}c");
             SearchURL = new VRCUrl($"{BaseURL}s?q=");
             DeckURL = new VRCUrl($"{BaseURL}d?q=");
+            DeckRefreshURL = new VRCUrl($"{BaseURL}drefresh");
+            DeckLoadURLs = new VRCUrl[256];
+            for (int i = 0; i < DeckLoadURLs.Length; i++)
+                DeckLoadURLs[i] = new VRCUrl($"{BaseURL}dl{ToBase36(i)}");
             JoinURLs = new VRCUrl[64];
             for (int i = 0; i < JoinURLs.Length; i++)
                 JoinURLs[i] = new VRCUrl($"{BaseURL}j{ToBase36(i)}");
@@ -103,6 +114,7 @@ namespace MTG
             for (int i = 0; i < TempURLs.Length; i++)
                 TempURLs[i] = new VRCUrl($"{BaseURL}t{ToBase36(i)}");
             RegisterURL = new VRCUrl($"{BaseURL}ur");
+            HealthURL = new VRCUrl($"{BaseURL}h");
             LoginURLs = new VRCUrl[4096];
             for (int i = 0; i < LoginURLs.Length; i++)
                 LoginURLs[i] = new VRCUrl($"{BaseURL}ul{ToHex3(i)}");
@@ -162,6 +174,8 @@ namespace MTG
             KeyReady = false;
             KeyCheckStarted = false;
             NextJoinTime = 0f;
+            HealthCheckPending = false;
+            NextHealthTime = 0f;
         }
         protected override void Update()
         {
@@ -171,21 +185,14 @@ namespace MTG
             if (CardRefreshSweepActive)
                 ProcessCardRefreshBatch();
 
-            // 1. Envoi progressif des chunks de login (4 requetes espacees de 5s)
-            if (LoginInProgress && !string.IsNullOrEmpty(UserKey) && Time.time >= NextLoginTime)
+            // 1. Surveillance du login par chunks (ordre force : envoi -> reponse -> suivant).
+            //    Timeout sans reponse -> ping /h pour verifier l'etat du serveur.
+            if (LoginInProgress && !string.IsNullOrEmpty(UserKey))
             {
-                if (LoginChunkIndex < LOGIN_CHUNKS)
-                {
-                    int _Start = LoginChunkIndex * LOGIN_CHUNK_SIZE;
-                    int _ChunkIdx = HexChunkToInt(UserKey.Substring(_Start, LOGIN_CHUNK_SIZE));
-                    if (_ChunkIdx >= 0 && _ChunkIdx < LoginURLs.Length)
-                    {
-                        VRCStringDownloader.LoadUrl(LoginURLs[_ChunkIdx], (IUdonEventReceiver)this);
-                        this.Log($"Key login chunk {LoginChunkIndex + 1}/{LOGIN_CHUNKS} sent");
-                    }
-                    LoginChunkIndex++;
-                    NextLoginTime = Time.time + LOGIN_INTERVAL;
-                }
+                if (!HealthCheckPending && Time.time >= NextLoginTime)
+                    PingHealthCheck();
+                else if (HealthCheckPending && Time.time >= NextHealthTime)
+                    PingHealthCheck(); // /h sans reponse : re-ping (backoff)
             }
 
             // 2. Une fois la key traitee (register ou login), join automatique :
@@ -237,7 +244,7 @@ namespace MTG
             if (_Json == null || _Json.Url == null) return;
 
             // Dispatch de la key utilisateur (register / login chunks)
-            if (_Json.Url == RegisterURL)
+            if (UrlEquals(_Json.Url, RegisterURL))
             {
                 IsRegisterResponse(_Json);
                 return;
@@ -247,9 +254,14 @@ namespace MTG
                 IsLoginChunkResponse(_Json);
                 return;
             }
+            else if (UrlEquals(_Json.Url, HealthURL))
+            {
+                IsHealthResponse(_Json);
+                return;
+            }
 
             // Dispatch base sur l'URL (evite le parsing JSON couteux pour les grosses reponses)
-            if (_Json.Url == CreateURL)
+            if (UrlEquals(_Json.Url, CreateURL))
             {
                 int _TempInstanceID;
                 IsCreateResponse(_Json, out _TempInstanceID);
@@ -257,6 +269,12 @@ namespace MTG
             }
             else if (IsDeckURL(_Json.Url))
             {
+                if (DeckInterface != null)
+                    DeckInterface.OnDeckResponse(_Json);
+            }
+            else if (UrlEquals(_Json.Url, DeckRefreshURL) || IsDeckLoadURL(_Json.Url))
+            {
+                // /adrefresh et /adl{index} : meme traitement que /ad (action lue dans data.action)
                 if (DeckInterface != null)
                     DeckInterface.OnDeckResponse(_Json);
             }
@@ -301,6 +319,17 @@ namespace MTG
             }
         }
 
+        // Comparaison d'URL par valeur (string) : plus robuste que == sur VRCUrl,
+        // car le VRCUrl retourne par le downloader peut etre une autre instance.
+        private bool UrlEquals(VRCUrl _A, VRCUrl _B)
+        {
+            if (_A == null || _B == null) return false;
+            string _AStr = _A.ToString();
+            string _BStr = _B.ToString();
+            if (string.IsNullOrEmpty(_AStr) || string.IsNullOrEmpty(_BStr)) return false;
+            return _AStr == _BStr;
+        }
+
         private bool IsJoinURL(VRCUrl _Url)
         {
             if (_Url == null || JoinURLs == null) return false;
@@ -308,7 +337,7 @@ namespace MTG
             string _UrlStr = _Url.ToString();
             if (_UrlStr.IndexOf("/aj") < 0) return false;
             for (int i = 0; i < JoinURLs.Length; i++)
-                if (_Url == JoinURLs[i]) return true;
+                if (UrlEquals(_Url, JoinURLs[i])) return true;
             return false;
         }
 
@@ -343,27 +372,47 @@ namespace MTG
             string _UrlStr = _Url.ToString();
             if (_UrlStr.IndexOf("/at") < 0) return false;
             for (int i = 0; i < TempURLs.Length; i++)
-                if (_Url == TempURLs[i]) return true;
+                if (UrlEquals(_Url, TempURLs[i])) return true;
+            return false;
+        }
+
+        private bool IsDeckLoadURL(VRCUrl _Url)
+        {
+            if (_Url == null || DeckLoadURLs == null) return false;
+            // Prefix guard: /adl{index} — eviter de boucler sur les 256 URLs pour le reste
+            string _UrlStr = _Url.ToString();
+            if (_UrlStr.IndexOf("/adl") < 0) return false;
+            for (int i = 0; i < DeckLoadURLs.Length; i++)
+                if (UrlEquals(_Url, DeckLoadURLs[i])) return true;
             return false;
         }
         public override void OnStringLoadError(IVRCStringDownload _Json)
         {
             this.Log("OnStringLoadError called");
-            if (_Json != null && _Json.Url != null && (IsLoginURL(_Json.Url) || _Json.Url == RegisterURL))
+            if (_Json != null && _Json.Url != null)
             {
-                // Erreur sur le flux de key : re-tenter sans toucher au flux de sync
-                this.Warning($"Key request error: {_Json.Error}");
-                if (_Json.Url == RegisterURL)
+                if (UrlEquals(_Json.Url, HealthURL))
                 {
+                    // /h echoue : serveur injoignable, on re-teste plus tard (backoff)
+                    this.Warning($"Health check error: {_Json.Error}");
+                    HealthCheckPending = false;
+                    NextLoginTime = Time.time + HEALTH_RETRY_DELAY;
+                    return;
+                }
+                if (UrlEquals(_Json.Url, RegisterURL))
+                {
+                    // Erreur sur l'enregistrement : re-tenter plus tard
+                    this.Warning($"Register request error: {_Json.Error}");
                     SendCustomEventDelayedSeconds(nameof(RetryRegister), 5f);
+                    return;
                 }
-                else
+                if (IsLoginURL(_Json.Url))
                 {
-                    // Chunk echoue : renvoyer le chunk en cours (le serveur deduplique)
-                    if (LoginChunkIndex > 0) LoginChunkIndex--;
-                    NextLoginTime = Time.time + 3f;
+                    // Chunk echoue : re-envoyer le chunk courant apres un court delai
+                    this.Warning($"Login chunk error: {_Json.Error}");
+                    NextLoginTime = Time.time + LOGIN_RETRY_DELAY;
+                    return;
                 }
-                return;
             }
             this.Error($"Error loading URL: {_Json.Url}");
             this.Error($"Error message: {_Json.Error}");
@@ -393,7 +442,7 @@ namespace MTG
             DataDictionary _Dict;
             _InstanceID = -1;
             if (_Json == null || _Json.Url == null) return;
-            if (_Json.Url != CreateURL) return;
+            if (!UrlEquals(_Json.Url, CreateURL)) return;
             _JsonData = _Json.Result;
             if (!VRCJson.TryDeserializeFromJson(_JsonData, out DataToken result))
             {
@@ -429,7 +478,7 @@ namespace MTG
             
             for (int i = 0; i < JoinURLs.Length; i++)
             {
-                if (JoinURLs[i] == _Json.Url)
+                if (UrlEquals(JoinURLs[i], _Json.Url))
                 {
                     urlFound = true;
                     break;
@@ -471,19 +520,19 @@ namespace MTG
         {
             this.VerboseLog("IsTempURLsResponse called");
             if (_Json == null || _Json.Url == null) return;
-            if (_Json.Url == TempURLs[0])
+            if (UrlEquals(_Json.Url, TempURLs[0]))
             {
                 ProcessCardInstanceResponse(_Json);
             }
-            else if (_Json.Url == TempURLs[1])
+            else if (UrlEquals(_Json.Url, TempURLs[1]))
             {
                 ProcessDeckListResponse(_Json);
             }
-            else if (_Json.Url == TempURLs[2])
+            else if (UrlEquals(_Json.Url, TempURLs[2]))
             {
                 ProcessSetListResponse(_Json);
             }
-            else if (_Json.Url == TempURLs[3])
+            else if (UrlEquals(_Json.Url, TempURLs[3]))
             {
                 ProcessOracleDataResponse(_Json);
             }
@@ -534,7 +583,8 @@ namespace MTG
             }
         }
 
-        // Demarre la sequence de login : envoie les 4 chunks dans Update()
+        // Demarre la sequence de login : envoie le chunk 0 puis attend sa reponse
+        // avant d'envoyer le suivant (ordre force).
         private void StartKeyLogin()
         {
             if (string.IsNullOrEmpty(UserKey) || UserKey.Length != LOGIN_CHUNKS * LOGIN_CHUNK_SIZE)
@@ -543,9 +593,10 @@ namespace MTG
                 return;
             }
             LoginChunkIndex = 0;
-            NextLoginTime = Time.time + 1f;
+            HealthCheckPending = false;
             LoginInProgress = true;
             this.Log("Key login sequence started");
+            SendLoginChunk(0);
         }
 
         private bool IsLoginURL(VRCUrl _Url)
@@ -553,6 +604,62 @@ namespace MTG
             if (_Url == null || LoginURLs == null) return false;
             string _UrlStr = _Url.ToString();
             return _UrlStr.IndexOf("/aul") >= 0;
+        }
+
+        // Envoie un chunk de login (3 hex) et arme le timeout
+        private void SendLoginChunk(int _Index)
+        {
+            if (string.IsNullOrEmpty(UserKey) || _Index < 0 || _Index >= LOGIN_CHUNKS) return;
+            int _Start = _Index * LOGIN_CHUNK_SIZE;
+            int _ChunkIdx = HexChunkToInt(UserKey.Substring(_Start, LOGIN_CHUNK_SIZE));
+            if (_ChunkIdx < 0 || _ChunkIdx >= LoginURLs.Length)
+            {
+                this.Error($"Invalid login chunk for chunk {_Index}");
+                return;
+            }
+            VRCStringDownloader.LoadUrl(LoginURLs[_ChunkIdx], (IUdonEventReceiver)this);
+            NextLoginTime = Time.time + LOGIN_CHUNK_TIMEOUT;
+            this.Log($"Key login chunk {_Index + 1}/{LOGIN_CHUNKS} sent");
+        }
+
+        // Re-envoie le chunk courant (appele apres un health check OK)
+        private void ResendCurrentChunk()
+        {
+            if (!LoginInProgress || string.IsNullOrEmpty(UserKey)) return;
+            int _Index = LoginChunkIndex;
+            if (_Index >= LOGIN_CHUNKS) _Index = LOGIN_CHUNKS - 1; // re-envoyer le dernier chunk
+            SendLoginChunk(_Index);
+        }
+
+        // Ping /h pour verifier l'etat du serveur avant de re-envoyer un chunk
+        private void PingHealthCheck()
+        {
+            if (HealthURL == null)
+            {
+                ResendCurrentChunk();
+                return;
+            }
+            HealthCheckPending = true;
+            NextHealthTime = Time.time + HEALTH_RETRY_DELAY;
+            VRCStringDownloader.LoadUrl(HealthURL, (IUdonEventReceiver)this);
+            this.Log("Health check /h sent");
+        }
+
+        // Reponse du health check /h : { status:"ok", uid:... }
+        private void IsHealthResponse(IVRCStringDownload _Json)
+        {
+            this.Log("IsHealthResponse called");
+            HealthCheckPending = false;
+            if (_Json == null || _Json.Result == null) return;
+            if (!VRCJson.TryDeserializeFromJson(_Json.Result, out DataToken _Token)) return;
+            if (_Token.TokenType != TokenType.DataDictionary) return;
+            DataDictionary _Dict = _Token.DataDictionary;
+            string _Status = "";
+            if (_Dict.TryGetValue("status", out DataToken _StatusToken))
+                _Status = _StatusToken.String;
+            this.Log($"Health check response: status={_Status}");
+            // Serveur joignable : re-envoyer le chunk courant
+            ResendCurrentChunk();
         }
 
         // Reponse d'enregistrement : le serveur a genere une key, on la sauvegarde en PlayerData
@@ -585,18 +692,22 @@ namespace MTG
         }
 
         // Reponse d'un chunk de login :
-        // - contient uid (nombre) : login termine, l'IP est re-associee au compte
-        // - contient error : key inconnue, on retente puis on re-enregistre au besoin
-        // - sinon : chunk recu, on attend les suivants
+        // - uid = STRING (clé 12 hex) : login termine, l'IP est re-associee au compte
+        // - error : key inconnue, on retente puis on re-enregistre au besoin
+        // - sinon : reponse intermediaire (chunks_received) -> on envoie le chunk suivant
         private void IsLoginChunkResponse(IVRCStringDownload _Json)
         {
             this.Log("IsLoginChunkResponse called");
             if (_Json == null || _Json.Result == null) return;
             if (!VRCJson.TryDeserializeFromJson(_Json.Result, out DataToken _Result)) return;
             DataDictionary _Dict = _Result.DataDictionary;
+
+            // Une reponse de chunk est arrivee : on n'attend plus le health check
+            HealthCheckPending = false;
+
             // Nouveau format serveur :
             // - login OK : uid = STRING (clé 12 hex) + key_confirmed
-            // - intermédiaire : uid = 0 (nombre) + chunks_received → on attend
+            // - intermédiaire : uid = 0 (nombre) + chunks_received → on envoie le suivant
             // - clé inconnue : uid = 0 + error:"unknown_key"
             if (_Dict.TryGetValue("uid", out DataToken _UidToken) && _UidToken.TokenType == TokenType.String &&
                 !string.IsNullOrEmpty(_UidToken.String))
@@ -626,7 +737,19 @@ namespace MTG
                     StartKeyLogin();
                 }
             }
-            // sinon : reponse intermediaire (chunks_received), on continue d'attendre
+            else
+            {
+                // Reponse intermediaire (chunks_received) : envoyer le chunk suivant
+                if (LoginChunkIndex < LOGIN_CHUNKS - 1)
+                {
+                    LoginChunkIndex++;
+                    SendLoginChunk(LoginChunkIndex);
+                }
+                else
+                {
+                    this.Log("All login chunks sent, waiting for final confirmation...");
+                }
+            }
         }
 
         // Re-tente l'enregistrement apres une erreur reseau (appele via SendCustomEventDelayedSeconds)
@@ -963,6 +1086,20 @@ namespace MTG
             this.Log("FetchDeckList called (at1)");
             if (TempURLs == null || TempURLs.Length < 2) return;
             VRCStringDownloader.LoadUrl(TempURLs[1], (IUdonEventReceiver)this);
+        }
+        // Rejoue la derniere recherche de decks (/adrefresh) — static URL, pas de validation
+        public void RefreshDeckList()
+        {
+            this.Log("RefreshDeckList called (/adrefresh)");
+            if (DeckRefreshURL == null) return;
+            VRCStringDownloader.LoadUrl(DeckRefreshURL, (IUdonEventReceiver)this);
+        }
+        // Charge le deck a l'index base36 de la derniere liste (/adl{index}) — static URL
+        public void LoadDeckByIndex(int _Index)
+        {
+            if (DeckLoadURLs == null || _Index < 0 || _Index >= DeckLoadURLs.Length) return;
+            this.Log($"LoadDeckByIndex called (/adl{ToBase36(_Index)})");
+            VRCStringDownloader.LoadUrl(DeckLoadURLs[_Index], (IUdonEventReceiver)this);
         }
         // obtient la texture de l'atlas
         public Texture2D GetAtlasTexture(int _AtlasIndex)

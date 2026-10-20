@@ -326,6 +326,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_PhysicCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 5743712851070634336}
   CardImageBack: {fileID: 9025214704787611300}
   CardImagePlaceholder: {fileID: 0}
@@ -354,11 +355,13 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   PlaceholderImage: {fileID: 6603121515399491368}
   Pickup: {fileID: 4967623039646331834}
   IsHeld: 0
   PoolIndex: -1
   PoolManager: {fileID: 0}
+  _CountedActive: 0
   _SyncedCardKey: 
   _SyncedPosition: {x: 0, y: 0, z: 0}
   _SyncedRotation: {x: 0, y: 0, z: 0, w: 0}

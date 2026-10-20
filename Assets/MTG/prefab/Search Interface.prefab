@@ -340,6 +340,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 8870020395780370172}
   CardImageBack: {fileID: 7357856199660213328}
   CardImagePlaceholder: {fileID: 0}
@@ -368,6 +369,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &4039550864335107441
 MonoBehaviour:
@@ -803,6 +805,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 5438393400614333810}
   CardImageBack: {fileID: 1811524792809033593}
   CardImagePlaceholder: {fileID: 0}
@@ -831,6 +834,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &4232762575948523818
 MonoBehaviour:
@@ -1123,6 +1127,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 6233901325410431094}
   CardImageBack: {fileID: 1240582662314726251}
   CardImagePlaceholder: {fileID: 0}
@@ -1151,6 +1156,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &6073481530559860511
 MonoBehaviour:
@@ -1895,6 +1901,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 6861554428260513765}
   CardImageBack: {fileID: 5863424335806254878}
   CardImagePlaceholder: {fileID: 0}
@@ -1923,6 +1930,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &6922714770425857986
 MonoBehaviour:
@@ -3847,6 +3855,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 7830499555918499097}
   CardImageBack: {fileID: 84279499728932161}
   CardImagePlaceholder: {fileID: 0}
@@ -3875,6 +3884,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &4625154260788454730
 MonoBehaviour:
@@ -4697,6 +4707,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 8219045668451326059}
   CardImageBack: {fileID: 2888452599744249783}
   CardImagePlaceholder: {fileID: 0}
@@ -4725,6 +4736,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &2921383590064818768
 MonoBehaviour:
@@ -6092,6 +6104,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 1458489435559279202}
   CardImageBack: {fileID: 7430475423640018575}
   CardImagePlaceholder: {fileID: 0}
@@ -6120,6 +6133,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &3000732753042430607
 MonoBehaviour:
@@ -10133,6 +10147,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4507447532706744704}
   CardImageBack: {fileID: 1444711171880036828}
   CardImagePlaceholder: {fileID: 0}
@@ -10161,6 +10176,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &5265429543207431997
 MonoBehaviour:
@@ -10399,6 +10415,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 663762384612520745}
   CardImageBack: {fileID: 4820995704087577784}
   CardImagePlaceholder: {fileID: 0}
@@ -10427,6 +10444,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &1563801617227532715
 MonoBehaviour:
@@ -11989,6 +12007,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 6098693451747501981}
   CardImageBack: {fileID: 5161880573353970505}
   CardImagePlaceholder: {fileID: 0}
@@ -12017,6 +12036,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &8829408867076653162
 MonoBehaviour:
@@ -12513,6 +12533,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 7023698164908062764}
   CardImageBack: {fileID: 3586588045384872789}
   CardImagePlaceholder: {fileID: 0}
@@ -12541,6 +12562,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &5327611927871039632
 MonoBehaviour:
@@ -12704,6 +12726,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4579784663682927659}
   CardImageBack: {fileID: 297303966258056341}
   CardImagePlaceholder: {fileID: 0}
@@ -12732,6 +12755,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &6025464404833096225
 MonoBehaviour:
@@ -12946,6 +12970,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 3098260021638730815}
   CardImageBack: {fileID: 2960264308133480112}
   CardImagePlaceholder: {fileID: 0}
@@ -12974,6 +12999,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &1382595044877062974
 MonoBehaviour:
@@ -13978,6 +14004,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 7064131773799732249}
   CardImageBack: {fileID: 893052671629275584}
   CardImagePlaceholder: {fileID: 0}
@@ -14006,6 +14033,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &8473120129336037885
 MonoBehaviour:
@@ -14373,6 +14401,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4572604945009589601}
   CardImageBack: {fileID: 9003159400134380117}
   CardImagePlaceholder: {fileID: 0}
@@ -14401,6 +14430,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &3082154209762851037
 MonoBehaviour:
@@ -16393,6 +16423,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 6591645754010149056}
   CardImageBack: {fileID: 7917896632459240768}
   CardImagePlaceholder: {fileID: 0}
@@ -16421,6 +16452,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &1692610353637887316
 MonoBehaviour:
@@ -17894,6 +17926,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 6625451050341145923}
   CardImageBack: {fileID: 4962324416761630170}
   CardImagePlaceholder: {fileID: 0}
@@ -17922,6 +17955,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &7635717949110845964
 MonoBehaviour:
@@ -18435,6 +18469,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4269624897652275037}
   CardImageBack: {fileID: 8518903589069010650}
   CardImagePlaceholder: {fileID: 0}
@@ -18463,6 +18498,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &3955252865813517560
 MonoBehaviour:
@@ -21351,6 +21387,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 2629591943653233330}
   CardImageBack: {fileID: 5172771444015029214}
   CardImagePlaceholder: {fileID: 0}
@@ -21379,6 +21416,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &6666788037424567466
 MonoBehaviour:
@@ -23304,6 +23342,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 7381667460215482480}
   CardImageBack: {fileID: 7228278485958188314}
   CardImagePlaceholder: {fileID: 0}
@@ -23332,6 +23371,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &7726024214954523038
 MonoBehaviour:
@@ -28060,6 +28100,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 8135918275289053165}
   CardImageBack: {fileID: 5499900548153540259}
   CardImagePlaceholder: {fileID: 0}
@@ -28088,6 +28129,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &2596700607740157465
 MonoBehaviour:
@@ -28561,6 +28603,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 8965559710010192709}
   CardImageBack: {fileID: 4406795572243418061}
   CardImagePlaceholder: {fileID: 0}
@@ -28589,6 +28632,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &4790587231028888810
 MonoBehaviour:
@@ -28959,6 +29003,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 8662181373417044808}
   CardImageBack: {fileID: 8136754515103246882}
   CardImagePlaceholder: {fileID: 0}
@@ -28987,6 +29032,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &675187108520904604
 MonoBehaviour:
@@ -29500,6 +29546,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 8035467783058738768}
   CardImageBack: {fileID: 4021430332142074507}
   CardImagePlaceholder: {fileID: 0}
@@ -29528,6 +29575,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &9196754102771911494
 MonoBehaviour:
@@ -31338,6 +31386,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 5368950737024422206}
   CardImageBack: {fileID: 8401414423741677621}
   CardImagePlaceholder: {fileID: 0}
@@ -31366,6 +31415,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &6474015009777778480
 MonoBehaviour:
@@ -32433,6 +32483,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 8762155913847625721}
   CardImageBack: {fileID: 8285604077887803154}
   CardImagePlaceholder: {fileID: 0}
@@ -32461,6 +32512,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &9194943953036277220
 MonoBehaviour:
@@ -34357,6 +34409,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4143319046447815327}
   CardImageBack: {fileID: 7591281793313834891}
   CardImagePlaceholder: {fileID: 0}
@@ -34385,6 +34438,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &7955966120655141374
 MonoBehaviour:
@@ -36489,6 +36543,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 2040166887203642666}
   CardImageBack: {fileID: 8480994578510883301}
   CardImagePlaceholder: {fileID: 0}
@@ -36517,6 +36572,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &3179921444125542520
 MonoBehaviour:
@@ -37540,6 +37596,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 1023732430772974717}
   CardImageBack: {fileID: 1139965288962878961}
   CardImagePlaceholder: {fileID: 0}
@@ -37568,6 +37625,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &5896350088226040771
 MonoBehaviour:
@@ -38175,6 +38233,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 5109517247137250237}
   CardImageBack: {fileID: 897459163021797701}
   CardImagePlaceholder: {fileID: 0}
@@ -38203,6 +38262,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &203429173253479089
 MonoBehaviour:
@@ -39737,6 +39797,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 2275742514056725505}
   CardImageBack: {fileID: 8129155293150339592}
   CardImagePlaceholder: {fileID: 0}
@@ -39765,6 +39826,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &2956955765785247693
 MonoBehaviour:
@@ -40183,6 +40245,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 5389766857517260756}
   CardImageBack: {fileID: 7484588156074509798}
   CardImagePlaceholder: {fileID: 0}
@@ -40211,6 +40274,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &4711412167496067236
 MonoBehaviour:
@@ -43227,6 +43291,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4165429678098797557}
   CardImageBack: {fileID: 7436466055776684051}
   CardImagePlaceholder: {fileID: 0}
@@ -43255,6 +43320,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &3534164517228428562
 MonoBehaviour:
@@ -43418,6 +43484,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 3236475636878261265}
   CardImageBack: {fileID: 6204949839092685566}
   CardImagePlaceholder: {fileID: 0}
@@ -43446,6 +43513,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &2405793913238127405
 MonoBehaviour:
@@ -45373,6 +45441,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 1346053586083772391}
   CardImageBack: {fileID: 2142755896646600530}
   CardImagePlaceholder: {fileID: 0}
@@ -45401,6 +45470,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &5761845967457134318
 MonoBehaviour:
@@ -45564,6 +45634,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 7402575791111873478}
   CardImageBack: {fileID: 5560144269809105099}
   CardImagePlaceholder: {fileID: 0}
@@ -45592,6 +45663,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &6263092938044162769
 MonoBehaviour:
@@ -47017,6 +47089,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4614184579711783722}
   CardImageBack: {fileID: 5334451198848884413}
   CardImagePlaceholder: {fileID: 0}
@@ -47045,6 +47118,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &3327805211099155259
 MonoBehaviour:
@@ -47655,6 +47729,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 3468855197059569369}
   CardImageBack: {fileID: 1986273812396943952}
   CardImagePlaceholder: {fileID: 0}
@@ -47683,6 +47758,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &702769262448257626
 MonoBehaviour:
@@ -49634,6 +49710,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 7405166507049890888}
   CardImageBack: {fileID: 6168936547343377920}
   CardImagePlaceholder: {fileID: 0}
@@ -49662,6 +49739,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &2496573841542344812
 MonoBehaviour:
@@ -52324,6 +52402,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 914482680322132106}
   CardImageBack: {fileID: 8849496222241790062}
   CardImagePlaceholder: {fileID: 0}
@@ -52352,6 +52431,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &3545224622639362157
 MonoBehaviour:
@@ -52566,6 +52646,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 760548273035668415}
   CardImageBack: {fileID: 8845193587253485227}
   CardImagePlaceholder: {fileID: 0}
@@ -52594,6 +52675,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &203742903762723285
 MonoBehaviour:
@@ -52757,6 +52839,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 5693561743335464350}
   CardImageBack: {fileID: 8323999061404571486}
   CardImagePlaceholder: {fileID: 0}
@@ -52785,6 +52868,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &8488793412543278670
 MonoBehaviour:
@@ -54537,6 +54621,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 2510808465387262080}
   CardImageBack: {fileID: 2678896973405679458}
   CardImagePlaceholder: {fileID: 0}
@@ -54565,6 +54650,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &4579263948666416814
 MonoBehaviour:
@@ -54820,6 +54906,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 7705610561067449738}
   CardImageBack: {fileID: 8129855087063543584}
   CardImagePlaceholder: {fileID: 0}
@@ -54848,6 +54935,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &7470385352136744908
 MonoBehaviour:
@@ -57150,6 +57238,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 1366717061575433217}
   CardImageBack: {fileID: 1762664148844476349}
   CardImagePlaceholder: {fileID: 0}
@@ -57178,6 +57267,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &7514631841491048457
 MonoBehaviour:
@@ -59829,6 +59919,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 9097432897426001165}
   CardImageBack: {fileID: 6479947022685357266}
   CardImagePlaceholder: {fileID: 0}
@@ -59857,6 +59948,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &8647187226569114921
 MonoBehaviour:
@@ -60149,6 +60241,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 511230983665389604}
   CardImageBack: {fileID: 6460658995968317547}
   CardImagePlaceholder: {fileID: 0}
@@ -60177,6 +60270,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &4653383032113375121
 MonoBehaviour:
@@ -60819,6 +60913,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 3382212998975920654}
   CardImageBack: {fileID: 9159811232869385879}
   CardImagePlaceholder: {fileID: 0}
@@ -60847,6 +60942,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &1955107911332732820
 MonoBehaviour:
@@ -61010,6 +61106,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 2437441001544113925}
   CardImageBack: {fileID: 3542212265061100059}
   CardImagePlaceholder: {fileID: 0}
@@ -61038,6 +61135,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &2742605091873341672
 MonoBehaviour:
@@ -61898,6 +61996,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4983551987986951217}
   CardImageBack: {fileID: 43662602829502466}
   CardImagePlaceholder: {fileID: 0}
@@ -61926,6 +62025,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &3524952908100558002
 MonoBehaviour:
@@ -62609,6 +62709,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 5074809126761588077}
   CardImageBack: {fileID: 255407305047119904}
   CardImagePlaceholder: {fileID: 0}
@@ -62637,6 +62738,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &6299207608635783018
 MonoBehaviour:
@@ -63266,6 +63368,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4383991046501922860}
   CardImageBack: {fileID: 1255384006835321646}
   CardImagePlaceholder: {fileID: 0}
@@ -63294,6 +63397,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &9164663326548769558
 MonoBehaviour:
@@ -63858,6 +63962,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 7358884703825333487}
   CardImageBack: {fileID: 2164458306544482882}
   CardImagePlaceholder: {fileID: 0}
@@ -63886,6 +63991,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &6001325350168125905
 MonoBehaviour:
@@ -64600,6 +64706,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 5733696450193725058}
   CardImageBack: {fileID: 1827088065812703105}
   CardImagePlaceholder: {fileID: 0}
@@ -64628,6 +64735,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &1678661333991398812
 MonoBehaviour:
@@ -66185,6 +66293,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 48336380362852542}
   CardImageBack: {fileID: 847978643407450495}
   CardImagePlaceholder: {fileID: 0}
@@ -66213,6 +66322,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &8549735655202518607
 MonoBehaviour:
@@ -66750,6 +66860,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 1350319208269017758}
   CardImageBack: {fileID: 4196257865364793031}
   CardImagePlaceholder: {fileID: 0}
@@ -66778,6 +66889,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &3280899387461816842
 MonoBehaviour:
@@ -67638,6 +67750,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 238665731718701573}
   CardImageBack: {fileID: 3965279214133179609}
   CardImagePlaceholder: {fileID: 0}
@@ -67666,6 +67779,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &8766865431198626213
 MonoBehaviour:
@@ -68757,6 +68871,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 8992269020249286053}
   CardImageBack: {fileID: 5049433374844480239}
   CardImagePlaceholder: {fileID: 0}
@@ -68785,6 +68900,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &3844927729311035556
 MonoBehaviour:
@@ -69368,6 +69484,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 3684132417329872172}
   CardImageBack: {fileID: 7167132595682871316}
   CardImagePlaceholder: {fileID: 0}
@@ -69396,6 +69513,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &7642628770424249271
 MonoBehaviour:
@@ -69559,6 +69677,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 8070413630124352903}
   CardImageBack: {fileID: 3754556317134237736}
   CardImagePlaceholder: {fileID: 0}
@@ -69587,6 +69706,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &831826880784566489
 MonoBehaviour:
@@ -69954,6 +70074,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 2101447965285343632}
   CardImageBack: {fileID: 3470392071662208021}
   CardImagePlaceholder: {fileID: 0}
@@ -69982,6 +70103,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &2493907214083920040
 MonoBehaviour:
@@ -71673,6 +71795,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 1167688113572938652}
   CardImageBack: {fileID: 2330674044287817491}
   CardImagePlaceholder: {fileID: 0}
@@ -71701,6 +71824,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &3465847358781036898
 MonoBehaviour:
@@ -72731,6 +72855,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 7726068499717237394}
   CardImageBack: {fileID: 2186336094814162666}
   CardImagePlaceholder: {fileID: 0}
@@ -72759,6 +72884,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &9035849721777860840
 MonoBehaviour:
@@ -73019,6 +73145,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 6633974538774260597}
   CardImageBack: {fileID: 1687448479300610641}
   CardImagePlaceholder: {fileID: 0}
@@ -73047,6 +73174,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &6035062134992335921
 MonoBehaviour:
@@ -74649,6 +74777,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4841766592619658978}
   CardImageBack: {fileID: 5256164420617482891}
   CardImagePlaceholder: {fileID: 0}
@@ -74677,6 +74806,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &3767025232509570532
 MonoBehaviour:
@@ -75117,6 +75247,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 1264306579312999070}
   CardImageBack: {fileID: 3808917409366955649}
   CardImagePlaceholder: {fileID: 0}
@@ -75145,6 +75276,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &7381732221627364832
 MonoBehaviour:
@@ -75692,6 +75824,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 8565195068953761212}
   CardImageBack: {fileID: 6434069623750710252}
   CardImagePlaceholder: {fileID: 0}
@@ -75720,6 +75853,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &3986784839990187265
 MonoBehaviour:
@@ -77388,6 +77522,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4972797076781774391}
   CardImageBack: {fileID: 4833310057295697473}
   CardImagePlaceholder: {fileID: 0}
@@ -77416,6 +77551,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &4934969200376621634
 MonoBehaviour:
@@ -77676,6 +77812,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 7221993245504085654}
   CardImageBack: {fileID: 7239620392039811744}
   CardImagePlaceholder: {fileID: 0}
@@ -77704,6 +77841,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &4797536719896825987
 MonoBehaviour:
@@ -78037,6 +78175,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 6258382497254760629}
   CardImageBack: {fileID: 5050240928459461332}
   CardImagePlaceholder: {fileID: 0}
@@ -78065,6 +78204,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &7139640160132050021
 MonoBehaviour:
@@ -78884,6 +79024,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 782958147389314170}
   CardImageBack: {fileID: 592479442497978414}
   CardImagePlaceholder: {fileID: 0}
@@ -78912,6 +79053,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &1556605580238218365
 MonoBehaviour:
@@ -79583,6 +79725,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4684883181133289994}
   CardImageBack: {fileID: 6009452074830450091}
   CardImagePlaceholder: {fileID: 0}
@@ -79611,6 +79754,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &2742308824588281306
 MonoBehaviour:
@@ -81692,6 +81836,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 5583396149042860888}
   CardImageBack: {fileID: 4807886779238722726}
   CardImagePlaceholder: {fileID: 0}
@@ -81720,6 +81865,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &1376565531933282415
 MonoBehaviour:
@@ -82012,6 +82158,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 399926271215404833}
   CardImageBack: {fileID: 7094187600829956359}
   CardImagePlaceholder: {fileID: 0}
@@ -82040,6 +82187,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &802353173839902683
 MonoBehaviour:
@@ -82733,6 +82881,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 3129346175679191655}
   CardImageBack: {fileID: 7300604743437703762}
   CardImagePlaceholder: {fileID: 0}
@@ -82761,6 +82910,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &2866600906126001605
 MonoBehaviour:
@@ -87150,6 +87300,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 3506093946379677834}
   CardImageBack: {fileID: 4837192347391926780}
   CardImagePlaceholder: {fileID: 0}
@@ -87178,6 +87329,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &1652418813831634789
 MonoBehaviour:
@@ -89766,6 +89918,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 7570560031197605973}
   CardImageBack: {fileID: 713561225616994680}
   CardImagePlaceholder: {fileID: 0}
@@ -89794,6 +89947,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &2388749395387417249
 MonoBehaviour:
@@ -90722,6 +90876,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 56799562954491364}
   CardImageBack: {fileID: 5957346932626086424}
   CardImagePlaceholder: {fileID: 0}
@@ -90750,6 +90905,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &6168657336953900542
 MonoBehaviour:
@@ -90913,6 +91069,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 8642112954608012873}
   CardImageBack: {fileID: 2373043863710642172}
   CardImagePlaceholder: {fileID: 0}
@@ -90941,6 +91098,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &5710565769787665235
 MonoBehaviour:
@@ -91104,6 +91262,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 5892838670005487942}
   CardImageBack: {fileID: 8924314673155563473}
   CardImagePlaceholder: {fileID: 0}
@@ -91132,6 +91291,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &4274734505587107172
 MonoBehaviour:
@@ -92045,6 +92205,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 2634809181092490826}
   CardImageBack: {fileID: 6995463957764453646}
   CardImagePlaceholder: {fileID: 0}
@@ -92073,6 +92234,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &3310681142317507369
 MonoBehaviour:
@@ -92639,6 +92801,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4901759349893657190}
   CardImageBack: {fileID: 5863689356736468364}
   CardImagePlaceholder: {fileID: 0}
@@ -92667,6 +92830,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &5265227697484971019
 MonoBehaviour:
@@ -94027,6 +94191,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4480196076076141033}
   CardImageBack: {fileID: 1408719642787307779}
   CardImagePlaceholder: {fileID: 0}
@@ -94055,6 +94220,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &7150641281996585942
 MonoBehaviour:
@@ -95071,6 +95237,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 3059542824655310229}
   CardImageBack: {fileID: 7690139377784614312}
   CardImagePlaceholder: {fileID: 0}
@@ -95099,6 +95266,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &497636377673675129
 MonoBehaviour:
@@ -95262,6 +95430,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 8578501673507707325}
   CardImageBack: {fileID: 7377299430309046894}
   CardImagePlaceholder: {fileID: 0}
@@ -95290,6 +95459,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &3599728649661123338
 MonoBehaviour:
@@ -97084,6 +97254,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 401207539253871653}
   CardImageBack: {fileID: 7959806294973931548}
   CardImagePlaceholder: {fileID: 0}
@@ -97112,6 +97283,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &186435165313540069
 MonoBehaviour:
@@ -97653,6 +97825,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 3838882262589497298}
   CardImageBack: {fileID: 1527622259518962062}
   CardImagePlaceholder: {fileID: 0}
@@ -97681,6 +97854,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &2850490661317307388
 MonoBehaviour:
@@ -98220,6 +98394,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 5880668465405448184}
   CardImageBack: {fileID: 4951663505992077111}
   CardImagePlaceholder: {fileID: 0}
@@ -98248,6 +98423,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &8272285887931151747
 MonoBehaviour:
@@ -98411,6 +98587,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 8599545743284939825}
   CardImageBack: {fileID: 7908931221087267948}
   CardImagePlaceholder: {fileID: 0}
@@ -98439,6 +98616,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &4110004001926307486
 MonoBehaviour:
@@ -99516,6 +99694,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 322400192244969231}
   CardImageBack: {fileID: 6830137154578891248}
   CardImagePlaceholder: {fileID: 0}
@@ -99544,6 +99723,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &1057013611865057585
 MonoBehaviour:
@@ -100528,6 +100708,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 2527917482693511788}
   CardImageBack: {fileID: 8120441438792175001}
   CardImagePlaceholder: {fileID: 0}
@@ -100556,6 +100737,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &3748429392291999450
 MonoBehaviour:
@@ -101373,6 +101555,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 3072109384480992220}
   CardImageBack: {fileID: 4402805257484055011}
   CardImagePlaceholder: {fileID: 0}
@@ -101401,6 +101584,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &7746083724579732566
 MonoBehaviour:
@@ -101819,6 +102003,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 3750952661119637072}
   CardImageBack: {fileID: 7646091423829512475}
   CardImagePlaceholder: {fileID: 0}
@@ -101847,6 +102032,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &7623994442419485241
 MonoBehaviour:
@@ -102010,6 +102196,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4415262068842876661}
   CardImageBack: {fileID: 6430035144470405928}
   CardImagePlaceholder: {fileID: 0}
@@ -102038,6 +102225,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &5003525704082520197
 MonoBehaviour:
@@ -102787,6 +102975,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 2594243601393721350}
   CardImageBack: {fileID: 2613338663062230276}
   CardImagePlaceholder: {fileID: 0}
@@ -102815,6 +103004,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &6744266734576414418
 MonoBehaviour:
@@ -105034,6 +105224,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 187776210495652277}
   CardImageBack: {fileID: 1924492518693972254}
   CardImagePlaceholder: {fileID: 0}
@@ -105062,6 +105253,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &8005855865720199027
 MonoBehaviour:
@@ -105867,6 +106059,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 3793055089298384899}
   CardImageBack: {fileID: 7468026557408973583}
   CardImagePlaceholder: {fileID: 0}
@@ -105895,6 +106088,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &8783071476488690987
 MonoBehaviour:
@@ -107061,6 +107255,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 5111514730972712030}
   CardImageBack: {fileID: 6773722334188003049}
   CardImagePlaceholder: {fileID: 0}
@@ -107089,6 +107284,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &193686139619199967
 MonoBehaviour:
@@ -108224,6 +108420,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 2624520561240626035}
   CardImageBack: {fileID: 7281778189750199103}
   CardImagePlaceholder: {fileID: 0}
@@ -108252,6 +108449,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &4527176149544598498
 MonoBehaviour:
@@ -108415,6 +108613,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 6889526209827550766}
   CardImageBack: {fileID: 6305608074812775448}
   CardImagePlaceholder: {fileID: 0}
@@ -108443,6 +108642,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &1902248391273014418
 MonoBehaviour:
@@ -108870,6 +109070,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 6051247965115407504}
   CardImageBack: {fileID: 1748954621625762534}
   CardImagePlaceholder: {fileID: 0}
@@ -108898,6 +109099,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &2336554439527987749
 MonoBehaviour:
@@ -111257,6 +111459,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4954245296424663199}
   CardImageBack: {fileID: 1770084756657972517}
   CardImagePlaceholder: {fileID: 0}
@@ -111285,6 +111488,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &3771028417879638324
 MonoBehaviour:
@@ -111919,6 +112123,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 6162165169394374902}
   CardImageBack: {fileID: 7314879565368473585}
   CardImagePlaceholder: {fileID: 0}
@@ -111947,6 +112152,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &4326308144431289981
 MonoBehaviour:
@@ -113029,6 +113235,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 3269199515735294724}
   CardImageBack: {fileID: 8810328327908227854}
   CardImagePlaceholder: {fileID: 0}
@@ -113057,6 +113264,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &9084325621435995854
 MonoBehaviour:
@@ -113312,6 +113520,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 479558863129822602}
   CardImageBack: {fileID: 7831700183538597833}
   CardImagePlaceholder: {fileID: 0}
@@ -113340,6 +113549,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &304746485959434565
 MonoBehaviour:
@@ -113632,6 +113842,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4750400867820554007}
   CardImageBack: {fileID: 7350456218919316494}
   CardImagePlaceholder: {fileID: 0}
@@ -113660,6 +113871,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &5142966927697333542
 MonoBehaviour:
@@ -116251,6 +116463,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 8294370701735344292}
   CardImageBack: {fileID: 5667426305320430075}
   CardImagePlaceholder: {fileID: 0}
@@ -116279,6 +116492,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &6717060531228114577
 MonoBehaviour:
@@ -116442,6 +116656,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 1009286971820186683}
   CardImageBack: {fileID: 5824566886538630956}
   CardImagePlaceholder: {fileID: 0}
@@ -116470,6 +116685,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &6655399902051087114
 MonoBehaviour:
@@ -116910,6 +117126,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 2105988747131886309}
   CardImageBack: {fileID: 1661326807865930197}
   CardImagePlaceholder: {fileID: 0}
@@ -116938,6 +117155,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &6190561707042154770
 MonoBehaviour:
@@ -118154,6 +118372,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 7524839464241739405}
   CardImageBack: {fileID: 1553548528169239586}
   CardImagePlaceholder: {fileID: 0}
@@ -118182,6 +118401,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &1152321106533503822
 MonoBehaviour:
@@ -119107,6 +119327,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 1199671348817493725}
   CardImageBack: {fileID: 7121440704673206085}
   CardImagePlaceholder: {fileID: 0}
@@ -119135,6 +119356,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &8840107554805389713
 MonoBehaviour:
@@ -119575,6 +119797,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 3004300256170688006}
   CardImageBack: {fileID: 7163166739137560617}
   CardImagePlaceholder: {fileID: 0}
@@ -119603,6 +119826,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &7258409626956924677
 MonoBehaviour:
@@ -120500,6 +120724,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 5458455516050331879}
   CardImageBack: {fileID: 5559701701082662446}
   CardImagePlaceholder: {fileID: 0}
@@ -120528,6 +120753,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &8608747497317539056
 MonoBehaviour:
@@ -123061,6 +123287,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 5146143017662728150}
   CardImageBack: {fileID: 5411504250397442352}
   CardImagePlaceholder: {fileID: 0}
@@ -123089,6 +123316,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &5960815908455259454
 MonoBehaviour:
@@ -123252,6 +123480,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 77143723193725472}
   CardImageBack: {fileID: 2955474087658767135}
   CardImagePlaceholder: {fileID: 0}
@@ -123280,6 +123509,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &4453502195025417092
 MonoBehaviour:
@@ -125257,6 +125487,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 7877001006331775555}
   CardImageBack: {fileID: 4347621461391878287}
   CardImagePlaceholder: {fileID: 0}
@@ -125285,6 +125516,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &4965321807661227327
 MonoBehaviour:
@@ -126327,6 +126559,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 2694147235756750362}
   CardImageBack: {fileID: 1128676204451496963}
   CardImagePlaceholder: {fileID: 0}
@@ -126355,6 +126588,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &7501341731015171536
 MonoBehaviour:
@@ -132267,6 +132501,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 8371145910175968398}
   CardImageBack: {fileID: 6471362886811240581}
   CardImagePlaceholder: {fileID: 0}
@@ -132295,6 +132530,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &4897343898664732721
 MonoBehaviour:
@@ -133742,6 +133978,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 7537101074811048429}
   CardImageBack: {fileID: 2955024537126068852}
   CardImagePlaceholder: {fileID: 0}
@@ -133770,6 +134007,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &7407803305787392307
 MonoBehaviour:
@@ -134871,6 +135109,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4362483836803393519}
   CardImageBack: {fileID: 6063486204157978289}
   CardImagePlaceholder: {fileID: 0}
@@ -134899,6 +135138,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &3124963636831169472
 MonoBehaviour:
@@ -135890,6 +136130,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 1812047461396786170}
   CardImageBack: {fileID: 83413062546853264}
   CardImagePlaceholder: {fileID: 0}
@@ -135918,6 +136159,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &7885205993993636002
 MonoBehaviour:
@@ -136888,6 +137130,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 5657871522000992711}
   CardImageBack: {fileID: 7550934371461713848}
   CardImagePlaceholder: {fileID: 0}
@@ -136916,6 +137159,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &2486968649294635452
 MonoBehaviour:
@@ -137079,6 +137323,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 2015822645398156919}
   CardImageBack: {fileID: 7026653056060006077}
   CardImagePlaceholder: {fileID: 0}
@@ -137107,6 +137352,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &7407059451159433600
 MonoBehaviour:
@@ -137709,6 +137955,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 3327846094152261494}
   CardImageBack: {fileID: 139855054681641634}
   CardImagePlaceholder: {fileID: 0}
@@ -137737,6 +137984,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &7709417329593168784
 MonoBehaviour:
@@ -138818,6 +139066,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 8288692730058364076}
   CardImageBack: {fileID: 3196202611973664945}
   CardImagePlaceholder: {fileID: 0}
@@ -138846,6 +139095,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &1238545392872895226
 MonoBehaviour:
@@ -139106,6 +139356,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 8366644653353481580}
   CardImageBack: {fileID: 2430382800214272071}
   CardImagePlaceholder: {fileID: 0}
@@ -139134,6 +139385,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &6076508850016421279
 MonoBehaviour:
@@ -139820,6 +140072,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 3927442255362369600}
   CardImageBack: {fileID: 5166305241146103623}
   CardImagePlaceholder: {fileID: 0}
@@ -139848,6 +140101,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &5797452939096933056
 MonoBehaviour:
@@ -140636,6 +140890,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4357655843398046153}
   CardImageBack: {fileID: 2501676592690805400}
   CardImagePlaceholder: {fileID: 0}
@@ -140664,6 +140919,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &1578794960311369093
 MonoBehaviour:
@@ -140827,6 +141083,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 9186934543263359028}
   CardImageBack: {fileID: 2793340217208953204}
   CardImagePlaceholder: {fileID: 0}
@@ -140855,6 +141112,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &4963560920442165175
 MonoBehaviour:
@@ -141503,6 +141761,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 2467525162335256872}
   CardImageBack: {fileID: 866332118430200948}
   CardImagePlaceholder: {fileID: 0}
@@ -141531,6 +141790,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &3129793014401689325
 MonoBehaviour:
@@ -141791,6 +142051,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 9147803037649199178}
   CardImageBack: {fileID: 1426103804372297080}
   CardImagePlaceholder: {fileID: 0}
@@ -141819,6 +142080,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &1542741344915121871
 MonoBehaviour:
@@ -142449,6 +142711,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 3976553829066460852}
   CardImageBack: {fileID: 7499475503772978236}
   CardImagePlaceholder: {fileID: 0}
@@ -142477,6 +142740,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &3329577530400375055
 MonoBehaviour:
@@ -143370,6 +143634,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 8668904106664406161}
   CardImageBack: {fileID: 6535632177330633807}
   CardImagePlaceholder: {fileID: 0}
@@ -143398,6 +143663,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &346926718906128163
 MonoBehaviour:
@@ -143690,6 +143956,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4181741935815247913}
   CardImageBack: {fileID: 6818711857625948308}
   CardImagePlaceholder: {fileID: 0}
@@ -143718,6 +143985,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &1035099867719135781
 MonoBehaviour:
@@ -144024,6 +144292,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 7828203571876030098}
   CardImageBack: {fileID: 1019131929198107967}
   CardImagePlaceholder: {fileID: 0}
@@ -144052,6 +144321,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &2667976479754622271
 MonoBehaviour:
@@ -145194,6 +145464,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 3242380581716492633}
   CardImageBack: {fileID: 8429122603243887767}
   CardImagePlaceholder: {fileID: 0}
@@ -145222,6 +145493,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &1218217625384412825
 MonoBehaviour:
@@ -145613,6 +145885,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 2321378660679025950}
   CardImageBack: {fileID: 2646070818574889653}
   CardImagePlaceholder: {fileID: 0}
@@ -145641,6 +145914,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &5432078971903460248
 MonoBehaviour:
@@ -145804,6 +146078,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 7724462523588479864}
   CardImageBack: {fileID: 7328835288886940329}
   CardImagePlaceholder: {fileID: 0}
@@ -145832,6 +146107,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &8819976488605455380
 MonoBehaviour:
@@ -146806,6 +147082,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 2705331059061536324}
   CardImageBack: {fileID: 3342558368697248636}
   CardImagePlaceholder: {fileID: 0}
@@ -146834,6 +147111,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &7085389783647847941
 MonoBehaviour:
@@ -149418,6 +149696,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 8296373777109419540}
   CardImageBack: {fileID: 2229947627396124203}
   CardImagePlaceholder: {fileID: 0}
@@ -149446,6 +149725,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &8598311708437636212
 MonoBehaviour:
@@ -149816,6 +150096,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 2677598643121434753}
   CardImageBack: {fileID: 5888744103261010762}
   CardImagePlaceholder: {fileID: 0}
@@ -149844,6 +150125,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &3664406945781136506
 MonoBehaviour:
@@ -150421,6 +150703,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4558442198917025718}
   CardImageBack: {fileID: 2514233102596551020}
   CardImagePlaceholder: {fileID: 0}
@@ -150449,6 +150732,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &4367635421129210458
 MonoBehaviour:
@@ -151250,6 +151534,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4691509342970285781}
   CardImageBack: {fileID: 2245528557320829041}
   CardImagePlaceholder: {fileID: 0}
@@ -151278,6 +151563,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &7962411741527158533
 MonoBehaviour:
@@ -151970,6 +152256,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4820591293453146833}
   CardImageBack: {fileID: 3260140963681974996}
   CardImagePlaceholder: {fileID: 0}
@@ -151998,6 +152285,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &2248455295907236805
 MonoBehaviour:
@@ -152793,6 +153081,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 3105355333999866247}
   CardImageBack: {fileID: 1064163363574106982}
   CardImagePlaceholder: {fileID: 0}
@@ -152821,6 +153110,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &7756591804880582664
 MonoBehaviour:
@@ -153565,6 +153855,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 2705937948320547305}
   CardImageBack: {fileID: 1465426120022902461}
   CardImagePlaceholder: {fileID: 0}
@@ -153593,6 +153884,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &4396090777650131857
 MonoBehaviour:
@@ -154006,6 +154298,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 7365337426094573174}
   CardImageBack: {fileID: 1249809518509758852}
   CardImagePlaceholder: {fileID: 0}
@@ -154034,6 +154327,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &2975554749722585534
 MonoBehaviour:
@@ -155847,6 +156141,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 8719040128122368900}
   CardImageBack: {fileID: 7444573527282496358}
   CardImagePlaceholder: {fileID: 0}
@@ -155875,6 +156170,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &8647613457052574584
 MonoBehaviour:
@@ -157592,6 +157888,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 8010165729818945467}
   CardImageBack: {fileID: 8281791662456148363}
   CardImagePlaceholder: {fileID: 0}
@@ -157620,6 +157917,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &1031645026458495079
 MonoBehaviour:
@@ -159970,6 +160268,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 204079496151354605}
   CardImageBack: {fileID: 4752292933565041042}
   CardImagePlaceholder: {fileID: 0}
@@ -159998,6 +160297,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &2836819619275540893
 MonoBehaviour:
@@ -160161,6 +160461,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 5542112606028993171}
   CardImageBack: {fileID: 8194945030434789976}
   CardImagePlaceholder: {fileID: 0}
@@ -160189,6 +160490,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &2030092702859162427
 MonoBehaviour:
@@ -160670,6 +160972,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 8396748351637333219}
   CardImageBack: {fileID: 8236219278943239448}
   CardImagePlaceholder: {fileID: 0}
@@ -160698,6 +161001,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &1154520184936616426
 MonoBehaviour:
@@ -161216,6 +161520,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4136502446052032149}
   CardImageBack: {fileID: 347221995993098448}
   CardImagePlaceholder: {fileID: 0}
@@ -161244,6 +161549,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &6496978134279787889
 MonoBehaviour:
@@ -162417,6 +162723,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 8902099679587510999}
   CardImageBack: {fileID: 7678915046227820216}
   CardImagePlaceholder: {fileID: 0}
@@ -162445,6 +162752,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &301930818259965282
 MonoBehaviour:
@@ -162829,6 +163137,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 449853090036417318}
   CardImageBack: {fileID: 378153248884222615}
   CardImagePlaceholder: {fileID: 0}
@@ -162857,6 +163166,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &4917206335204923450
 MonoBehaviour:
@@ -164378,6 +164688,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 1490467814552767382}
   CardImageBack: {fileID: 4559266811391449969}
   CardImagePlaceholder: {fileID: 0}
@@ -164406,6 +164717,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &7429386619556800772
 MonoBehaviour:
@@ -165642,6 +165954,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 58067267847844657}
   CardImageBack: {fileID: 7996754898799290}
   CardImagePlaceholder: {fileID: 0}
@@ -165670,6 +165983,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &4109327633392382164
 MonoBehaviour:
@@ -165833,6 +166147,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 2173069396076656572}
   CardImageBack: {fileID: 3934881434963190444}
   CardImagePlaceholder: {fileID: 0}
@@ -165861,6 +166176,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &8681608353165561787
 MonoBehaviour:
@@ -166245,6 +166561,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4481468248528795803}
   CardImageBack: {fileID: 1862153687063377308}
   CardImagePlaceholder: {fileID: 0}
@@ -166273,6 +166590,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &4137398208270505457
 MonoBehaviour:
@@ -167071,6 +167389,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 3474963425693838039}
   CardImageBack: {fileID: 9077248389564175306}
   CardImagePlaceholder: {fileID: 0}
@@ -167099,6 +167418,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &4696250077473020031
 MonoBehaviour:
@@ -167262,6 +167582,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 818487711804725485}
   CardImageBack: {fileID: 6378858979918614499}
   CardImagePlaceholder: {fileID: 0}
@@ -167290,6 +167611,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &5125700005127464602
 MonoBehaviour:
@@ -167453,6 +167775,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 8486516331067781552}
   CardImageBack: {fileID: 8000518429553230495}
   CardImagePlaceholder: {fileID: 0}
@@ -167481,6 +167804,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &3182987354845448703
 MonoBehaviour:
@@ -167644,6 +167968,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 1696250573205967962}
   CardImageBack: {fileID: 1509681806212642133}
   CardImagePlaceholder: {fileID: 0}
@@ -167672,6 +167997,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &1888853922532527147
 MonoBehaviour:
@@ -168061,6 +168387,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4450523836379075188}
   CardImageBack: {fileID: 1090619144258461626}
   CardImagePlaceholder: {fileID: 0}
@@ -168089,6 +168416,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &7738587951551490537
 MonoBehaviour:
@@ -170452,6 +170780,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4890646847510778431}
   CardImageBack: {fileID: 6687141257784208158}
   CardImagePlaceholder: {fileID: 0}
@@ -170480,6 +170809,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &1946878057016112049
 MonoBehaviour:
@@ -171491,6 +171821,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 436679612045697078}
   CardImageBack: {fileID: 6709585534103414311}
   CardImagePlaceholder: {fileID: 0}
@@ -171519,6 +171850,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &5689586177286843048
 MonoBehaviour:
@@ -172259,6 +172591,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchInterface
+  _updateEveryNFrames: 50
   ValidatedInput: {fileID: 8058086617878511774}
   UrlDisplayText: {fileID: 1976704064125173397}
   CardPrefab: {fileID: 9097265551286121856, guid: 43d7b374a862a3147862dba75eff978c,
@@ -172581,6 +172914,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 6298746135636506576}
   CardImageBack: {fileID: 5462923952246992393}
   CardImagePlaceholder: {fileID: 0}
@@ -172609,6 +172943,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &3927318594255052690
 MonoBehaviour:
@@ -175879,6 +176214,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 120041714726839576}
   CardImageBack: {fileID: 8977210940234383357}
   CardImagePlaceholder: {fileID: 0}
@@ -175907,6 +176243,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &8829277659596945689
 MonoBehaviour:
@@ -176984,6 +177321,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 7309871109314823620}
   CardImageBack: {fileID: 5614591658833645981}
   CardImagePlaceholder: {fileID: 0}
@@ -177012,6 +177350,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &5641136946741992682
 MonoBehaviour:
@@ -178603,6 +178942,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 7062742249656450334}
   CardImageBack: {fileID: 5751824515959954082}
   CardImagePlaceholder: {fileID: 0}
@@ -178631,6 +178971,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &3448872431803360832
 MonoBehaviour:
@@ -180521,6 +180862,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 8694635413811335722}
   CardImageBack: {fileID: 7918703834803554240}
   CardImagePlaceholder: {fileID: 0}
@@ -180549,6 +180891,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &1299439858261650675
 MonoBehaviour:
@@ -182175,6 +182518,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 5768020552668372168}
   CardImageBack: {fileID: 7053533049745487766}
   CardImagePlaceholder: {fileID: 0}
@@ -182203,6 +182547,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &5680286630802590571
 MonoBehaviour:
@@ -182753,6 +183098,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 1663066050578398400}
   CardImageBack: {fileID: 2870576831044081289}
   CardImagePlaceholder: {fileID: 0}
@@ -182781,6 +183127,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &1300141590173518117
 MonoBehaviour:
@@ -183019,6 +183366,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4992247205945851174}
   CardImageBack: {fileID: 8519915922831071186}
   CardImagePlaceholder: {fileID: 0}
@@ -183047,6 +183395,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &6640984417460103924
 MonoBehaviour:
@@ -185051,6 +185400,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4480262047011087992}
   CardImageBack: {fileID: 7324171137998099640}
   CardImagePlaceholder: {fileID: 0}
@@ -185079,6 +185429,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &1878705323176135101
 MonoBehaviour:
@@ -187041,6 +187392,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 7167370243554452138}
   CardImageBack: {fileID: 5475404456321471370}
   CardImagePlaceholder: {fileID: 0}
@@ -187069,6 +187421,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &4914718087688618101
 MonoBehaviour:
@@ -187458,6 +187811,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 8367922941781152391}
   CardImageBack: {fileID: 58761258620537531}
   CardImagePlaceholder: {fileID: 0}
@@ -187486,6 +187840,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &4081974183961692768
 MonoBehaviour:
@@ -188763,6 +189118,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 6751252516801877701}
   CardImageBack: {fileID: 1659285448232428879}
   CardImagePlaceholder: {fileID: 0}
@@ -188791,6 +189147,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &3418774007892940030
 MonoBehaviour:
@@ -188954,6 +189311,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 3220012484183129260}
   CardImageBack: {fileID: 8987459227576224910}
   CardImagePlaceholder: {fileID: 0}
@@ -188982,6 +189340,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &3232007322777435364
 MonoBehaviour:
@@ -189726,6 +190085,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 49165452740497904}
   CardImageBack: {fileID: 2439733059888885724}
   CardImagePlaceholder: {fileID: 0}
@@ -189754,6 +190114,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &1714552944790258609
 MonoBehaviour:
@@ -190253,6 +190614,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4486892350791258512}
   CardImageBack: {fileID: 8825757250943398251}
   CardImagePlaceholder: {fileID: 0}
@@ -190281,6 +190643,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &8429152601076255978
 MonoBehaviour:
@@ -190781,6 +191144,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 6153523426152608501}
   CardImageBack: {fileID: 2708061073755399543}
   CardImagePlaceholder: {fileID: 0}
@@ -190809,6 +191173,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &3049363511868656016
 MonoBehaviour:
@@ -192005,6 +192370,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 5981402627368057566}
   CardImageBack: {fileID: 8256414808886477440}
   CardImagePlaceholder: {fileID: 0}
@@ -192033,6 +192399,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &3186328999509024796
 MonoBehaviour:
@@ -193212,6 +193579,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 6313576205142110098}
   CardImageBack: {fileID: 3492615758378450367}
   CardImagePlaceholder: {fileID: 0}
@@ -193240,6 +193608,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &1796167539439912813
 MonoBehaviour:
@@ -193495,6 +193864,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4410614866701724784}
   CardImageBack: {fileID: 7931054109135489229}
   CardImagePlaceholder: {fileID: 0}
@@ -193523,6 +193893,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &4301750770043260248
 MonoBehaviour:
@@ -193839,6 +194210,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 2620110340240028955}
   CardImageBack: {fileID: 9187030593118683932}
   CardImagePlaceholder: {fileID: 0}
@@ -193867,6 +194239,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &2600042373128810352
 MonoBehaviour:
@@ -194587,6 +194960,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 3745771713296323359}
   CardImageBack: {fileID: 719011161368883221}
   CardImagePlaceholder: {fileID: 0}
@@ -194615,6 +194989,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &4922175759948165947
 MonoBehaviour:
@@ -194948,6 +195323,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4023062921136496951}
   CardImageBack: {fileID: 4765810060701969606}
   CardImagePlaceholder: {fileID: 0}
@@ -194976,6 +195352,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &4203412009026711472
 MonoBehaviour:
@@ -195909,6 +196286,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 1002574552499190157}
   CardImageBack: {fileID: 1094381333261209703}
   CardImagePlaceholder: {fileID: 0}
@@ -195937,6 +196315,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &7816138305122277841
 MonoBehaviour:
@@ -196358,6 +196737,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 9133185188874773426}
   CardImageBack: {fileID: 6330028493666719630}
   CardImagePlaceholder: {fileID: 0}
@@ -196386,6 +196766,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &4432570776732334814
 MonoBehaviour:
@@ -197544,6 +197925,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 5773959070933793293}
   CardImageBack: {fileID: 7914282653948328627}
   CardImagePlaceholder: {fileID: 0}
@@ -197572,6 +197954,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &5832374620308494088
 MonoBehaviour:
@@ -198343,6 +198726,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 7541860688055433755}
   CardImageBack: {fileID: 7188679486123822346}
   CardImagePlaceholder: {fileID: 0}
@@ -198371,6 +198755,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &326299338266678766
 MonoBehaviour:
@@ -199034,6 +199419,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 3690880855198730958}
   CardImageBack: {fileID: 4785809349465328057}
   CardImagePlaceholder: {fileID: 0}
@@ -199062,6 +199448,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &4947186663139343402
 MonoBehaviour:
@@ -199661,6 +200048,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 1586847933086161218}
   CardImageBack: {fileID: 3412713051825128613}
   CardImagePlaceholder: {fileID: 0}
@@ -199689,6 +200077,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &5448508585885630404
 MonoBehaviour:
@@ -200136,6 +200525,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 7046458770253637924}
   CardImageBack: {fileID: 4020842726961371166}
   CardImagePlaceholder: {fileID: 0}
@@ -200164,6 +200554,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &7301210795085066943
 MonoBehaviour:
@@ -202539,6 +202930,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 3335444923043577818}
   CardImageBack: {fileID: 7044699831947518937}
   CardImagePlaceholder: {fileID: 0}
@@ -202567,6 +202959,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &5098864514945207465
 MonoBehaviour:
@@ -204351,6 +204744,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 6558479357165172488}
   CardImageBack: {fileID: 2799350740790695130}
   CardImagePlaceholder: {fileID: 0}
@@ -204379,6 +204773,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &1308597518428694473
 MonoBehaviour:
@@ -206446,6 +206841,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 2004578077297534882}
   CardImageBack: {fileID: 3758994985288770881}
   CardImagePlaceholder: {fileID: 0}
@@ -206474,6 +206870,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &4513563101217103564
 MonoBehaviour:
@@ -206812,6 +207209,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 6332744290908477573}
   CardImageBack: {fileID: 9076351142251458429}
   CardImagePlaceholder: {fileID: 0}
@@ -206840,6 +207238,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &9439621614364907
 MonoBehaviour:
@@ -207003,6 +207402,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 8429498475358874944}
   CardImageBack: {fileID: 3123437790207941157}
   CardImagePlaceholder: {fileID: 0}
@@ -207031,6 +207431,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &4702331927002777917
 MonoBehaviour:
@@ -207831,6 +208232,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 868692206894096664}
   CardImageBack: {fileID: 1893515816991419159}
   CardImagePlaceholder: {fileID: 0}
@@ -207859,6 +208261,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &5562155762233999124
 MonoBehaviour:
@@ -208902,6 +209305,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4018173142612279995}
   CardImageBack: {fileID: 3319792991650436491}
   CardImagePlaceholder: {fileID: 0}
@@ -208930,6 +209334,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &4828821627641049001
 MonoBehaviour:
@@ -210751,6 +211156,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 8217431453737766112}
   CardImageBack: {fileID: 2884574102633191505}
   CardImagePlaceholder: {fileID: 0}
@@ -210779,6 +211185,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &7000815237043456492
 MonoBehaviour:
@@ -210942,6 +211349,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 1194604838075801043}
   CardImageBack: {fileID: 5942806197017512018}
   CardImagePlaceholder: {fileID: 0}
@@ -210970,6 +211378,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &3739869883800460386
 MonoBehaviour:
@@ -211340,6 +211749,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 5323897446999318168}
   CardImageBack: {fileID: 3018732003823693409}
   CardImagePlaceholder: {fileID: 0}
@@ -211368,6 +211778,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &5055447939024806351
 MonoBehaviour:
@@ -212549,6 +212960,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 3340609020762508004}
   CardImageBack: {fileID: 7830751282431977147}
   CardImagePlaceholder: {fileID: 0}
@@ -212577,6 +212989,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &8179812690611243939
 MonoBehaviour:
@@ -212929,6 +213342,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 9123436637960697206}
   CardImageBack: {fileID: 1851965683561828343}
   CardImagePlaceholder: {fileID: 0}
@@ -212957,6 +213371,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &4804844473156031702
 MonoBehaviour:
@@ -213120,6 +213535,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 8600719667661025007}
   CardImageBack: {fileID: 2930307529083580612}
   CardImagePlaceholder: {fileID: 0}
@@ -213148,6 +213564,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &7244182384349303628
 MonoBehaviour:
@@ -213868,6 +214285,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 6245161473517399069}
   CardImageBack: {fileID: 4832855014039400466}
   CardImagePlaceholder: {fileID: 0}
@@ -213896,6 +214314,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &8297911305613075241
 MonoBehaviour:
@@ -214188,6 +214607,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 5222753057024447662}
   CardImageBack: {fileID: 1307986720408770414}
   CardImagePlaceholder: {fileID: 0}
@@ -214216,6 +214636,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &1622955581230922795
 MonoBehaviour:
@@ -218194,6 +218615,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 6772868893632217605}
   CardImageBack: {fileID: 2264708839276275538}
   CardImagePlaceholder: {fileID: 0}
@@ -218222,6 +218644,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &2715078592195604695
 MonoBehaviour:
@@ -218385,6 +218808,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 8434918705742218301}
   CardImageBack: {fileID: 5495458573718871315}
   CardImagePlaceholder: {fileID: 0}
@@ -218413,6 +218837,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &8977910734330676714
 MonoBehaviour:
@@ -218627,6 +219052,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 7473127487390130046}
   CardImageBack: {fileID: 8950940947008179198}
   CardImagePlaceholder: {fileID: 0}
@@ -218655,6 +219081,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &2376105341085248603
 MonoBehaviour:
@@ -219537,6 +219964,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 7639888459855573783}
   CardImageBack: {fileID: 8533522303411677399}
   CardImagePlaceholder: {fileID: 0}
@@ -219565,6 +219993,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &5176369707975023166
 MonoBehaviour:
@@ -220527,6 +220956,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 7977279797471858834}
   CardImageBack: {fileID: 4378176405744668028}
   CardImagePlaceholder: {fileID: 0}
@@ -220555,6 +220985,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &3988541421056583307
 MonoBehaviour:
@@ -220718,6 +221149,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 7296189227500591526}
   CardImageBack: {fileID: 69168707485183040}
   CardImagePlaceholder: {fileID: 0}
@@ -220746,6 +221178,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &955670689997268796
 MonoBehaviour:
@@ -221154,6 +221587,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 6717989773300111083}
   CardImageBack: {fileID: 7594767176216349820}
   CardImagePlaceholder: {fileID: 0}
@@ -221182,6 +221616,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &6026410714916793971
 MonoBehaviour:
@@ -221571,6 +222006,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 8717883928489147479}
   CardImageBack: {fileID: 880712901053791984}
   CardImagePlaceholder: {fileID: 0}
@@ -221599,6 +222035,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &2163676468590937807
 MonoBehaviour:
@@ -222075,6 +222512,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 8418925153865084246}
   CardImageBack: {fileID: 6331063884092649384}
   CardImagePlaceholder: {fileID: 0}
@@ -222103,6 +222541,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &7648353159846457797
 MonoBehaviour:
@@ -223127,6 +223566,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 305029550070344413}
   CardImageBack: {fileID: 3983580644772942083}
   CardImagePlaceholder: {fileID: 0}
@@ -223155,6 +223595,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &2027279652649903698
 MonoBehaviour:
@@ -223568,6 +224009,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 6286787763779580607}
   CardImageBack: {fileID: 198815530740858901}
   CardImagePlaceholder: {fileID: 0}
@@ -223596,6 +224038,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &3896555578922988830
 MonoBehaviour:
@@ -223759,6 +224202,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 3711427484590706641}
   CardImageBack: {fileID: 58239333102417631}
   CardImagePlaceholder: {fileID: 0}
@@ -223787,6 +224231,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &8098791127705549732
 MonoBehaviour:
@@ -224776,6 +225221,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 6823398962181048971}
   CardImageBack: {fileID: 755276631367247163}
   CardImagePlaceholder: {fileID: 0}
@@ -224804,6 +225250,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &7228320216882586798
 MonoBehaviour:
@@ -225355,6 +225802,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4080595181306791657}
   CardImageBack: {fileID: 5662730903254699011}
   CardImagePlaceholder: {fileID: 0}
@@ -225383,6 +225831,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &1229231760055000002
 MonoBehaviour:
@@ -226012,6 +226461,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4113326993375833596}
   CardImageBack: {fileID: 8205979565629128612}
   CardImagePlaceholder: {fileID: 0}
@@ -226040,6 +226490,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &2974776583746925938
 MonoBehaviour:
@@ -226668,6 +227119,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 5056724731966724495}
   CardImageBack: {fileID: 1852566233326155774}
   CardImagePlaceholder: {fileID: 0}
@@ -226696,6 +227148,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &8121007703100586319
 MonoBehaviour:
@@ -226937,6 +227390,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 7169787624584191858}
   CardImageBack: {fileID: 5814663635903363267}
   CardImagePlaceholder: {fileID: 0}
@@ -226965,6 +227419,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &8672957336583325272
 MonoBehaviour:
@@ -227220,6 +227675,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 432189590115831027}
   CardImageBack: {fileID: 5169024019637144795}
   CardImagePlaceholder: {fileID: 0}
@@ -227248,6 +227704,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &5078783385362869047
 MonoBehaviour:
@@ -228662,6 +229119,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 7227023538752655270}
   CardImageBack: {fileID: 1716230183828954244}
   CardImagePlaceholder: {fileID: 0}
@@ -228690,6 +229148,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &5059864627540263072
 MonoBehaviour:
@@ -229096,6 +229555,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 7077333451241345420}
   CardImageBack: {fileID: 2332795657851068221}
   CardImagePlaceholder: {fileID: 0}
@@ -229124,6 +229584,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &4881991052302715679
 MonoBehaviour:
@@ -229670,6 +230131,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 2469435262512003908}
   CardImageBack: {fileID: 3666252526335095746}
   CardImagePlaceholder: {fileID: 0}
@@ -229698,6 +230160,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &3291909623972753908
 MonoBehaviour:
@@ -229953,6 +230416,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 1156511398574311411}
   CardImageBack: {fileID: 3238824979295597377}
   CardImagePlaceholder: {fileID: 0}
@@ -229981,6 +230445,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &1634708489930987881
 MonoBehaviour:
@@ -233060,6 +233525,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 8598806740545886446}
   CardImageBack: {fileID: 1050586345763886984}
   CardImagePlaceholder: {fileID: 0}
@@ -233088,6 +233554,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &6508401060763974952
 MonoBehaviour:
@@ -233601,6 +234068,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4887793898724892853}
   CardImageBack: {fileID: 9047548456004054914}
   CardImagePlaceholder: {fileID: 0}
@@ -233629,6 +234097,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &6935138557527160248
 MonoBehaviour:
@@ -237645,6 +238114,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4444085603305851182}
   CardImageBack: {fileID: 6398725268667637305}
   CardImagePlaceholder: {fileID: 0}
@@ -237673,6 +238143,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &4726816857656170263
 MonoBehaviour:
@@ -238186,6 +238657,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 8170011068202814719}
   CardImageBack: {fileID: 3859475154219657662}
   CardImagePlaceholder: {fileID: 0}
@@ -238214,6 +238686,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &6671689473090739264
 MonoBehaviour:
@@ -238960,6 +239433,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 1654398314979557750}
   CardImageBack: {fileID: 6341113941735976004}
   CardImagePlaceholder: {fileID: 0}
@@ -238988,6 +239462,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &8640271253459787124
 MonoBehaviour:
@@ -239280,6 +239755,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 8271084512644362359}
   CardImageBack: {fileID: 3464814940616872796}
   CardImagePlaceholder: {fileID: 0}
@@ -239308,6 +239784,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &3878013617402593379
 MonoBehaviour:
@@ -239546,6 +240023,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 3819156393292130546}
   CardImageBack: {fileID: 7075550947543626039}
   CardImagePlaceholder: {fileID: 0}
@@ -239574,6 +240052,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &7845296081148882627
 MonoBehaviour:
@@ -239917,6 +240396,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 1320267939394818467}
   CardImageBack: {fileID: 4985229977920268748}
   CardImagePlaceholder: {fileID: 0}
@@ -239945,6 +240425,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &7383664615101931297
 MonoBehaviour:
@@ -240312,6 +240793,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 9121153438972370550}
   CardImageBack: {fileID: 7721320472258922898}
   CardImagePlaceholder: {fileID: 0}
@@ -240340,6 +240822,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &6622568166999561807
 MonoBehaviour:
@@ -241998,6 +242481,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 2319747377289652603}
   CardImageBack: {fileID: 2356063320470651337}
   CardImagePlaceholder: {fileID: 0}
@@ -242026,6 +242510,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &4305872179282810611
 MonoBehaviour:
@@ -244235,6 +244720,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 8092182980248317920}
   CardImageBack: {fileID: 6422483096169206642}
   CardImagePlaceholder: {fileID: 0}
@@ -244263,6 +244749,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &4481108353363937062
 MonoBehaviour:
@@ -244426,6 +244913,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 124631363564740151}
   CardImageBack: {fileID: 2832928051790968555}
   CardImagePlaceholder: {fileID: 0}
@@ -244454,6 +244942,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &2180197041221614036
 MonoBehaviour:
@@ -246019,6 +246508,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 2540330229631933402}
   CardImageBack: {fileID: 4416983115688917343}
   CardImagePlaceholder: {fileID: 0}
@@ -246047,6 +246537,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &4521082324038712159
 MonoBehaviour:
@@ -247838,6 +248329,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4296921257548719907}
   CardImageBack: {fileID: 4683585571882952860}
   CardImagePlaceholder: {fileID: 0}
@@ -247866,6 +248358,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &5266033932615300818
 MonoBehaviour:
@@ -249635,6 +250128,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 5937481975166634321}
   CardImageBack: {fileID: 5147218303476195478}
   CardImagePlaceholder: {fileID: 0}
@@ -249663,6 +250157,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &3476156128424460945
 MonoBehaviour:
@@ -250627,6 +251122,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 2836443496617294803}
   CardImageBack: {fileID: 7319549252537768570}
   CardImagePlaceholder: {fileID: 0}
@@ -250655,6 +251151,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &6146040016426855900
 MonoBehaviour:
@@ -251941,6 +252438,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 2955926379845928761}
   CardImageBack: {fileID: 2921037106225213202}
   CardImagePlaceholder: {fileID: 0}
@@ -251969,6 +252467,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &6850793245732811299
 MonoBehaviour:
@@ -252567,6 +253066,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 6634506533578578599}
   CardImageBack: {fileID: 3214377646723182374}
   CardImagePlaceholder: {fileID: 0}
@@ -252595,6 +253095,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &7396283322687281759
 MonoBehaviour:
@@ -252914,6 +253415,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4472652765982208890}
   CardImageBack: {fileID: 8043371701945867997}
   CardImagePlaceholder: {fileID: 0}
@@ -252942,6 +253444,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &693848475948383756
 MonoBehaviour:
@@ -255916,6 +256419,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 3699543164789908458}
   CardImageBack: {fileID: 2234329825904718849}
   CardImagePlaceholder: {fileID: 0}
@@ -255944,6 +256448,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &9089776031043145406
 MonoBehaviour:
@@ -256990,6 +257495,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 2723439062633785603}
   CardImageBack: {fileID: 5734216334943488794}
   CardImagePlaceholder: {fileID: 0}
@@ -257018,6 +257524,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &445170816435394047
 MonoBehaviour:
@@ -257918,6 +258425,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 3766330606408648344}
   CardImageBack: {fileID: 4458715238105984147}
   CardImagePlaceholder: {fileID: 0}
@@ -257946,6 +258454,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &6479381206933793078
 MonoBehaviour:
@@ -259414,6 +259923,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 4575005480232988076}
   CardImageBack: {fileID: 2674254621112456476}
   CardImagePlaceholder: {fileID: 0}
@@ -259442,6 +259952,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &2850067190968130584
 MonoBehaviour:
@@ -259877,6 +260388,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 3633637520513643236}
   CardImageBack: {fileID: 7780455237750283662}
   CardImagePlaceholder: {fileID: 0}
@@ -259905,6 +260417,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 7094124050143817495}
 --- !u!114 &8555559606988252955
 MonoBehaviour:
@@ -262721,6 +263234,12 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3312897141848936709, guid: 43d7b374a862a3147862dba75eff978c,
+        type: 3}
+      propertyPath: programSource
+      value: 
+      objectReference: {fileID: 11400000, guid: 531ab1c58c481344ca50a70ef51a1c36,
+        type: 2}
     - target: {fileID: 3312897141848936709, guid: 43d7b374a862a3147862dba75eff978c,
         type: 3}
       propertyPath: serializedProgramAsset

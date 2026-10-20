@@ -916,6 +916,7 @@ MonoBehaviour:
   VERBOSE_DEBUG: 1
   Manager: {fileID: 0}
   _ScriptName: MTG_SearchCard
+  _updateEveryNFrames: 50
   CardImageFront: {fileID: 1390902743463539671}
   CardImageBack: {fileID: 6042717330344361188}
   CardImagePlaceholder: {fileID: 0}
@@ -944,6 +945,7 @@ MonoBehaviour:
   ImageBackLoaded: 0
   IsFlipped: 0
   IsDoubleFaced: 0
+  RegisteredForRefresh: 0
   SearchInterface: {fileID: 0}
 --- !u!114 &3312897141848936709
 MonoBehaviour:

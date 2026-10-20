@@ -34,30 +34,38 @@ namespace MTG
         // (Pas d'Update ici : interface purement evenementielle)
 
         // Construit l'URL deck au NOUVEAU format : /ad?q=action:param1:param2:...
-        // save:name:format:list:lang:description | parse:list:format:lang
-        // load:id | load:format:list:lang | delete:id | list[:search]
+        // - load:<uuid> : charge un deck sauvegarde par son UUID
+        // - list[:name[:format]] : liste mes decks ou cherche les decks publics
         protected override void GenerateUrl()
         {
             this.Log("GenerateUrl called (DeckInterface)");
             if (Manager == null || Manager.DeckURL == null) return;
 
             string _BaseUrl = Manager.DeckURL.ToString(); // ".../ad?q="
-            string _Name    = TrimInput(DeckNameInput);
-            string _Desc    = TrimInput(DeckDescriptionInput);
-            string _List    = CardListInput != null ? CardListInput.text : "";
+            string _Name    = TrimInput(DeckNameInput);       // filtre : nom du deck
+            string _Format  = TrimInput(DeckDescriptionInput); // filtre : format
+            string _DeckId  = CardListInput != null ? CardListInput.text.Trim() : ""; // UUID pour load
 
             string _FullUrl;
-            if (string.IsNullOrEmpty(_Name) || string.IsNullOrEmpty(_List))
+            if (IsDeckUuid(_DeckId))
             {
-                // Pas assez d'infos pour un save : URL de base uniquement
-                _FullUrl = _BaseUrl;
+                // Nouveau format : load:<uuid> (charge un deck sauvegarde)
+                _FullUrl = _BaseUrl + "load:" + UrlEncode(_DeckId);
             }
             else
             {
-                // save:name:auto:list  (+ :en:description si description)
-                _FullUrl = _BaseUrl + "save:" + UrlEncode(_Name) + ":auto:" + UrlEncode(_List);
-                if (!string.IsNullOrEmpty(_Desc))
-                    _FullUrl += ":en:" + UrlEncode(_Desc);
+                // Nouveau format : list[:name[:format]]
+                _FullUrl = _BaseUrl + "list";
+                if (!string.IsNullOrEmpty(_Name))
+                {
+                    _FullUrl += ":" + UrlEncode(_Name);
+                    if (!string.IsNullOrEmpty(_Format))
+                        _FullUrl += ":" + UrlEncode(_Format);
+                }
+                else if (!string.IsNullOrEmpty(_Format))
+                {
+                    _FullUrl += "::" + UrlEncode(_Format);
+                }
             }
 
             // Affichage pour copier/coller (VRCUrl dynamique impossible en Udon)
@@ -70,6 +78,15 @@ namespace MTG
 
             this.Log("GenerateUrl result: " + _FullUrl);
             ResetFocusUrlInputFields();
+        }
+
+        // Detecte un UUID de deck (format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)
+        private bool IsDeckUuid(string _Input)
+        {
+            if (string.IsNullOrEmpty(_Input)) return false;
+            if (_Input.IndexOf("-") < 0) return false;
+            if (_Input.Length < 8) return false;
+            return true;
         }
 
         // Encodeur URL minimal compatible Udon (UnityWebRequest.EscapeURL n'est pas expose)
@@ -107,20 +124,8 @@ namespace MTG
                 this.Error("Deck response is null");
                 return;
             }
-            // Traitement de la reponse de deck
+            // Traitement de la reponse de deck (list / load / refresh)
             ProcessDeckResponse(_Json);
-
-            // Une modif de deck (save/delete) invalide la liste : re-fetch at1 (event only)
-            if (_Json.Url != null)
-            {
-                string _UrlStr = _Json.Url.ToString();
-                if (_UrlStr.IndexOf("q=save:") >= 0 || _UrlStr.IndexOf("q=delete:") >= 0)
-                {
-                    this.Log("Deck modification detected, re-fetching deck list (at1)");
-                    if (Manager != null)
-                        Manager.FetchDeckList();
-                }
-            }
         }
 
         // callback pour la liste des decks (at1) — forwarde par le Manager
@@ -151,53 +156,38 @@ namespace MTG
                 return;
             }
 
-            // Action depuis l'en-tete standardise (link_id = action)
-            string _Action = "";
-            if (_RootDict.TryGetValue("link_id", out _Token))
-                _Action = _Token.String;
-
             if (!_RootDict.TryGetValue("data", out _Token) || _Token.TokenType != TokenType.DataDictionary) return;
             DataDictionary _Data = _Token.DataDictionary;
 
-            if (_Action == "save")
-            {
-                string _DeckId = "";
-                string _DeckName = "";
-                if (_Data.TryGetValue("deck_id", out _Token)) _DeckId = _Token.String;
-                if (_Data.TryGetValue("deck_name", out _Token)) _DeckName = _Token.String;
-                this.Log($"Deck saved: '{_DeckName}' (id: {_DeckId})");
-            }
-            else if (_Action == "load")
+            // L'action reelle est dans data.action (link_id peut etre l'index pour /adl{index})
+            string _Action = "";
+            if (_Data.TryGetValue("action", out _Token)) _Action = _Token.String;
+            if (string.IsNullOrEmpty(_Action) && _RootDict.TryGetValue("link_id", out _Token))
+                _Action = _Token.String;
+
+            if (_Action == "load")
             {
                 int _Added = 0;
                 string _DeckName = "";
                 if (_Data.TryGetValue("cards_added_to_instance", out _Token)) _Added = (int)_Token.Double;
                 if (_Data.TryGetValue("deck_name", out _Token)) _DeckName = _Token.String;
                 this.Log($"Deck loaded: '{_DeckName}', {_Added} cards added to instance");
-            }
-            else if (_Action == "delete")
-            {
-                string _DeckName = "";
-                if (_Data.TryGetValue("deck_name", out _Token)) _DeckName = _Token.String;
-                this.Log($"Deck deleted: '{_DeckName}'");
-            }
-            else if (_Action == "parse")
-            {
-                int _Found = 0;
-                int _NotFound = 0;
-                if (_Data.TryGetValue("stats", out _Token) && _Token.TokenType == TokenType.DataDictionary)
-                {
-                    DataDictionary _Stats = _Token.DataDictionary;
-                    if (_Stats.TryGetValue("found", out _Token)) _Found = (int)_Token.Double;
-                    if (_Stats.TryGetValue("not_found", out _Token)) _NotFound = (int)_Token.Double;
-                }
-                this.Log($"Deck parsed: {_Found} found, {_NotFound} not found");
+                // L'instance a change : recharger cartes (at0) + oracle (at3) immediatement
+                if (Manager != null)
+                    Manager.UpdateAtlasInfo();
             }
             else if (_Action == "list")
             {
                 int _Count = 0;
+                int _Matching = 0;
                 if (_Data.TryGetValue("decks_count", out _Token)) _Count = (int)_Token.Double;
-                this.Log($"Deck search: {_Count} decks");
+                if (_Data.TryGetValue("matching_total_count", out _Token)) _Matching = (int)_Token.Double;
+                this.Log($"Deck search: {_Count} decks returned ({_Matching} matching total)");
+                ParseDeckList(_Data);
+            }
+            else if (_Action == "refresh")
+            {
+                this.Log("Deck refresh status received");
             }
             else
             {
@@ -216,8 +206,14 @@ namespace MTG
 
             // Format at1: { data: { total_decks, decks: [{ id, name }] } }
             if (!_RootDict.TryGetValue("data", out _Token) || _Token.TokenType != TokenType.DataDictionary) return;
-            DataDictionary _Data = _Token.DataDictionary;
+            ParseDeckList(_Token.DataDictionary);
+        }
 
+        // Parse la liste des decks (at1 OU /ad?q=list) dans DeckIds / DeckNames
+        private void ParseDeckList(DataDictionary _Data)
+        {
+            DataToken _Token;
+            if (_Data == null) return;
             if (!_Data.TryGetValue("decks", out _Token) || _Token.TokenType != TokenType.DataList) return;
             DataList _Decks = _Token.DataList;
 
