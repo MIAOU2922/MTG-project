@@ -5,10 +5,12 @@ import { apiCreateRouter } from "@routes/ac/route";
 import { apiSearchRouter } from "@routes/as/route";
 import { atRouter } from "@routes/at/route";
 import { apiDeckRouter } from "@routes/ad/route";
+import { apiLangRouter } from "@routes/al/route";
 import Database from "@/database/Database";
 
 export const router = Router();
 router.use(apiUserRouter);
+router.use(apiLangRouter);
 router.use(apiJoinRouter);
 router.use(apiCreateRouter);
 router.use(apiSearchRouter);

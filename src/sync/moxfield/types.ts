@@ -22,6 +22,7 @@ export interface MoxfieldDeckSearchItem {
     colorIdentity?: string[];
     bracket?: number | null;
     autoBracket?: number | null;
+    tags?: string[];
     hasPrimer?: boolean;
     isLegal?: boolean;
     isShared?: boolean;
@@ -95,6 +96,10 @@ export interface MoxfieldDeck {
     format?: string;
     visibility?: string;
     version?: number;
+    bracket?: number | null;
+    autoBracket?: number | null;
+    hubNames?: string[];
+    tags?: string[];
     createdAtUtc?: string;
     lastUpdatedAtUtc?: string;
     createdByUser?: MoxfieldAuthor;
@@ -138,6 +143,9 @@ export interface NormalizedDeck {
     commander: string | null;
     format: string | null;
     author: string | null;
+    bracket: number | null;
+    autoBracket: number | null;
+    tags: string[];
     cards: RawDeckCard[];
 }
 

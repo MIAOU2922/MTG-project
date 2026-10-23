@@ -405,6 +405,8 @@ export default class ScryFallSync {
                 // Legalities card-level : identiques pour toutes les faces d'une
                 // carte double face (Scryfall ne les donne qu'au niveau carte)
                 legalities: card.legalities || {},
+                // game_changer est card-level aussi (liste Game Changers)
+                game_changer: card.game_changer ?? false,
             };
             if (source.cmc !== undefined) data.cmc = source.cmc ?? null;
             if (source.layout !== undefined) data.layout = source.layout || null;
@@ -426,6 +428,7 @@ export default class ScryFallSync {
                     keywords: source.keywords || [],
                     color_identities: source.color_identities || [],
                     legalities: card.legalities || {},
+                    game_changer: card.game_changer ?? false,
                 },
             });
         };
@@ -476,6 +479,7 @@ export default class ScryFallSync {
                     data: {
                         index: i,
                         name: face.name,
+                        printed_name: face.printed_name || null,
                         oracle_id: faceOracleId,
                         card_id: card.id,
                         type_line: face.type_line ?? card.type_line ?? null,
@@ -498,6 +502,7 @@ export default class ScryFallSync {
                 data: {
                     index: 0,
                     name: card.name,
+                    printed_name: card.printed_name || null,
                     oracle_id: card.oracle_id,
                     card_id: card.id,
                     type_line: card.type_line ?? null,

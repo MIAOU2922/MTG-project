@@ -94,8 +94,10 @@ Retourne toujours des données JSON avec les informations de l'instance.
 - Format: `{card_id}:{face_index}` pour supporter les cartes double face
 - Les coordonnées UV ont été supprimées (calculées côté client)
 
-#### **at1 : Liste des decks de l'utilisateur** ✨ NEW
-Retourne uniquement l'ID et le nom des decks créés par l'utilisateur.
+#### **at1 : Cartes de l'instance avec textes de jeu localisés** ✨ NEW
+Retourne les cartes de l'instance groupées par oracle (comme `at3` pour les
+rulings), avec tous les textes nécessaires pour jouer la carte dans la langue
+préférée de l'utilisateur (définie via `/al{code}`).
 
 **Endpoint:** `GET /at1`
 
@@ -107,29 +109,55 @@ Retourne uniquement l'ID et le nom des decks créés par l'utilisateur.
   "uid": "330ea1cc96e9",
   "time": 1728499200000,
   "data": {
-    "total_decks": 3,
-    "decks": [
+    "lang": "fr",
+    "total_cards": 6,
+    "cards": [
       {
-        "id": "deck-uuid-1",
-        "name": "Red Aggro"
-      },
-      {
-        "id": "deck-uuid-2",
-        "name": "Control Blue"
-      },
-      {
-        "id": "deck-uuid-3",
-        "name": "Beatdown"
+        "oracle_id": "8485cfaa-1dbf-432b-b5d0-92a6aa6a329b",
+        "ids": [
+          "14dc88ee-bba9-4625-af0d-89f3762a0ead",
+          "529451ef-2c7e-4566-8627-a1f25e010829"
+        ],
+        "lang": "fr",
+        "name": "Foudre",
+        "type_line": "Éphémère",
+        "mana_cost": "{R}",
+        "cmc": 1,
+        "oracle_text": "La Foudre inflige 3 blessures à n'importe quelle cible.",
+        "power": null,
+        "toughness": null,
+        "loyalty": null,
+        "colors": ["R"],
+        "color_identity": ["R"]
       }
     ]
   }
 }
 ```
 
+**Structure des données:**
+- **lang**: Langue demandée (langue préférée du user)
+- **total_cards**: Nombre de cartes groupées par oracle
+- **cards**: Une entrée par oracle unique
+  - **oracle_id**: Identifiant Oracle (partagé entre impressions)
+  - **ids**: UUIDs des cartes de l'instance portant cet oracle
+  - **lang**: Langue réellement utilisée (`fr`… ou `en` si aucune impression localisée n'existe)
+  - **name**: Nom localisé (retombée sur l'anglais)
+  - **type_line**: Type de la carte (localisé si disponible)
+  - **mana_cost**: Coût de mana (symboles, identique dans toutes les langues)
+  - **cmc**: Coût de mana converti
+  - **oracle_text**: Texte de la carte (texte imprimé localisé, retombée sur le texte oracle anglais)
+  - **power / toughness / loyalty**: Force / endurance / loyauté
+  - **colors / color_identity**: Couleurs de la face / identité couleur de l'oracle
+
+**Particularités:**
+- Groupé par oracle comme `at3` : une carte split (2 oracles) apparaît dans 2 groupes
+- La langue est liée au **user**, pas à l'instance — le même deck affiche des langues différentes selon le joueur
+- Requiert une instance active (404 sinon), comme les autres liens `/at`
+
 **Utilisation:**
-- Afficher la liste des decks de l'utilisateur
-- Chaque deck contient un `id` et un `name`
-- Pas besoin d'instance active (requiert seulement l'authentification utilisateur)
+- Afficher les cartes de l'instance dans la langue du joueur (règles, noms, types)
+- Rendu des cartes jouables côté client sans avoir besoin de l'image
 
 #### **at2 : Liste des sets MTG** ✨ NEW
 Retourne la liste complète des sets MTG disponibles dans la base de données.

@@ -92,6 +92,9 @@ export class DeckImporter {
             name: deck.name.slice(0, 255),
             description: deck.description?.slice(0, 10_000) ?? null,
             commander: deck.commander?.slice(0, 255) ?? null,
+            bracket: deck.bracket,
+            auto_bracket: deck.autoBracket,
+            tags: deck.tags,
         };
 
         // Regrouper les cartes résolues en zones (tableaux parallèles)

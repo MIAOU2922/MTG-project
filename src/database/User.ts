@@ -5,12 +5,14 @@ import Instance from "@/database/Instance";
 export default class User implements IUser {
     public readonly id: string;
     public readonly ip_hash: string | null;
+    public readonly lang: string;
     public readonly created_at: Date;
     public readonly last_seen_at: Date;
 
     constructor(data: IUser) {
         this.id = data.id;
         this.ip_hash = data.ip_hash;
+        this.lang = data.lang;
         this.created_at = data.created_at;
         this.last_seen_at = data.last_seen_at;
     }
@@ -55,6 +57,15 @@ export default class User implements IUser {
             where: { user_ids: { has: this.id } }
         });
         return instance ? new Instance(instance) : null;
+    }
+
+    /** Définit la langue préférée de l'utilisateur (stockée sur le user, pas l'instance) */
+    public async setLang(lang: string): Promise<User> {
+        const user = await Database.prisma.user.update({
+            where: { id: this.id },
+            data: { lang },
+        });
+        return new User(user);
     }
 
     public async updateLastSeen(): Promise<User> {

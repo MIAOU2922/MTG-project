@@ -44,6 +44,9 @@ export interface IDeck {
     name: string;
     description: string | null;
     commander: string | null;
+    bracket: number | null;
+    auto_bracket: number | null;
+    tags: string[];
     created_at: Date;
     updated_at: Date;
 }
@@ -59,6 +62,9 @@ export default class Deck implements IDeck {
     public readonly name: string;
     public readonly description: string | null;
     public readonly commander: string | null;
+    public readonly bracket: number | null;
+    public readonly auto_bracket: number | null;
+    public readonly tags: string[];
     public readonly created_at: Date;
     public readonly updated_at: Date;
 
@@ -73,6 +79,9 @@ export default class Deck implements IDeck {
         this.name = data.name;
         this.description = data.description;
         this.commander = data.commander;
+        this.bracket = data.bracket ?? null;
+        this.auto_bracket = data.auto_bracket ?? null;
+        this.tags = data.tags ?? [];
         this.created_at = data.created_at;
         this.updated_at = data.updated_at;
     }

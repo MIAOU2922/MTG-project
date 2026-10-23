@@ -8,6 +8,7 @@ import type {
     MoxfieldBoard,
     MoxfieldBoardCard,
     MoxfieldDeck,
+    MoxfieldDeckSearchItem,
     NormalizedDeck,
     RawDeckCard
 } from "./types";
@@ -40,7 +41,10 @@ const SKIPPED_BOARDS = new Set(["tokens"]);
 /** Formats où la carte "à la une" d'un deck est bien le commander */
 const COMMANDER_FORMATS = /commander|brawl|oathbreaker|edh/i;
 
-export function normalizeDeck(deck: MoxfieldDeck): NormalizedDeck {
+export function normalizeDeck(
+    deck: MoxfieldDeck,
+    searchMetadata?: Pick<MoxfieldDeckSearchItem, "bracket" | "autoBracket" | "hubNames" | "tags">
+): NormalizedDeck {
     const cards: RawDeckCard[] = [];
 
     for (const [boardName, board] of Object.entries(deck.boards ?? {})) {
@@ -70,6 +74,14 @@ export function normalizeDeck(deck: MoxfieldDeck): NormalizedDeck {
         commander,
         format: deck.format ?? null,
         author: deck.createdByUser?.userName ?? deck.authors?.[0]?.userName ?? null,
+        bracket: deck.bracket ?? searchMetadata?.bracket ?? null,
+        autoBracket: deck.autoBracket ?? searchMetadata?.autoBracket ?? null,
+        tags: [...new Set([
+            ...(deck.tags ?? []),
+            ...(deck.hubNames ?? []),
+            ...(searchMetadata?.tags ?? []),
+            ...(searchMetadata?.hubNames ?? [])
+        ].map(tag => tag.trim()).filter(Boolean))],
         cards
     };
 }

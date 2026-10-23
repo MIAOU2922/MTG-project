@@ -58,8 +58,8 @@ function parseAdQuery(queryParam: string): ParsedQuery {
             break;
         case 'list':
             // list:search_name:format:author:commander
-            //   - sans params : liste les decks de l'utilisateur
-            //   - avec params : recherche publique (decks importés), filtres
+            //   - sans params : liste les decks importés depuis une source
+            //   - avec params : recherche publique parmi les decks importés, filtres
             //     optionnels par nom (partiel), format exact, auteur (partiel)
             //     et commander (partiel). La recherche est forwardée au scraper
             //     Moxfield (re-scraping en arrière-plan pour rafraîchir la BDD).
@@ -341,6 +341,9 @@ async function handleLoad(
                 format: deck.format,
                 author: deck.author,
                 source_url: deck.source_url,
+                bracket: deck.bracket,
+                auto_bracket: deck.auto_bracket,
+                tags: deck.tags,
                 unique_cards: uniqueCardIds.length,
                 total_cards: deckSize,
                 cards_added_to_instance: cardIds.length,
@@ -376,17 +379,17 @@ function handleRefreshStatus(res: Response, user: any): Response {
 }
 
 /**
- * LIST action: List user's decks or search public decks
+ * LIST action: List imported decks or search them publicly
  *
  * Formes :
- *   list                      → decks de l'utilisateur
+ *   list                      → decks importés depuis Moxfield
  *   list:<nom>                → recherche publique par nom (partiel)
  *   list::<format>            → decks publics d'un format (ex: commander)
- *   list:::<auteur>           → decks publics d'un auteur Moxfield
+ *   list:::<auteur>           → decks d'un auteur Moxfield
  *   list::::<commander>       → decks publics avec ce commander (partiel)
  *   list:<nom>:<format>:<auteur>:<commander> → combinaison
  *
- * ⚡ Live refresh : toute recherche publique (au moins un filtre) est aussi
+ * ⚡ Live refresh : toute recherche filtrée (au moins un filtre) est aussi
  *   forwardée au scraper Moxfield, qui re-scrape en arrière-plan les decks
  *   correspondants pour mettre la BDD à jour (voir `refresh` dans la réponse).
  */
@@ -403,89 +406,70 @@ async function handleList(
         let deckEntries: Array<Record<string, unknown>> = [];
         let matchingTotalCount: number;
 
-        if (deckName || listFormat || listAuthor || listCommander) {
-            // ==== Recherche publique (decks importés) avec filtres ====
-            const where: any = { source: { not: null } };
-            if (deckName) where.name = { contains: deckName, mode: 'insensitive' };
-            if (listFormat) where.format = listFormat.toLowerCase();
-            if (listAuthor) where.author = { contains: listAuthor, mode: 'insensitive' };
-            if (listCommander) where.commander = { contains: listCommander, mode: 'insensitive' };
+        // L'API ne liste que les decks importés depuis une source (Moxfield).
+        // Les decks sans source ne sont pas exposés, même dans la liste par défaut.
+        const where: any = { source: { not: null } };
+        if (deckName) where.name = { contains: deckName, mode: 'insensitive' };
+        if (listFormat) where.format = listFormat.toLowerCase();
+        if (listAuthor) where.author = { contains: listAuthor, mode: 'insensitive' };
+        if (listCommander) where.commander = { contains: listCommander, mode: 'insensitive' };
 
-            const [rows, totalCount] = await Promise.all([
-                Database.prisma.deck.findMany({
-                    where,
-                    orderBy: { created_at: 'desc' },
-                    take: 200, // Limite de sécurité pour la réponse
-                    select: {
-                        id: true,
-                        name: true,
-                        description: true,
-                        commander: true,
-                        user_id: true,
-                        source: true,
-                        source_id: true,
-                        source_url: true,
-                        format: true,
-                        author: true,
-                        created_at: true,
-                        updated_at: true,
-                        _count: { select: { zones: true } }
-                    }
-                }),
-                Database.prisma.deck.count({ where })
-            ]);
-            matchingTotalCount = totalCount;
+        const [rows, totalCount] = await Promise.all([
+            Database.prisma.deck.findMany({
+                where,
+                orderBy: { created_at: 'desc' },
+                take: 200, // Limite de sécurité pour la réponse
+                select: {
+                    id: true,
+                    name: true,
+                    description: true,
+                    commander: true,
+                    user_id: true,
+                    source: true,
+                    source_id: true,
+                    source_url: true,
+                    format: true,
+                    author: true,
+                    bracket: true,
+                    auto_bracket: true,
+                    tags: true,
+                    created_at: true,
+                    updated_at: true
+                }
+            }),
+            Database.prisma.deck.count({ where })
+        ]);
+        matchingTotalCount = totalCount;
 
-            // Nombre total d'exemplaires par deck (somme des counts des zones)
-            const zoneRows = await Database.prisma.deckZone.findMany({
-                where: { deck_id: { in: rows.map(r => r.id) } },
-                select: { deck_id: true, counts: true }
-            });
-            const sizeMap = new Map<string, number>();
-            for (const z of zoneRows) {
-                sizeMap.set(z.deck_id, (sizeMap.get(z.deck_id) ?? 0) + z.counts.reduce((a, b) => a + b, 0));
-            }
-
-            deckEntries = rows.map((r: any) => ({
-                id: r.id,
-                name: r.name,
-                description: r.description,
-                commander: r.commander,
-                owner_id: r.user_id,
-                is_owner: r.user_id === user.id,
-                source: r.source,
-                source_id: r.source_id,
-                source_url: r.source_url,
-                format: r.format,
-                author: r.author,
-                cards_count: sizeMap.get(r.id) ?? 0,
-                created_at: r.created_at,
-                updated_at: r.updated_at
-            }));
-        } else {
-            // ==== Decks de l'utilisateur ====
-            const decks = await Deck.findByUserId(user.id);
-            matchingTotalCount = await Database.prisma.deck.count({ where: { user_id: user.id } });
-
-            deckEntries = await Promise.all(
-                decks.map(async (deck) => ({
-                    id: deck.id,
-                    name: deck.name,
-                    description: deck.description,
-                    commander: deck.commander,
-                    owner_id: deck.user_id,
-                    is_owner: deck.user_id === user.id,
-                    source: deck.source,
-                    source_id: deck.source_id,
-                    source_url: deck.source_url,
-                    format: deck.format,
-                    author: deck.author,
-                    cards_count: await deck.getDeckSize(),
-                    created_at: deck.created_at,
-                    updated_at: deck.updated_at
-                }))
-            );
+        // Nombre total d'exemplaires par deck (somme des counts des zones)
+        const zoneRows = await Database.prisma.deckZone.findMany({
+            where: { deck_id: { in: rows.map(r => r.id) } },
+            select: { deck_id: true, counts: true }
+        });
+        const sizeMap = new Map<string, number>();
+        for (const z of zoneRows) {
+            sizeMap.set(z.deck_id, (sizeMap.get(z.deck_id) ?? 0) + z.counts.reduce((a, b) => a + b, 0));
         }
+
+        deckEntries = rows.map((r: any) => ({
+            id: r.id,
+            name: r.name,
+            description: r.description,
+            commander: r.commander,
+            owner_id: r.user_id,
+            is_owner: r.user_id === user.id,
+            source: r.source,
+            source_id: r.source_id,
+            source_url: r.source_url,
+            format: r.format,
+            author: r.author,
+            bracket: r.bracket,
+            auto_bracket: r.auto_bracket,
+            tags: r.tags,
+            cards_count: sizeMap.get(r.id) ?? 0,
+            created_at: r.created_at,
+            updated_at: r.updated_at
+        }));
 
         // ⚡ Forward de la recherche au scraper Moxfield (re-scraping ciblé,
         // jamais bloquant : la réponse part immédiatement, le crawl tourne en

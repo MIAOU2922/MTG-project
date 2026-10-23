@@ -16,7 +16,14 @@
 import { MoxfieldClient, MoxfieldError, MoxfieldNotFoundError } from "./client";
 import { DeckImporter } from "./importer";
 import { summarize } from "./normalize";
-import type { CrawlStats, ImportResult, MoxfieldDeckSearchResponse } from "./types";
+import type {
+    CrawlStats,
+    ImportResult,
+    MoxfieldDeckSearchItem,
+    MoxfieldDeckSearchResponse
+} from "./types";
+
+type SearchMetadata = Pick<MoxfieldDeckSearchItem, "bracket" | "autoBracket" | "hubNames" | "tags">;
 
 export interface CrawlerOptions {
     /** Délai additionnel entre deux fetches de deck (en plus du throttle client) */
@@ -157,7 +164,7 @@ export class MoxfieldCrawler {
             }
             for (const item of res.data) {
                 if (this.limitCount >= maxDecks) break;
-                await this.importByPublicId(item.publicId, item.name);
+                await this.importByPublicId(item.publicId, item.name, item);
             }
             if (this.limitCount >= maxDecks) break;
             if (page >= res.totalPages || res.data.length === 0) break;
@@ -303,7 +310,7 @@ export class MoxfieldCrawler {
                     for (const item of res.data) {
                         if (this.limitCount >= maxDecks || total >= maxDecksPerUser) break;
                         total++;
-                        await this.importByPublicId(item.publicId, item.name);
+                        await this.importByPublicId(item.publicId, item.name, item);
                     }
                     if (page >= res.totalPages || res.data.length === 0) break;
                 }
@@ -360,7 +367,11 @@ export class MoxfieldCrawler {
     // -------------------------------------------------------------------------
 
     /** Importe un deck par publicId, en dédupliquant et en respectant les limites. */
-    private async importByPublicId(publicId: string, name?: string): Promise<void> {
+    private async importByPublicId(
+        publicId: string,
+        name?: string,
+        searchMetadata?: SearchMetadata
+    ): Promise<void> {
         if (this.seen.has(publicId)) return;
         this.seen.add(publicId);
         this.stats.discovered++;
@@ -374,7 +385,7 @@ export class MoxfieldCrawler {
         try {
             const deck = await this.client.getDeck(publicId);
             const { normalizeDeck } = await import("./normalize");
-            const normalized = normalizeDeck(deck);
+            const normalized = normalizeDeck(deck, searchMetadata);
             const result = await this.importer.importDeck(normalized, { refresh: this.refresh });
 
             this.record(result);
@@ -422,11 +433,11 @@ export class MoxfieldCrawler {
             });
             // Lots de `deckConcurrency` : les imports (fetch + BDD) se chevauchent,
             // les départs HTTP restent cadencés par le throttle global du client.
-            let batch: Array<{ publicId: string; name?: string }> = [];
+            let batch: Array<{ publicId: string; name?: string; searchMetadata?: SearchMetadata }> = [];
             for (const item of res.data) {
                 if (this.limitCount >= maxDecks || total >= maxPerQuery) break;
                 total++;
-                batch.push(item);
+                batch.push({ publicId: item.publicId, name: item.name, searchMetadata: item });
                 if (batch.length >= this.deckConcurrency) {
                     await this.importBatch(batch);
                     batch = [];
@@ -439,8 +450,12 @@ export class MoxfieldCrawler {
     }
 
     /** Importe un lot de decks en parallèle (départs espacés par le throttle). */
-    private async importBatch(items: Array<{ publicId: string; name?: string }>): Promise<void> {
-        await Promise.all(items.map(item => this.importByPublicId(item.publicId, item.name)));
+    private async importBatch(
+        items: Array<{ publicId: string; name?: string; searchMetadata?: SearchMetadata }>
+    ): Promise<void> {
+        await Promise.all(items.map(item =>
+            this.importByPublicId(item.publicId, item.name, item.searchMetadata)
+        ));
     }
 
     /** Résout un nom de carte vers l'ID interne Moxfield (via /v3/cards/named). */

@@ -1,7 +1,6 @@
 import { Request, Response, Router } from "express";
 import User from "@/database/User";
 import Instance from "@/database/Instance";
-import Deck from "@/database/Deck";
 import { getUserId } from "@/utils";
 import Database from "@/database/Database";
 import fs from "fs";
@@ -54,7 +53,7 @@ async function atHandler(req: Request, res: Response) {
         const isAtlasResponse = linkIndex >= 10; // Les liens 10+ sont des atlas d'images
 
         if (isJsonResponse) {
-            const data = await generateJsonData(linkIndex, playerInstance, user.id);
+            const data = await generateJsonData(linkIndex, playerInstance, user);
             return res.json({
                 link_type: 't',
                 link_id: linkIndex.toString(),
@@ -107,7 +106,7 @@ async function atHandler(req: Request, res: Response) {
             const returnJson = Math.random() < 0.5;
 
             if (returnJson) {
-                const data = await generateJsonData(linkIndex, playerInstance, user.id);
+                const data = await generateJsonData(linkIndex, playerInstance, user);
                 return res.json({
                     link_type: 't',
                     link_id: linkIndex.toString(),
@@ -159,33 +158,6 @@ async function managePlayerInstance(user: User): Promise<Instance | null> {
 async function cleanupOldPlayerAssociations(currentUserId: string): Promise<void> {
     // Cette logique peut être étendue selon les besoins
     // Pour l'instant, on ne fait rien de spécial
-}
-
-/**
- * Génère la liste des decks de l'utilisateur
- * at1 : Retourne juste l'ID et le nom de chaque deck
- */
-async function generateDeckListData(userId: string): Promise<any> {
-    try {
-        const userDecks = await Deck.findByUserId(userId);
-        
-        const decksList = userDecks.map((deck) => ({
-            id: deck.id,
-            name: deck.name
-        }));
-
-        return {
-            total_decks: decksList.length,
-            decks: decksList
-        };
-    } catch (error) {
-        console.error('Error generating deck list:', error);
-        return {
-            total_decks: 0,
-            decks: [],
-            error: 'Failed to fetch decks'
-        };
-    }
 }
 
 /**
@@ -374,13 +346,159 @@ async function generateInstanceCardsData(instance: Instance): Promise<any> {
 }
 
 /**
+ * Génère les données de jeu localisées de l'instance, groupées par oracle
+ * (comme at3 pour les rulings). Pour chaque oracle unique :
+ *  - ids : les cartes de l'instance qui portent cet oracle
+ *  - name / type_line / mana_cost / cmc / oracle_text / power / toughness /
+ *    loyalty / colors / color_identity : dans la langue préférée du user
+ *    (retombée sur l'anglais si aucun print dans cette langue n'existe).
+ * at1 : Retourne les cartes de l'instance prêtes à jouer, dans la langue du user
+ */
+async function generatePlayData(instance: Instance, lang: string): Promise<any> {
+    try {
+        const cardIds = instance.card_ids;
+
+        if (cardIds.length === 0) {
+            return {
+                total_cards: 0,
+                lang,
+                cards: []
+            };
+        }
+
+        // UUIDs de base (sans le suffixe :N des faces)
+        const baseCardIds = new Set<string>();
+        cardIds.forEach(cardId => baseCardIds.add(cardId.split(':')[0]));
+
+        // 1) Les prints exacts de l'instance avec leurs faces + oracles
+        const cards = await Database.prisma.card.findMany({
+            where: { id: { in: Array.from(baseCardIds) } },
+            include: {
+                faces: { include: { oracle: true } },
+            },
+        });
+        const cardMap = new Map(cards.map(card => [card.id, card]));
+
+        // 2) Grouper par oracle_id : chaque face compte (une carte split
+        //    appartient à autant de groupes qu'elle a de faces/oracles)
+        const groupIds = new Map<string, Set<string>>();  // oracleId → card ids
+        const primaryFaces = new Map<string, { card: any, face: any }>(); // oracleId → face du print de l'instance
+
+        for (const cardId of baseCardIds) {
+            const card = cardMap.get(cardId);
+            if (!card) continue;
+            for (const face of card.faces) {
+                const oracleId = face.oracle_id;
+                if (!oracleId) continue;
+                if (!groupIds.has(oracleId)) groupIds.set(oracleId, new Set());
+                groupIds.get(oracleId)!.add(card.id);
+                if (!primaryFaces.has(oracleId)) {
+                    primaryFaces.set(oracleId, { card, face });
+                }
+            }
+        }
+
+        // 3) Prints localisés : pour chaque oracle, trouver un print dans la
+        //    langue du user (retombée : print anglais)
+        const langPrefs = lang === 'en' ? ['en'] : [lang, 'en'];
+        const oracleIdsArr = Array.from(groupIds.keys());
+
+        const localizedPrints = oracleIdsArr.length === 0 ? [] : await Database.prisma.card.findMany({
+            where: {
+                lang: { in: langPrefs },
+                faces: { some: { oracle_id: { in: oracleIdsArr } } },
+            },
+            include: {
+                faces: { where: { oracle_id: { in: oracleIdsArr } } },
+            },
+        });
+
+        const langScore = (l: string) => (l === lang ? 2 : l === 'en' ? 1 : 0);
+        const localizedByOracle = new Map<string, { card: any, face: any, lang: string }>();
+        for (const print of localizedPrints) {
+            for (const face of print.faces) {
+                const oracleId = face.oracle_id;
+                if (!oracleId) continue;
+                const existing = localizedByOracle.get(oracleId);
+                if (!existing || langScore(print.lang) > langScore(existing.lang)) {
+                    localizedByOracle.set(oracleId, { card: print, face, lang: print.lang });
+                }
+            }
+        }
+
+        // 4) Construire la réponse, une entrée par oracle
+        const cardsData = Array.from(groupIds.entries()).map(([oracleId, idsSet]) => {
+            const loc = localizedByOracle.get(oracleId);
+            const primary = primaryFaces.get(oracleId);
+
+            const card = loc?.card ?? primary?.card;
+            const face = loc?.face ?? primary?.face;
+            // L'oracle (cmc, color_identity, texte anglais) vient TOUJOURS du
+            // print de l'instance : les prints localisés sont inclus sans oracle.
+            const oracle = primary?.face?.oracle ?? face?.oracle;
+
+            // Nom : face localisée → nom imprimé card-level (simple face) → anglais
+            const name = face?.printed_name
+                ?? card?.printed_name
+                ?? primary?.face?.name
+                ?? face?.name
+                ?? card?.name
+                ?? null;
+
+            return {
+                oracle_id: oracleId,
+                ids: Array.from(idsSet),
+                lang: loc?.lang ?? card?.lang ?? lang,
+                name,
+                type_line: face?.printed_type_line ?? face?.type_line ?? null,
+                mana_cost: face?.mana_cost ?? null,
+                cmc: oracle?.cmc ?? null,
+                oracle_text: face?.printed_text ?? oracle?.text ?? '',
+                power: face?.power ?? null,
+                toughness: face?.toughness ?? null,
+                loyalty: face?.loyalty ?? null,
+                colors: face?.colors ?? [],
+                color_identity: oracle?.color_identities ?? [],
+            };
+        });
+
+        // Ordre stable : ordre d'apparition dans l'instance
+        const order = new Map<string, number>();
+        let idx = 0;
+        for (const cardId of baseCardIds) {
+            const card = cardMap.get(cardId);
+            if (!card) continue;
+            for (const face of card.faces) {
+                const oracleId = face.oracle_id;
+                if (oracleId && !order.has(oracleId)) order.set(oracleId, idx++);
+            }
+        }
+        cardsData.sort((a, b) => (order.get(a.oracle_id) ?? 0) - (order.get(b.oracle_id) ?? 0));
+
+        return {
+            total_cards: cardsData.length,
+            lang,
+            cards: cardsData
+        };
+    } catch (error) {
+        console.error('Error generating localized play data:', error);
+        return {
+            total_cards: 0,
+            lang,
+            cards: [],
+            error: 'Failed to fetch card play data'
+        };
+    }
+}
+
+/**
  * Génère les données JSON pour un lien donné
  * Utilise le même calcul de coordonnées UV que le script Python
  */
-async function generateJsonData(linkIndex: number, instance: Instance, userId: string): Promise<any> {
-    // at1 : Retourner la liste des decks de l'utilisateur
+async function generateJsonData(linkIndex: number, instance: Instance, user: User): Promise<any> {
+    // at1 : Cartes de l'instance avec les textes de jeu dans la langue du user
     if (linkIndex === 1) {
-        return generateDeckListData(userId);
+        return generatePlayData(instance, user.lang);
     }
 
     // at2 : Retourner la liste des sets MTG et des types de sets

@@ -351,10 +351,10 @@ GET /as?q=name:bolt+set:m21+lang:fr
 #### Recherche & Chargement de Decks
 
 ```bash
-# Lister mes decks
+# Lister les decks importés depuis Moxfield
 GET /ad?q=list
 
-# Rechercher les decks publics (forward au scraper Moxfield)
+# Rechercher les decks importés (forward au scraper Moxfield)
 GET /ad?q=list:winota:commander:
 
 # Charger un deck sauvegardé dans l'instance

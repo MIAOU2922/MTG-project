@@ -4,7 +4,10 @@ Recherche de decks en base et chargement dans l'instance. Les actions
 `parse`/`save`/`delete` n'existent plus. Les recherches publiques déclenchent
 un re-scraping Moxfield en arrière-plan ; les chargements tentent aussi un
 re-scraping individuel avant d'utiliser le deck, avec repli sur la dernière
-copie en BDD si la source est indisponible.
+copie en BDD si la source est indisponible. L'API ne crée ni ne modifie de
+decks enregistrés : elle expose uniquement les decks importés et permet de
+rafraîchir leurs données depuis Moxfield. L'action `load` ajoute les cartes à
+l'instance active, sans enregistrer un deck utilisateur.
 
 ## Endpoint
 
@@ -56,6 +59,9 @@ applicable.
 ```json
 {
   "deck_type": "saved",
+  "bracket": 3,
+  "auto_bracket": 3,
+  "tags": ["cedh", "combo"],
   "cards_by_zone": {
     "main": [
       { "count": 1, "name": "Lightning Bolt", "card_id": "..." }
@@ -79,9 +85,9 @@ GET /ad?q=load:550e8400-e29b-41d4-a716-446655440000
 
 ### 2. `list` - Lister les decks / rechercher les decks importés
 
-**Description:** Liste les decks de l'utilisateur ou cherche dans les decks
-publics importés (Moxfield) avec filtres par **nom**, **format**, **auteur**
-et **commander**.
+**Description:** Liste uniquement les decks importés depuis Moxfield avec
+filtres optionnels par **nom**, **format**, **auteur** et **commander**.
+Sans filtre, retourne les decks importés les plus récemment ajoutés.
 
 **Syntaxe:**
 ```
@@ -98,10 +104,13 @@ et **commander**.
 - `format` - format exact (ex: `commander`, `modern`, `standard`)
 - `author` - pseudo Moxfield partiel (insensible à la casse)
 - `commander` - nom du commander partiel (insensible à la casse)
-- Si les 4 sont absents : liste les decks de l'utilisateur.
+- Si les 4 sont absents : liste les decks importés, sans filtre.
 
 Chaque deck retourné contient désormais : `source`, `source_id`, `source_url`,
-`format`, `author`, `cards_count`, `created_at`, `updated_at`, `is_owner`.
+`format`, `author`, `bracket`, `auto_bracket`, `tags`, `cards_count`,
+`created_at`, `updated_at`, `is_owner`. `bracket` et `auto_bracket` sont
+`null` si Moxfield ne les fournit pas ; `tags` est une liste vide si aucun tag
+n'est disponible.
 Limite : 200 résultats, triés par `created_at` décroissant.
 La réponse conserve `decks_count` et ajoute `returned_count` (nombre de decks
 dans la réponse) et `matching_total_count` (nombre total de decks correspondant
@@ -112,7 +121,7 @@ utilisateur authentifié. Cet état est conservé en BDD afin que les endpoints
 statiques fonctionnent également après un redémarrage du serveur.
 
 **⚡ Live refresh (re-scraping automatique) :**
-Toute recherche publique (au moins un filtre) est aussi **forwardée au scraper
+Toute recherche filtrée (au moins un filtre) est aussi **forwardée au scraper
 Moxfield**, qui re-scrape en arrière-plan les decks correspondants pour mettre
 la BDD à jour (les decks existants sont rafraîchis, les nouveaux sont importés).
 - `commander` → re-scrape tous les decks avec ce commander
@@ -129,7 +138,7 @@ couper.
 
 **Exemples:**
 ```
-# Lister mes decks
+# Lister les decks importés depuis Moxfield
 GET /ad?q=list
 
 # Chercher les decks publics contenant "Lightning"
@@ -151,7 +160,7 @@ GET /ad?q=list::::Winota
 ### 3. `/adrefresh` - Rejouer la dernière recherche
 
 **Description:** Rejoue contre la BDD les filtres de la dernière requête `list`
-de l'utilisateur et retourne les résultats actuels, sans créer un nouveau job
+de l'utilisateur et retourne les decks importés actuels, sans créer un nouveau job
 de scraping. L'application peut rappeler cette route après quelques secondes
 (par exemple après 30 secondes) pour récupérer les decks mis à jour par le
 scraping déclenché lors de la recherche initiale.
@@ -289,8 +298,14 @@ Toutes les réponses partagent l'en-tête standardisé :
         "name": "Red Aggro",
         "description": "Fast red deck",
         "commander": null,
-        "owner_id": "330ea1cc96e9",
-        "is_owner": true,
+        "source": "moxfield",
+        "source_id": "fwq-lH-fckSltIk_I_Thrg",
+        "source_url": "https://moxfield.com/decks/fwq-lH-fckSltIk_I_Thrg",
+        "format": "commander",
+        "author": "ExampleAuthor",
+        "bracket": 3,
+        "auto_bracket": 3,
+        "tags": ["cedh", "combo"],
         "cards_count": 60,
         "created_at": "2026-09-19T10:00:00.000Z",
         "updated_at": "2026-09-19T10:00:00.000Z"
@@ -317,10 +332,11 @@ Toutes les réponses partagent l'en-tête standardisé :
 
 - **Chargement** (`load`): N'importe quel utilisateur peut charger n'importe
   quel deck public sauvegardé
-- **Listing** (`list`): l'utilisateur voit ses decks et peut chercher les
-  decks publics importés
-- **Écriture** : aucune — la route ne modifie plus la BDD ; seule la
-  recherche `list` déclenche un re-scraping Moxfield en arrière-plan
+- **Listing** (`list`): uniquement les decks importés depuis une source,
+  sans exposer les decks utilisateur sans source
+- **Écriture** : aucun deck utilisateur n'est créé ou modifié par l'API ;
+  une recherche filtrée peut déclencher un re-scraping Moxfield, qui met à
+  jour les decks importés. `load` ajoute les cartes du deck à l'instance active.
 
 ---
 
@@ -375,8 +391,8 @@ string fullUrl = "https://mtg.hactazia.fr/ad?q=" + query;
 - Chaque chargement re-scrape les decks Moxfield si possible et retombe sur
   la version en BDD si la source est indisponible
 - Le deck size inclut les répétitions (2x Lightning Bolt = 2 dans le total)
-- `list` sans filtre → decks de l'utilisateur ; avec au moins un filtre →
-  recherche publique (decks importés) + forward au scraper Moxfield
+- `list` sans filtre → decks importés ; avec au moins un filtre → recherche
+  ciblée parmi les decks importés + forward au scraper Moxfield
 - `refresh` → état de la file de re-scraping (`liveRefresh.status()`)
 - Retour du `load` : cartes groupées par zone avec `count` et flag
   `is_commander` optionnel

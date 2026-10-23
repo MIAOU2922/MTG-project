@@ -91,6 +91,9 @@ En plus des cartes : `decks.source/source_id/source_url`, **`decks.format`**
 (commander, modern, standard, commanderPrecons, none…), **`decks.author`**
 (pseudo Moxfield du créateur), `decks.commander` (nom, uniquement pour les
 formats à commander).
+`decks.bracket` et `decks.auto_bracket` (bracket manuel et estimation
+automatique, lorsqu'ils sont fournis par Moxfield), ainsi que `decks.tags`
+(tags/hubs Moxfield, liste vide si aucun tag n'est disponible).
 
 ### Mode sweep (longue durée)
 

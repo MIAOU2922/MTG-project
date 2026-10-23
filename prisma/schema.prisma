@@ -14,6 +14,7 @@ datasource db {
 model User {
   id           String   @id // clé 12 hex, utilisée directement comme identifiant
   ip_hash      String? // hash SHA-256 de la dernière IP connue — jamais d'IP en clair (non unique : plusieurs users par IP)
+  lang         String   @default("en") // langue préférée de l'utilisateur (code Scryfall : en, fr, it, ...)
   created_at   DateTime @default(now()) @db.Timestamptz(3)
   last_seen_at DateTime @default(now()) @updatedAt @db.Timestamptz(3)
   @@map("users")
@@ -51,6 +52,7 @@ model Oracle {
   keywords         String[]
   layout           String?
   legalities       Json     @default("{}")
+  game_changer     Boolean  @default(false)
 
   faces   Face[]
   rulings Ruling[]
@@ -84,6 +86,7 @@ model Card {
 model Face {
   index             Int      @default(0)
   name              String
+  printed_name      String? // nom imprimé localisé (per-face pour les cartes multi-faces)
   oracle_id         String?  @db.Uuid
   card_id           String   @db.Uuid
   // Champs qui varient PAR FACE (cartes double face partagent un oracle)
@@ -154,6 +157,9 @@ model Deck {
   name        String
   description String?
   commander   String?
+  bracket      Int?
+  auto_bracket Int?
+  tags         String[] @default([])
   created_at  DateTime @default(now()) @db.Timestamptz(3)
   updated_at  DateTime @default(now()) @updatedAt @db.Timestamptz(3)
   

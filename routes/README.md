@@ -39,6 +39,7 @@ Toutes les routes suivent une structure JSON cohérente pour faciliter l'intégr
 | [/as](as/asREADME.md) | `s` (search) | Rechercher des cartes MTG | Oui |
 | [/ad](ad/adREADME.md) | `d` (deck) | Gestion des decks | Oui |
 | [/at](at/atREADME.md) | `t` (texture) | Liens statiques & atlas | Oui |
+| [/al](al/alREADME.md) | `l` (lang) | Langue préférée de l'utilisateur | Oui |
 | [/au](au/auREADME.md) | `u` (user) | Identité : enregistrement (`/aur`) et login (`/aul…`) | Oui |
 
 ## 📊 Détails par Route
@@ -129,7 +130,7 @@ Toutes les routes suivent une structure JSON cohérente pour faciliter l'intégr
 
 **Actions et endpoints disponibles :**
 - `load`: Charger un deck sauvegardé (UUID) dans l'instance
-- `list`: Lister mes decks / rechercher les decks importés (forward au scraper Moxfield)
+- `list`: Lister les decks importés / rechercher avec filtres (forward au scraper Moxfield)
 - `refresh`: État de la file de re-scraping Moxfield
 - `/adrefresh`: Rejouer les filtres de la dernière liste de l'utilisateur et récupérer les données actuelles de la BDD
 - `/adl{index}`: Charger dans l'instance un deck de la dernière liste, avec index base36 commençant à 0
@@ -165,11 +166,36 @@ Retourne une image PNG d'atlas (6×4 cartes, max 2048px).
 
 **Liens spéciaux:**
 - `at0`: Liste des cartes de l'instance avec batches
-- `at1`: Liste des decks de l'utilisateur
+- `at1`: Cartes de l'instance avec les textes de jeu (nom, type, cmc, texte oracle, power/toughness/loyauté…) dans la langue du user
 - `at2`: Liste des sets MTG
 - `at3`: Cartes avec légalités et rulings
 
 **Usage:** Système de liens statiques pour accéder au contenu dynamique.
+
+---
+
+### `/al` - Langue de l'Utilisateur
+
+**Type:** `l` (lang)
+
+```json
+{
+  "link_type": "l",
+  "link_id": "fr",
+  "iid": null,
+  "uid": "330ea1cc96e9",
+  "time": 1728499200000,
+  "data": {
+    "lang": "fr"
+  }
+}
+```
+
+**Endpoints:**
+- `GET /al` : langue actuelle de l'utilisateur + liste des langues supportées
+- `GET /al{code}` : définit la langue (liens statiques : `/alen`, `/alfr`, `/alit`, …) — 400 `unsupported_language` si le code est inconnu
+
+**Usage:** La langue est liée au **user** (pas à l'instance) et sert notamment à `/at1` qui renvoie les textes de jeu des cartes dans cette langue.
 
 ---
 
