@@ -12,8 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: MTG_TickableCard
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: a8580c54e2d033840a2576ee70cd7bec,
-    type: 2}
+  serializedUdonProgramAsset: {fileID: 11400000, guid: 1a8e6a8fb8d043746ab8b594f8336963, type: 2}
   udonAssembly: 
   assemblyError: 
   sourceCsScript: {fileID: 11500000, guid: a1c933a5adfcef941bea469df67e1ccd, type: 3}

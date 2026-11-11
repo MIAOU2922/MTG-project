@@ -12,8 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: MTG_DeckInterface
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: 0ceee6e3d5db50148a19edce15aa3dcc,
-    type: 2}
+  serializedUdonProgramAsset: {fileID: 11400000, guid: 06dc39e24e4100c4c8a716030d87f370, type: 2}
   udonAssembly: 
   assemblyError: 
   sourceCsScript: {fileID: 11500000, guid: 09a8a4ed122528549afc5a50c896e287, type: 3}
