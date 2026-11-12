@@ -28,7 +28,7 @@ namespace MTG
 
         [Header("=== URLS ===")]
 #if !COMPILER_UDONSHARP && UNITY_EDITOR
-        [SerializeField] public static VRCUrl BaseURL = new VRCUrl("https://mtg.hactazia.fr/a");
+        [SerializeField] public static VRCUrl BaseURL = new VRCUrl("https://mtg.polyc.be/a");
 #endif
         public VRCUrl CreateURL; //ac
         public VRCUrl SearchURL; //as?q

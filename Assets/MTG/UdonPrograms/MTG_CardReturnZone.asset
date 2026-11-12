@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: MTG_CardReturnZone
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: 3e03f601501ae6d4eb15cdd20308d20b, type: 2}
+  serializedUdonProgramAsset: {fileID: 11400000, guid: fc1f92aad2dc0074ebf055c3f1198c2c,
+    type: 2}
   udonAssembly: 
   assemblyError: 
   sourceCsScript: {fileID: 11500000, guid: e3c5bd73b1c3c8544842b7e513867329, type: 3}

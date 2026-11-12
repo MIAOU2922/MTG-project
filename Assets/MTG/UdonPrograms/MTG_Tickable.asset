@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: MTG_Tickable
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: ca455fe7fafbd574e96c63577857e2da, type: 2}
+  serializedUdonProgramAsset: {fileID: 11400000, guid: c0afee291fd6ef64bb59fd97ebaeb8ae,
+    type: 2}
   udonAssembly: 
   assemblyError: 
   sourceCsScript: {fileID: 11500000, guid: 7c750d25e70c91946ad0cd9e50f31a42, type: 3}

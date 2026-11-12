@@ -172606,8 +172606,6 @@ MonoBehaviour:
   SetDropdownCodes: []
   LangDropdown: {fileID: 8745149958507511555}
   LangDropdownCodes: []
-  ValidatedUrlField: {fileID: 8058086617878511774}
-  DisplayUrlField: {fileID: 1976704064125173397}
   ColorW_Button: {fileID: 2901830444757232624}
   ColorU_Button: {fileID: 3868756187914286094}
   ColorB_Button: {fileID: 1947079539338151314}
@@ -172620,7 +172618,6 @@ MonoBehaviour:
   RarityMythic_Button: {fileID: 1369762647428567354}
   ClearSearch_Button: {fileID: 4736080734750667427}
   SpawnCard_Button: {fileID: 4732841588478890457}
-  AddToDeck_Button: {fileID: 5994880346913864976}
   MaxSearchCards: 256
   PhysicCardSpawnPoint: {fileID: 5228289151155900672}
 --- !u!114 &6434843971863230126

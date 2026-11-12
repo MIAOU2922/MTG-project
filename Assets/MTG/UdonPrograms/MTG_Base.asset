@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c333ccfdd0cbdbc4ca30cef2dd6e6b9b, type: 3}
   m_Name: MTG_Base
   m_EditorClassIdentifier: 
-  serializedUdonProgramAsset: {fileID: 11400000, guid: 9c0d4f7c6c6b7d84cbd45885baeb23e1, type: 2}
+  serializedUdonProgramAsset: {fileID: 11400000, guid: 09f6dac72a88d514c95ac9530ae3243f,
+    type: 2}
   udonAssembly: 
   assemblyError: 
   sourceCsScript: {fileID: 11500000, guid: 8df4af9265c8b8546a37fb5a346a34a1, type: 3}

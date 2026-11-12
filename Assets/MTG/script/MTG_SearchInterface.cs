@@ -28,10 +28,6 @@ namespace MTG
         public TMPro.TMP_Dropdown LangDropdown;
         public string[] LangDropdownCodes; // index 0 = "" (pas de filtre), puis les codes langue (ex: en, fr, es...)
 
-        [Header("=== VRC URL INPUT ===")]
-        public VRCUrlInputField ValidatedUrlField;
-        public TMPro.TMP_InputField DisplayUrlField;
-
         [Header("=== COLOR BUTTONS ===")]
         public UnityEngine.UI.Button ColorW_Button;
         public UnityEngine.UI.Button ColorU_Button;
@@ -49,7 +45,6 @@ namespace MTG
         [Header("=== OTHER BUTTONS ===")]
         public UnityEngine.UI.Button ClearSearch_Button;
         public UnityEngine.UI.Button SpawnCard_Button;
-        public UnityEngine.UI.Button AddToDeck_Button;
 
         [Header("=== POOL SETTINGS ===")]
         [Tooltip("Nombre maximum de cartes dans l'interface de recherche (pool reusable).")]
@@ -105,7 +100,7 @@ namespace MTG
 #if !COMPILER_UDONSHARP && UNITY_EDITOR
 
         // validation dans l'editeur
-        protected virtual void OnValidate()
+        protected override void OnValidate()
         {
             base.OnValidate();
             //ForceInitializeCardPool();
@@ -234,13 +229,8 @@ namespace MTG
 
             VRCUrl _UrlToSend = null;
 
-            // Essayer d'abord avec ValidatedUrlField (specifique a SearchInterface)
-            if (ValidatedUrlField != null)
-            {
-                _UrlToSend = ValidatedUrlField.GetUrl();
-            }
-            // Sinon utiliser ValidatedInput (herite de MTG_Interface)
-            if (_UrlToSend == null && ValidatedInput != null)
+            // Champ valide unique herite de MTG_Interface
+            if (ValidatedInput != null)
             {
                 _UrlToSend = ValidatedInput.GetUrl();
             }
@@ -288,10 +278,8 @@ namespace MTG
             
             VRCUrl _ValidatedUrl = null;
 
-            // Recuperer l'URL depuis le champ valide (ValidatedUrlField ou ValidatedInput)
-            if (ValidatedUrlField != null)
-                _ValidatedUrl = ValidatedUrlField.GetUrl();
-            if (_ValidatedUrl == null && ValidatedInput != null)
+            // Recuperer l'URL depuis le champ valide unique herite (ValidatedInput)
+            if (ValidatedInput != null)
                 _ValidatedUrl = ValidatedInput.GetUrl();
 
             if (_ValidatedUrl == null)
@@ -735,9 +723,7 @@ namespace MTG
 
             _FullUrl = _BaseUrl + _Query.ToString();
 
-            // Afficher l'URL dans les champs de display
-            if (DisplayUrlField != null)
-                DisplayUrlField.text = _FullUrl;
+            // Afficher l'URL dans le champ de display herite (UrlDisplayText)
             if (UrlDisplayText != null)
                 UrlDisplayText.text = _FullUrl;
 
@@ -748,8 +734,6 @@ namespace MTG
             {
                 if (ValidatedInput != null && Manager != null && Manager.SearchURL != null)
                     ValidatedInput.SetUrl(Manager.SearchURL);
-                if (ValidatedUrlField != null && Manager != null && Manager.SearchURL != null)
-                    ValidatedUrlField.SetUrl(Manager.SearchURL);
             }
 
             this.Log("GenerateUrl result: " + _FullUrl);
@@ -950,15 +934,15 @@ namespace MTG
                 LangDropdown.interactable = false;
                 LangDropdown.interactable = true;
             }
-            if (ValidatedUrlField != null)
+            if (ValidatedInput != null)
             {
-                ValidatedUrlField.interactable = false;
-                ValidatedUrlField.interactable = true;
+                ValidatedInput.interactable = false;
+                ValidatedInput.interactable = true;
             }
-            if (DisplayUrlField != null)
+            if (UrlDisplayText != null)
             {
-                DisplayUrlField.interactable = false;
-                DisplayUrlField.interactable = true;
+                UrlDisplayText.interactable = false;
+                UrlDisplayText.interactable = true;
             }
         }
 
